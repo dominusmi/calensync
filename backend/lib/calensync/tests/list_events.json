@@ -1,0 +1,201 @@
+{
+  "kind": "calendar#events",
+  "etag": "\"p3288fcfuoe8vk0g\"",
+  "summary": "barp.edoardo@yahoo.com",
+  "updated": "2022-09-13T10:12:26.970Z",
+  "timeZone": "Europe/Paris",
+  "accessRole": "owner",
+  "defaultReminders": [
+    {
+      "method": "popup",
+      "minutes": 30
+    }
+  ],
+  "nextSyncToken": "CJCHsf7DkfoCEJCHsf7DkfoCGAUgxvHH4QE=",
+  "items": [
+    {
+      "kind": "calendar#event",
+      "etag": "\"3020105860239000\"",
+      "id": "c8q68c33c4o64b9hcdgj2b9kcooj4bb1c4q3ab9lcdhjacpicgpj6ohm6k",
+      "status": "tentative",
+      "htmlLink": "https://www.google.com/calendar/event?eid=YzhxNjhjMzNjNG82NGI5aGNkZ2oyYjlrY29vajRiYjFjNHEzYWI5bGNkaGphY3BpY2dwajZvaG02a18yMDE3MTEzMCBiYXJwLmVkb2FyZG9AbQ",
+      "created": "2017-11-07T11:08:50.000Z",
+      "updated": "2017-11-07T11:08:50.205Z",
+      "summary": "What's in",
+      "creator": {
+        "email": "barp.edoardo@yahoo.com",
+        "displayName": "Edoardo Barp",
+        "self": true
+      },
+      "organizer": {
+        "email": "barp.edoardo@yahoo.com",
+        "displayName": "Edoardo Barp",
+        "self": true
+      },
+      "start": {
+        "date": "2017-11-30"
+      },
+      "end": {
+        "date": "2017-12-01"
+      },
+      "recurrence": [
+        "RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1"
+      ],
+      "transparency": "transparent",
+      "iCalUID": "c8q68c33c4o64b9hcdgj2b9kcooj4bb1c4q3ab9lcdhjacpicgpj6ohm6k@google.com",
+      "sequence": 1,
+      "reminders": {
+        "useDefault": false,
+        "overrides": [
+          {
+            "method": "popup",
+            "minutes": 420
+          }
+        ]
+      },
+      "eventType": "default"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3322695914716000\"",
+      "id": "_60q30c1g60o30e1i60o4ac1g60rj8gpl88rj2c1h84s34h9g60s30c1g60o30c1g6523ah1g652jagi488rk8e1g64o30c1g60o30c1g60o30c1g60o32c1g60o30c1g611k8di66kqk2d216cqj2e1k850j4g9h8go36c1o7533ie1h8cp0",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=XzYwcTMwYzFnNjBvMzBlMWk2MG80YWMxZzYwcmo4Z3BsODhyajJjMWg4NHMzNGg5ZzYwczMwYzFnNjBvMzBjMWc2NTIzYWgxZzY1MmphZ2k0ODhyazhlMWc2NG8zMGMxZzYwbzMwYzFnNjBvMzBjMWc2MG8zMmMxZzYwbzMwYzFnNjExazhkaTY2a3FrMmQyMTZjcWoyZTFrODUwajRnOWg4Z28zNmMxbzc1MzNpZTFoOGNwMCBiYXJwLmVkb2FyZG9AbQ",
+      "created": "2022-08-24T13:32:03.000Z",
+      "updated": "2022-08-24T13:32:22.337Z",
+      "summary": "Info desk visit",
+      "description": "Info Desks",
+      "location": "12, Bvd Merlin, Paris",
+      "creator": {
+        "email": "barp.edoardo@yahoo.com",
+        "self": true
+      },
+      "organizer": {
+        "email": "infopoint@cc.fr",
+        "displayName": "Info Desks"
+      },
+      "start": {
+        "dateTime": "2022-09-15T09:45:00+02:00",
+        "timeZone": "Africa/Ceuta"
+      },
+      "end": {
+        "dateTime": "2022-09-15T10:15:00+02:00",
+        "timeZone": "Africa/Ceuta"
+      },
+      "iCalUID": "040000008200E00074C5B7101A82E008000000001D5D01E5BDB7D8010000000000000000100000000CD6F55A4A35184AA2A1D03089F981C2",
+      "sequence": 1,
+      "attendees": [
+        {
+          "email": "barp.edoardo@yahoo.com",
+          "self": true,
+          "responseStatus": "accepted"
+        }
+      ],
+      "guestsCanInviteOthers": false,
+      "privateCopy": true,
+      "reminders": {
+        "useDefault": false,
+        "overrides": [
+          {
+            "method": "popup",
+            "minutes": 30
+          },
+          {
+            "method": "popup",
+            "minutes": 1440
+          }
+        ]
+      },
+      "eventType": "default"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3324565784794000\"",
+      "id": "rmuca7urmv7gi7v3jdm8qcpgk0",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=cm11Y2E3dXJtdjdnaTd2M2pkbThxY3BnazAgYmFycC5lZG9hcmRvQG0",
+      "created": "2022-09-04T09:14:51.000Z",
+      "updated": "2022-09-04T09:14:52.397Z",
+      "summary": "Edoardo Barp - Anonymous",
+      "description": "Edoardo Barp and Anonymous should join this meeting link: https://topt.al/rKc3XM.\n\nAttendee:\nEdoardo Barp (barp.edoardo@yahoo.com)\n\nTitle:\nAnonymous\n\nCreated by Top Scheduler\n",
+      "creator": {
+        "email": "alex.burlacu@toptal.com",
+        "displayName": "Anonymous"
+      },
+      "organizer": {
+        "email": "anon@yahoo.com",
+        "displayName": "Anonymous"
+      },
+      "start": {
+        "dateTime": "2022-09-15T12:00:00+02:00",
+        "timeZone": "Europe/Bucharest"
+      },
+      "end": {
+        "dateTime": "2022-09-15T13:00:00+02:00",
+        "timeZone": "Europe/Bucharest"
+      },
+      "iCalUID": "rmuca7urmv7gi7v3jdm8qcpgk0@google.com",
+      "sequence": 0,
+      "attendees": [
+        {
+          "email": "barp.edoardo@yahoo.com",
+          "self": true,
+          "responseStatus": "accepted"
+        }
+      ],
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3326127893940000\"",
+      "id": "_6tlnaqrle5p6cpb4dhmj4phpehojgq9k6lin6dhp6dh7aqj1dcqmeq3k68p62orie5k6srhhdpkmaqhhdpon4e38ehn3ie3k71p38dpj6koj0",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=XzZ0bG5hcXJsZTVwNmNwYjRkaG1qNHBocGVob2pncTlrNmxpbjZkaHA2ZGg3YXFqMWRjcW1lcTNrNjhwNjJvcmllNWs2c3JoaGRwa21hcWhoZHBvbjRlMzhlaG4zaWUzazcxcDM4ZHBqNmtvajAgYmFycC5lZG9hcmRvQG0",
+      "created": "2022-08-31T14:37:55.000Z",
+      "updated": "2022-09-13T10:12:26.970Z",
+      "summary": "Appointment",
+      "description": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email that you received in Gmail. https://mail.google.com/mail?extsrc=cal&plid=ACUX6DPhor-8Z5CDolFmqnSsEvpnDrZXVvJLzx8\n",
+      "location": "Paris Town",
+      "creator": {
+        "email": "barp.edoardo@yahoo.com",
+        "self": true
+      },
+      "organizer": {
+        "email": "unknownorganizer@calendar.google.com",
+        "displayName": "Unknown Organizer"
+      },
+      "start": {
+        "dateTime": "2022-09-14T16:00:00+02:00",
+        "timeZone": "Europe/Paris"
+      },
+      "end": {
+        "dateTime": "2022-09-14T16:20:00+02:00",
+        "timeZone": "Europe/Paris"
+      },
+      "transparency": "transparent",
+      "visibility": "private",
+      "iCalUID": "7kukuqrfedlm2f9tq8i45es693bujak5ght22acrqhnn1niej1nqr8htn98t8r473510",
+      "sequence": 0,
+      "attendees": [
+        {
+          "email": "barp.edoardo@yahoo.com",
+          "self": true,
+          "responseStatus": "accepted"
+        }
+      ],
+      "guestsCanInviteOthers": false,
+      "privateCopy": true,
+      "reminders": {
+        "useDefault": true
+      },
+      "source": {
+        "url": "https://mail.google.com/mail?extsrc=cal&plid=ACUX6DPhor-8Z5CDolFmqnSsEvpnDrZXVvJLzx8",
+        "title": ""
+      },
+      "eventType": "default"
+    }
+  ]
+}

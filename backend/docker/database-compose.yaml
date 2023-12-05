@@ -1,0 +1,20 @@
+version: '2.4'
+
+networks:
+  api:
+    driver: bridge
+    name: api
+
+services:
+  postgres:
+    container_name: postgres-calensync
+    image: postgres:13.4-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: yoda
+      POSTGRES_DB: central
+    ports:
+      - "5432:5432"
+    networks:
+      - api

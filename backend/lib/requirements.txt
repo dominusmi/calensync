@@ -1,0 +1,11 @@
+peewee~=3.15.0
+boto3~=1.24.11
+psycopg2-binary~=2.9.1
+pydantic~=1.9.1
+fastapi==0.104.1
+mangum==0.17.0
+google-api-python-client==2.109.0
+google-auth==2.24.0
+aws-lambda-powertools==2.28.1
+pydantic==1.9.2
+python-dotenv==1.0.0

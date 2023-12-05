@@ -1,0 +1,12 @@
+**/.idea/*
+*.egg-info
+backend/api/local/local_api.py
+frontend/public/static/bundle/*
+backend/client_secret.json
+frontend/build*
+frontend/node_modules
+backend/.env
+*.pyc
+backend/lib/.pytest_cache
+**/__pycache__
+.idea
