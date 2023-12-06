@@ -3,7 +3,8 @@ import API from "./const";
 export enum VerifySession {
     OK = 0,
     INVALID = 1,
-    TOS = 2
+    TOS = 2,
+    LOGIN = 3
   }
 
 export async function verify_session_id(): Promise<VerifySession> {
@@ -26,11 +27,14 @@ export async function verify_session_id(): Promise<VerifySession> {
       return VerifySession.TOS;
     }
     else if (!response.ok) {
+      if(response.status == 403){
+        localStorage.removeItem("session-id")
+        return VerifySession.LOGIN;
+      }
       return VerifySession.INVALID;
     }
     return VerifySession.OK;
   } catch (error) {
-    console.log(error)
     return VerifySession.INVALID;
   }
 }
