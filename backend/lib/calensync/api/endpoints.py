@@ -19,11 +19,11 @@ logger = get_logger(__file__)
 
 
 def get_host_env():
-    return os.environ.get("HOST")
+    return os.environ.get("FrontendUri")
 
 
 def get_frontend_env():
-    return os.environ.get("FRONTEND")
+    return os.environ.get("FrontendUri")
 
 
 def verify_session(session_id: Optional[str]) -> User:
@@ -53,12 +53,12 @@ def credentials_to_dict(credentials: google.oauth2.credentials.Credentials):
     return json.loads(credentials.to_json())
 
 
-def get_oauth_token(state: str, code: str, db: peewee.Database):
+def get_oauth_token(state: str, code: str, db: peewee.Database, session):
     state_db: OAuthState = OAuthState.get_or_none(state=state)
     if state_db is None:
         raise ApiError("Invalid state")
 
-    client_secret = get_client_secret()
+    client_secret = get_client_secret(session)
 
     is_login = (state_db.kind == OAuthKind.GOOGLE_SSO)
     logger.info(f"OAuth of kind {state_db.kind}, is_login: {is_login}")
@@ -153,9 +153,9 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str, 
         raise ApiError(message="Service unavailable", code=503)
 
 
-def prepare_calendar_oauth(user: User, db: peewee.Database):
+def prepare_calendar_oauth(user: User, db: peewee.Database, session):
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
-        get_client_secret(),
+        get_client_secret(session),
         scopes=get_scopes())
 
     flow.redirect_uri = f'{get_host_env()}/oauth2'
@@ -171,14 +171,14 @@ def prepare_calendar_oauth(user: User, db: peewee.Database):
     return {"url": authorization_url}
 
 
-def prepare_google_sso_oauth(session_id: str, db: peewee.Database):
+def prepare_google_sso_oauth(session_id: str, db: peewee.Database, session):
     """
     Function used for login / signup purposes. Creates and anonymous OAuthState model
     object to keep track of the state reason.
     """
     scopes = get_google_sso_scopes()
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
-        get_client_secret(),
+        get_client_secret(session),
         scopes=scopes)
 
     logger.info(f"Scopes: {scopes}")

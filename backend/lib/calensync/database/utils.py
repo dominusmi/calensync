@@ -18,7 +18,7 @@ class DatabaseSession:
                 "host": "0.0.0.0",
                 "port": 5432
             }
-        elif env == "prod":
+        elif env in ["dev", "prod"]:
             global CONFIG_CACHE
             if CONFIG_CACHE:
                 configs = CONFIG_CACHE
@@ -29,12 +29,12 @@ class DatabaseSession:
                     secretsmanager = boto3.client("secretsmanager")
 
                 secret = secretsmanager.get_secret_value(
-                    SecretId='calensync-prod/db',
+                    SecretId=f'calensync-{env}-db',
                 )
                 configs = json.loads(secret["SecretString"])
                 CONFIG_CACHE = configs
         else:
-            raise SystemError("Environment must be local or prod")
+            raise RuntimeError(f"Invalid environment {env}")
 
         db.init(
             configs["db"],

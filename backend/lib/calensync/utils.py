@@ -7,14 +7,16 @@ def get_env():
     return os.environ["ENV"]
 
 
-def get_client_secret():
+def get_client_secret(session=None):
     if is_local():
         import pathlib
         path = pathlib.Path(__file__).parent.parent.parent.resolve()
         with open(path.joinpath("client_secret.json")) as f:
             return json.load(f)
     else:
-        raise NotImplementedError("Client secret not implemented")
+        client = session.client("secretsmanager")
+        response = client.get_secret_value(SecretId="calensync-google-secret")
+        return json.loads(response['SecretString'])
 
 
 def get_scopes():

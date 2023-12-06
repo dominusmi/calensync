@@ -1,5 +1,5 @@
+import boto3
 import fastapi.responses
-import uvicorn
 from fastapi import FastAPI, Request, Query, Header, Body
 from mangum import Mangum
 
@@ -28,7 +28,7 @@ def get__oauth2(state: str = Query(), code: str = Query()):
     Process new OAuth request. Can be either login or add calendar. See `OAuthKind`
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        return get_oauth_token(state, code, db)
+        return get_oauth_token(state, code, db, boto3.Session())
 
 
 @format_response
@@ -42,7 +42,7 @@ def get__prepare_google_sso_oauth(authorization: str = Header(None)):
     if session_id is None:
         raise ApiError("Session ID must be defined")
     with DatabaseSession(os.environ["ENV"]) as db:
-        return prepare_google_sso_oauth(session_id, db)
+        return prepare_google_sso_oauth(session_id, db, boto3.Session())
 
 
 @format_response
@@ -54,7 +54,7 @@ def get__prepare_google_calendar_oauth(authorization: str = Header(None)):
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        return prepare_calendar_oauth(user, db)
+        return prepare_calendar_oauth(user, db, boto3.Session())
 
 
 @format_response
@@ -150,6 +150,7 @@ app.add_middleware(
 handler = Mangum(app)
 
 if __name__ == "__main__":
+    import uvicorn
     from pathlib import Path
     dir = Path().expanduser().resolve().parent
     env_path = dir.joinpath("../.env").resolve()
