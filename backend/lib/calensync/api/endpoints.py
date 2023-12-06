@@ -19,11 +19,11 @@ logger = get_logger(__file__)
 
 
 def get_host_env():
-    return os.environ.get("FrontendUri")
+    return os.environ.get("API_ENDPOINT")
 
 
 def get_frontend_env():
-    return os.environ.get("FrontendUri")
+    return os.environ.get("FRONTEND")
 
 
 def verify_session(session_id: Optional[str]) -> User:
