@@ -11,11 +11,12 @@ import Plan from './pages/Plan';
 import Home from "./pages/Home";
 import './App.css'; // Make sure the file path is correct
 import Privacy from "./pages/Privacy";
+import { PUBLIC_URL } from "./utils/const";
 
 
 function App() {
   return (
-    <Router basename="/dev">
+    <Router basename={PUBLIC_URL}>
       <Routes>
         <Route path="/" element={<Home/>} />
         <Route path="/dashboard" element={<Dashboard/>} />
