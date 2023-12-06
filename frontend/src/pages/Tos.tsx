@@ -104,10 +104,6 @@ const Tos: React.FC = () => {
                             online reseller Paddle.com. Paddle.com is the Merchant of Record for all our orders.
                             Paddle provides all customer service inquiries and handles returns</li>
                         <li>Automatic billing is also done through Paddle, which allows several payment methods.</li>
-                        <li>Unused monthly events in the paid plan are forfeited at the end of the term.</li>
-                        <li>There are no extra charges for occasional traffic spikes. If the usage exceeds the selected
-                            plan for two consecutive months, we will contact you to upgrade. You will have two weeks to
-                            decide.</li>
                         <li>Upgrading or downgrading your paid plan can be done at any time within your account settings.
                             Downgrading may result in loss of features or capacity, for which Opali Analytics is not liable.
                         </li>
