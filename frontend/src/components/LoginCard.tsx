@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import API from '../utils/const';
+import LoadingOverlay from './LoadingOverlay';
 
 const cardContainerStyle: React.CSSProperties = {
     display: 'flex',
@@ -16,12 +17,13 @@ const loginCardStyle: React.CSSProperties = {
 };
 
 const LoginCard: React.FC = () => {
+    const [isLoading, setLoading] = useState(false);
     useEffect(() => {
         const handleGoogleLogin = async () => {
             try {
+                setLoading(true);
                 const sessionId = uuidv4();
                 localStorage.setItem('session-id', sessionId);
-
                 const response = await fetch(`${API}/google/sso/prepare`, {
                     method: 'GET',
                     headers: {
@@ -40,6 +42,8 @@ const LoginCard: React.FC = () => {
                 // Handle errors, for example, show an error toast
                 console.error(error);
                 // create_toast(error.message || "A server error occurred");
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -96,6 +100,7 @@ const LoginCard: React.FC = () => {
                     </div>
                 </div>
             </div>
+            { isLoading && <LoadingOverlay/> }
         </div>
     );
 };
