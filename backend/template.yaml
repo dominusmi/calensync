@@ -14,6 +14,8 @@ Parameters:
     Type: String
   PaddleSecretArn:
     Type: String
+  ApiEndpoint:
+    Type: String
 
 Resources:
   Api:
@@ -90,6 +92,7 @@ Resources:
         Variables:
           ENV: !Ref Env
           FRONTEND: !Ref FrontendUri
+          API_ENDPOINT: !Ref ApiEndpoint
       Events:
         read:
           Type: HttpApi
