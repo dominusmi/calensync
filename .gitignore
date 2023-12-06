@@ -15,3 +15,4 @@ backend/layer.zip
 frontend/build*
 /backend/.aws-sam/
 build
+/backend/samconfig.toml
