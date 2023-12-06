@@ -83,9 +83,10 @@ const Home: React.FC = () => {
                             <h3 className="mb-0 ml-4">Yearly</h3><p className='text-muted mx-1 align-middle'>48% Off!</p>
                         </div>
                         <div className='row mt-3'>
-                            <h2 className='fw-bold display-6 mb-4'>
+                            <h2 className='fw-bold display-6 mb-0'>
                                 {cost}$
                             </h2>
+                            <p className='text-muted small mb-4'>*Excluding VAT</p>
                             <div className="d-grid gap-2 d-md-flex justify-content-md-center mt-1">
                                 <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>Signup</button>
                             </div>
