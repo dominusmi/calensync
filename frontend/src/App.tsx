@@ -15,7 +15,7 @@ import Privacy from "./pages/Privacy";
 
 function App() {
   return (
-    <Router>
+    <Router basename="/dev">
       <Routes>
         <Route path="/" element={<Home/>} />
         <Route path="/dashboard" element={<Dashboard/>} />
