@@ -1,0 +1,293 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  Env:
+    Type: String
+  FrontendUri:
+    Type: String
+  SecretArn:
+    Type: String
+  GoogleSecretArn:
+    Type: String
+  DatabaseSecretArn:
+    Type: String
+  PaddleSecretArn:
+    Type: String
+
+Resources:
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      FailOnWarnings: true
+      CorsConfiguration:
+        AllowHeaders:
+          - "*"
+        AllowMethods:
+          - "*"
+        AllowOrigins:
+          - "*"
+        MaxAge: 300
+
+
+  RdsPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Gives access to RDS secrets"
+      ManagedPolicyName: !Sub "Calensync-${Env}-GetRDSSecret"
+      Path: /LambdaPolicies/
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref SecretArn
+
+  GetSecretsPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Gives access to RDS secrets"
+      ManagedPolicyName: !Sub "Calensync-${Env}-GetSecrets"
+      Path: /LambdaPolicies/
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              - !Ref GoogleSecretArn
+              - !Ref DatabaseSecretArn
+              - !Ref PaddleSecretArn
+
+  CalensyncLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: calensync-python-layer
+      Description: Calensync layer
+      ContentUri: layer.zip
+      CompatibleRuntimes:
+        - python3.9
+
+  RestApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "Calensync-${Env}-RestAPI"
+      Runtime: python3.9
+      CodeUri: api/src/
+      Handler: api.handler
+      Timeout: 15
+      MemorySize: 512
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref RdsPolicy
+        - !Ref GetSecretsPolicy
+      Layers:
+        - !Ref CalensyncLayer
+      Environment:
+        Variables:
+          ENV: !Ref Env
+          FRONTEND: !Ref FrontendUri
+      Events:
+        read:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+
+
+#### So this is if you want to do things well, all nicely separated lambdas.. but it's
+#### annoying to maintain so will be resolved if this grows big enough
+#  PrepareGoogleSSO:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-PrepareGoogleSSO"
+#      CodeUri: api/src/
+#      Handler: api.get__prepare_google_sso_oauth
+#      Policies:
+#        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+#        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+#        - !Ref RdsPolicy
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /google/sso/prepare
+#            Method: get
+#
+#  PrepareGoogleCalendarOAuth:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-PrepareGoogleCalendarOAuth"
+#      CodeUri: api/src/
+#      Handler: api.get__prepare_google_calendar_oauth
+#      Policies:
+#        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+#        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+#        - !Ref RdsPolicy
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /google/calendar/prepare
+#            Method: get
+#
+#  ReceiveOauth:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-ReceiveOauth"
+#      CodeUri: api/src/
+#      Handler: api.get__oauth2
+#      Policies:
+#        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+#        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+#        - !Ref RdsPolicy
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /oauth2
+#            Method: get
+#
+#  GetCalendarAccounts:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-GetCalendarAccounts"
+#      CodeUri: api/src/
+#      Handler: api.get__calendar_accounts
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /accounts
+#            Method: get
+#
+#  GetCalendars:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-GetCalendars"
+#      CodeUri: api/src/
+#      Handler: api.get__calendars
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /accounts/{account_id}/calendars
+#            Method: get
+#
+#  RefreshCalendars:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-RefreshCalendars"
+#      CodeUri: api/src/
+#      Handler: api.post__refresh_calendars
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /accounts/{account_id}/calendars/refresh
+#            Method: post
+#
+#  GetCalendar:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-GetCalendar"
+#      CodeUri: api/src/
+#      Handler: api.get__calendar
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /calendars/{calendar_id}
+#            Method: get
+#
+#
+#  PatchCalendar:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-PatchCalendar"
+#      CodeUri: api/src/
+#      Handler: api.patch__calendar
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /calendars/{calendar_id}
+#            Method: patch
+#
+#  GoogleWebhook:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-GoogleWebhook"
+#      CodeUri: api/src/
+#      Handler: api.post__webhook
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /webhook/google
+#            Method: post
+#
+#  PostObtainJWT:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-PostJWT"
+#      CodeUri: api/src/
+#      Handler: api.post__obtain_jwt
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /jwt
+#            Method: post
+#
+#  WhoAmI:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-WhoAmI"
+#      CodeUri: api/src/
+#      Handler: api.whoami
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /whoami
+#            Method: get
+#
+#  Tos:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      FunctionName: !Sub "calensync-${Env}-Tos"
+#      CodeUri: api/src/
+#      Handler: api.tos
+#      Events:
+#        Api:
+#          Type: HttpApi
+#          Properties:
+#            ApiId: !Ref ApiGateway
+#            PayloadFormatVersion: "2.0"
+#            Path: /tos
+#            Method: post
