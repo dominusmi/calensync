@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { toast } from 'react-toastify';
-import API from '../utils/const';
+import API, { PUBLIC_URL } from '../utils/const';
 import { get_session_id } from '../utils/session';
 import Toast, { toast_error } from '../components/Toast';
 
@@ -31,7 +31,17 @@ const Tos: React.FC = () => {
                     }
                 }
             );
-            window.location.href = "/dashboard";
+            if(response.ok){
+                window.location.href = `${PUBLIC_URL}/dashboard`;
+            }
+            else {
+                try {
+                    let error = await response.json();
+                    toast_error(error.detail || "Unknown error")
+                } catch(e) {
+                    toast_error(`Unknown error, status ${response.status}`)
+                }
+            }
         }
         catch {
             console.log("Error")

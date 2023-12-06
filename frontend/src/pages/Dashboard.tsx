@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import verify_session_id, { VerifySession, get_session_id } from '../utils/session'; // Adjust the import path
-import API from '../utils/const';
+import API, { PUBLIC_URL } from '../utils/const';
 import AccountCard, { Account } from '../components/AccountCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -28,7 +28,7 @@ const Dashboard: React.FC = () => {
           setAccounts(accountsData);
           setAccountsLoaded(true);
         }else if(result == VerifySession.TOS){
-          window.location.href = "/tos";
+          window.location.href = `${PUBLIC_URL}/tos`;
         }
       } catch (error) {
         console.error('Error fetching accounts data', error);
@@ -52,7 +52,6 @@ const Dashboard: React.FC = () => {
         Authorization: get_session_id()!,
       },
     });
-    console.log(response)
     if (!response.ok) {
       const error = await response.json();
       toast_error(error.message || "Internal server error");
@@ -76,7 +75,8 @@ const Dashboard: React.FC = () => {
       { accounts && accounts.length === 0 &&
         <div className="container-sm card my-4 py-4 shadow-sm rounded border-0 template account-row">
           <div className="row mx-2">
-            <h2>Connect your first Google calendar now!</h2>
+            <h2>You're set 🎉</h2>
+            <p>You can connect your Google calendars with the button below</p>
           </div>
         </div>
       }

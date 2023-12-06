@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import Footer from '../components/Footer';
 import Navbar from '../components/Navbar';
+import { PUBLIC_URL } from '../utils/const';
 
 const Home: React.FC = () => {
     const [isChecked, setIsChecked] = useState(false);
     const [cost, setCost] = useState(4);
 
     const signup = () => {
-        window.location.href = "/login";
+        window.location.href = `${PUBLIC_URL}/login`;
     }
 
     const changePricingSwitch = () => {
