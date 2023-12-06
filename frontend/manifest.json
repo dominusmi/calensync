@@ -1,0 +1,7 @@
+{
+    "short_name": "Calensync",
+    "name": "Synchronize your Google calendars",
+    "start_url": ".",
+    "scope": ".",
+    "display": "standalone"
+}
