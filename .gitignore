@@ -1,7 +1,6 @@
 **/.idea/*
 *.egg-info
 backend/api/local/local_api.py
-frontend/public/static/bundle/*
 backend/client_secret.json
 frontend/node_modules
 backend/.env
@@ -11,3 +10,8 @@ backend/lib/.pytest_cache
 .idea
 .DS_Store
 frontend/README.md
+backend/layer
+backend/layer.zip
+frontend/build*
+/backend/.aws-sam/
+build
