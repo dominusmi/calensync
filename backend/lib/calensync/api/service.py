@@ -22,6 +22,7 @@ def activate_calendar(calendar_db: Calendar):
     calendars = peewee.prefetch(calendars_query, CalendarAccount)
 
     active_calendars = [GoogleCalendarWrapper(c) for c in calendars]
+    logger.info(f"Found {len(active_calendars)} active calendars")
     if len(active_calendars) > 0:
         start_date = datetime.datetime.utcnow()
         end_date = start_date + datetime.timedelta(days=5)
@@ -41,8 +42,7 @@ def activate_calendar(calendar_db: Calendar):
 
     # add watch
     logger.info("Creating watch")
-    if get_env() != "local":
-        current_google_calendar.create_watch()
+    current_google_calendar.create_watch()
 
 
 def deactivate_calendar(calendar: Calendar):
@@ -50,6 +50,7 @@ def deactivate_calendar(calendar: Calendar):
     current_google_calendar.calendar_db.active = False
     current_google_calendar.calendar_db.save()
     events = list(current_google_calendar.calendar_db.get_synced_events())
+    logger.info(f"Found {len(events)} to delete for {calendar.uuid}")
     current_google_calendar.events_handler.delete(events)
     current_google_calendar.delete_events(include_database=True)
     current_google_calendar.delete_watch()

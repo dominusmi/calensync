@@ -38,6 +38,9 @@ def format_response(f):
             elif isinstance(result, RedirectResponse):
                 return HTMLResponse(**result.to_response())
 
+            elif isinstance(result, ApiError):
+                return JSONResponse({"detail": result.message}, status_code=result.code)
+
             return JSONResponse(json.dumps(result, cls=AugmentedEncoder))
         except RedirectResponse as result:
             return HTMLResponse(**result.to_response())

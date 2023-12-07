@@ -107,7 +107,7 @@ class Calendar(UUIDBaseModel):
         return (
             Event
             .select().join(Calendar)
-            .where(not Event.source_id.is_null(False), Calendar.id == self.id)
+            .where(Calendar.id == self.id)
         ).execute()
 
     @property

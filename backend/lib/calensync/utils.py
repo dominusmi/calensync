@@ -55,3 +55,11 @@ def is_local() -> bool:
 
 def utcnow():
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+def get_paddle_token():
+    return os.environ["PADDLE_TOKEN"]
+
+
+def get_product_id():
+    return os.environ["PRODUCT_ID"]

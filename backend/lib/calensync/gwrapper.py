@@ -24,7 +24,7 @@ def delete_event(service, calendar_id: str, event_id: str):
         service.events().delete(calendarId=calendar_id, eventId=event_id, sendNotifications=None,
                                    sendUpdates=None).execute()
     except Exception as e:
-        logger.info(f"Failed to delete event: {e}")
+        logger.error(f"Failed to delete event: {e}")
         pass
 
 
@@ -192,7 +192,8 @@ class GoogleCalendarWrapper:
                 "type": "webhook",
                 "token": self.calendar_db.token.__str__()
             }
-            self.service.events().watch(calendarId=str(self.google_id), body=body).execute()
+            if env != "local" and env != "test":
+                self.service.events().watch(calendarId=str(self.google_id), body=body).execute()
 
     def delete_watch(self):
         if self.calendar_db.is_read_only:
