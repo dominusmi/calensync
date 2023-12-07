@@ -7,6 +7,10 @@ import { PUBLIC_URL } from '../utils/const';
 function NavBar() {
   const isConnected = get_session_id();
 
+  function handleLogout(){
+    localStorage.removeItem('session-id');
+    window.location.href = `${PUBLIC_URL}/login`
+  }
 
   return (
     <div>
@@ -22,9 +26,10 @@ function NavBar() {
             /></Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
-              <Nav className="me-auto">
+              <Nav className="me-auto lead">
                 <Nav.Link href={`${PUBLIC_URL}/dashboard`}>Home</Nav.Link>
                 <Nav.Link href={`${PUBLIC_URL}/plan`}>Plan</Nav.Link>
+                <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
               </Nav>
             </Navbar.Collapse>
           </Container>
