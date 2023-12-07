@@ -13,7 +13,7 @@ function NavBar() {
       {isConnected &&
         <Navbar expand="md" className="hero py-2 hero-navbar">
           <Container className='p-0'>
-            <Navbar.Brand href="/"> <img
+            <Navbar.Brand href={`${PUBLIC_URL}/`}> <img
               src={`${PUBLIC_URL}/logo.png`}
               width="30"
               height="30"

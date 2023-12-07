@@ -173,16 +173,6 @@ const Privacy: React.FC = () => {
                         <li>For questions about the Terms of Service, please contact us at support@opali.xyz</li>
                     </ul>
                 </div>
-                <div className="row m-2">
-
-                    <h2>Your Privacy</h2>
-                </div>
-                <div className="p-4">
-
-                    <p>The Privacy Policy can be found at <a
-                        href="/privacy">calensync.live/privacy</a>. By accepting these terms and conditions,
-                        you also accept the privacy policy. </p>
-                </div>
             </div>
             <Footer />
         </div>

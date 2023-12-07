@@ -8,8 +8,9 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import LoadingOverlay from '../components/LoadingOverlay';
 import AddCalendarAccount from '../components/AddCalendarAccount';
-import Toast, { toast_error } from '../components/Toast';
-import { toast } from 'react-toastify';
+import { toast_msg } from '../components/Toast';
+import Layout from '../components/Layout';
+import { MessageKind, setMessage } from '../utils/common';
 
 const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -20,18 +21,19 @@ const Dashboard: React.FC = () => {
     let isMounted = true;
 
     const fetchData = async () => {
-      try {
-        const result = await verify_session_id();
-        console.log(result)
-        if (isMounted && result === VerifySession.OK) {
-          const accountsData = await fetchAccountsData();
-          setAccounts(accountsData);
-          setAccountsLoaded(true);
-        }else if(result == VerifySession.TOS){
-          window.location.href = `${PUBLIC_URL}/tos`;
-        }
-      } catch (error) {
-        console.error('Error fetching accounts data', error);
+      const result = await verify_session_id();
+      if (isMounted && result === VerifySession.OK) {
+        const accountsData = await fetchAccountsData();
+        setAccounts(accountsData);
+        setAccountsLoaded(true);
+      } else if (result == VerifySession.TOS) {
+        setMessage("Must accept Terms of Use", MessageKind.Info)
+        window.location.href = `${PUBLIC_URL}/tos`;
+      } else if (result == VerifySession.LOGIN) {
+        window.location.href = `${PUBLIC_URL}/login`;
+      } else {
+        setMessage("Could not verify session", MessageKind.Success)
+        window.location.href = `${PUBLIC_URL}/login`;
       }
     };
 
@@ -54,8 +56,8 @@ const Dashboard: React.FC = () => {
     });
     if (!response.ok) {
       const error = await response.json();
-      toast_error(error.message || "Internal server error");
-      
+      toast_msg(error.message || "Internal server error", MessageKind.Error);
+
       throw new Error(`Error fetching accounts data: ${error.message}`);
     }
     const data = await response.json();
@@ -65,26 +67,21 @@ const Dashboard: React.FC = () => {
 
   // Render AccountCards for each account
   return (
-    <div className='App bg-light'>
-      <div className='content'>
-      <Navbar />
-      {loading && <LoadingOverlay />}
-      {accounts && accounts.map((account) => (
-        <AccountCard key={account.uuid} account={account} />
-      ))}
-      { accounts && accounts.length === 0 &&
-        <div className="container-sm card my-4 py-4 shadow-sm rounded border-0 template account-row">
-          <div className="row mx-2">
-            <h2>You're set 🎉</h2>
-            <p>You can connect your Google calendars with the button below</p>
+    <Layout>
+        {loading && <LoadingOverlay />}
+        {accounts && accounts.map((account) => (
+          <AccountCard key={account.uuid} account={account} />
+        ))}
+        {accounts && accounts.length === 0 &&
+          <div className="container-sm card my-4 py-4 shadow-sm rounded border-0 template account-row">
+            <div className="row mx-2">
+              <h2>You're set 🎉</h2>
+              <p>You can connect your Google calendars with the button below</p>
+            </div>
           </div>
-        </div>
-      }
-      <AddCalendarAccount />
-      </div>
-      <Toast/>
-      <Footer />
-    </div>
+        }
+        <AddCalendarAccount />
+    </Layout>
   );
 };
 

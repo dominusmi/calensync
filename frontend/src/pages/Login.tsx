@@ -1,17 +1,14 @@
 import React from 'react';
 import LoginCard from '../components/LoginCard';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Layout from '../components/Layout';
 
 const Login: React.FC = () => {
   return (
-    <div className="App bg-light">
-      <Navbar />
-      <div className="container centered content">
+    <Layout>
+      <div className="container centered">
         <LoginCard />
       </div>
-      <Footer />
-    </div>
+    </Layout>
   );
 };
 

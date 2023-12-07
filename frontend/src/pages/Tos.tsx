@@ -4,7 +4,9 @@ import Footer from '../components/Footer';
 import { toast } from 'react-toastify';
 import API, { PUBLIC_URL } from '../utils/const';
 import { get_session_id } from '../utils/session';
-import Toast, { toast_error } from '../components/Toast';
+import Toast, { toast_msg } from '../components/Toast';
+import Layout from '../components/Layout';
+import { MessageKind } from '../utils/common';
 
 const Tos: React.FC = () => {
     const [isChecked, setIsChecked] = useState(false);
@@ -17,8 +19,7 @@ const Tos: React.FC = () => {
 
     const acceptTos = async () => {
         if (!isChecked) {
-            console.log("Must be checked");
-            toast_error("You must accept the Terms and Conditions");
+            toast_msg("You must accept the Terms and Conditions", MessageKind.Error);
             return
         }
         try {
@@ -37,9 +38,9 @@ const Tos: React.FC = () => {
             else {
                 try {
                     let error = await response.json();
-                    toast_error(error.detail || "Unknown error")
+                    toast_msg(error.detail || "Unknown error", MessageKind.Error)
                 } catch(e) {
-                    toast_error(`Unknown error, status ${response.status}`)
+                    toast_msg(`Unknown error, status ${response.status}`, MessageKind.Error)
                 }
             }
         }
@@ -50,7 +51,7 @@ const Tos: React.FC = () => {
     }
 
     return (
-        <div className="App bg-light content">
+        <Layout>
             <div className="container-sm card my-4 p-4 shadow-sm rounded border-0">
                 <div className="centered row my-4">
                     <h1>Terms and Conditions</h1>
@@ -287,9 +288,7 @@ const Tos: React.FC = () => {
                 </div>
                 }
             </div>
-            <Toast />
-            <Footer />
-        </div>
+        </Layout>
     );
 };
 
