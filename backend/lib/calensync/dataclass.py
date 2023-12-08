@@ -107,3 +107,5 @@ def event_list_to_map(events: List[GoogleEvent]) -> Dict[str, GoogleEvent]:
 def event_list_to_source_id_map(events: List[GoogleEvent]) -> Dict[str, GoogleEvent]:
     """ Given a list of events, returns a dictionary id->event """
     return {e.source_id: e for e in events if e.source_id is not None}
+
+
