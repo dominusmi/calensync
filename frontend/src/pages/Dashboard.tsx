@@ -1,7 +1,7 @@
 // Home.tsx
 
 import React, { useEffect, useState } from 'react';
-import verify_session_id, { VerifySession, get_session_id } from '../utils/session'; // Adjust the import path
+import verify_session_id, { VerifySession, get_session_id, getLoggedUser, User } from '../utils/session'; // Adjust the import path
 import API, { PUBLIC_URL } from '../utils/const';
 import AccountCard, { Account } from '../components/AccountCard';
 import Navbar from '../components/Navbar';
@@ -16,25 +16,29 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    getLoggedUser().then((user) => {
+      setUser(user);
+      setSessionChecked(true)
+    })
+  }, [])
+
+  useEffect(() => {
+    if(user != null && user!.customer_id == null){
+      toast_msg("You have {} days left on your trial", MessageKind.Info);
+    }
+  }, [user]);
 
   useEffect(() => {
     let isMounted = true;
 
     const fetchData = async () => {
-      const result = await verify_session_id();
-      if (isMounted && result === VerifySession.OK) {
         const accountsData = await fetchAccountsData();
         setAccounts(accountsData);
         setAccountsLoaded(true);
-      } else if (result == VerifySession.TOS) {
-        setMessage("Must accept Terms of Use", MessageKind.Info)
-        window.location.href = `${PUBLIC_URL}/tos`;
-      } else if (result == VerifySession.LOGIN) {
-        window.location.href = `${PUBLIC_URL}/login`;
-      } else {
-        setMessage("Could not verify session", MessageKind.Success)
-        window.location.href = `${PUBLIC_URL}/login`;
-      }
     };
 
     if (loading) {
@@ -44,7 +48,7 @@ const Dashboard: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [loading]);
+  }, [loading, sessionChecked]);
 
   const fetchAccountsData = async () => {
 
@@ -68,19 +72,26 @@ const Dashboard: React.FC = () => {
   // Render AccountCards for each account
   return (
     <Layout>
-        {loading && <LoadingOverlay />}
-        {accounts && accounts.map((account) => (
-          <AccountCard key={account.uuid} account={account} />
-        ))}
-        {accounts && accounts.length === 0 &&
-          <div className="container-sm card my-4 py-4 shadow-sm rounded border-0 template account-row">
-            <div className="row mx-2">
-              <h2>You're set 🎉</h2>
-              <p>You can connect your Google calendars with the button below</p>
-            </div>
+      {loading && <LoadingOverlay />}
+      { user != null && user.customer_id == null &&
+        // show trial message
+        <div className='container-sm p-0 mt-2'>
+          <p className='p-0 m-0'>You have { user.date_created.toLocaleDateString() } days left on your free trial. </p>
+          <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
+        </div>
+      }
+      {accounts && accounts.map((account) => (
+        <AccountCard key={account.uuid} account={account} />
+      ))}
+      {accounts && accounts.length === 0 &&
+        <div className="container-sm card my-4 py-4 shadow-sm rounded border-0 template account-row">
+          <div className="row mx-2">
+            <h2>You're set 🎉</h2>
+            <p>You can connect your Google calendars with the button below</p>
           </div>
-        }
-        <AddCalendarAccount />
+        </div>
+      }
+      <AddCalendarAccount />
     </Layout>
   );
 };
