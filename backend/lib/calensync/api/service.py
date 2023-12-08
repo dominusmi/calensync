@@ -5,7 +5,7 @@ import peewee
 from calensync.database.model import Calendar, CalendarAccount
 from calensync.gwrapper import GoogleCalendarWrapper
 from calensync.log import get_logger
-from calensync.utils import get_env
+from calensync.utils import get_env, is_local
 
 logger = get_logger(__file__)
 
@@ -25,7 +25,11 @@ def activate_calendar(calendar_db: Calendar):
     logger.info(f"Found {len(active_calendars)} active calendars")
     if len(active_calendars) > 0:
         start_date = datetime.datetime.utcnow()
-        end_date = start_date + datetime.timedelta(days=5)
+
+        # number of days to sync in the future
+        days = 5 if is_local() else 30
+        end_date = start_date + datetime.timedelta(days=days)
+
         current_google_calendar.get_events(start_date, end_date)
 
         # get all events for next 3 months for all calendars
