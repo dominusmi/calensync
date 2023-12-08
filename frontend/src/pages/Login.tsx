@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import LoginCard from '../components/LoginCard';
 import Layout from '../components/Layout';
 import { ENV } from '../utils/const';
-import LoadingOverlay from '../components/LoadingOverlay';
 
 
 const Login: React.FC = () => {
