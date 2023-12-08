@@ -1,11 +1,13 @@
 import boto3
 import fastapi.responses
+import requests
 from fastapi import FastAPI, Request, Query, Header, Body
 from mangum import Mangum
 
 from calensync.api.common import format_response
 from calensync.api.endpoints import *
 from calensync.database.utils import DatabaseSession
+from calensync.utils import get_paddle_token
 
 app = FastAPI(title="Calensync")  # Here is the magic
 
@@ -19,6 +21,14 @@ def post__webhook(event: Request):
     resource_id = event.headers.get("X-Goog-Resource-Id")
     with DatabaseSession(os.environ["ENV"]) as db:
         received_webhook(channel_id, state, resource_id, token, db)
+
+
+@app.get("/paddle/verify_transaction")
+@format_response
+def post__paddle_verify_transaction(authorization: str = Header(None), transaction_id: str = Query()):
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = verify_session(authorization)
+        paddle_verify_transaction(user, transaction_id)
 
 
 @app.get('/oauth2')
@@ -74,24 +84,24 @@ def get__calendars(calendar_account_id: str, authorization: str = Header(None)):
         return [{"uuid": c.uuid, "name": c.friendly_name, "active": c.active} for c in calendars]
 
 
-@format_response
 @app.post('/accounts/{calendar_account_id}/calendars/refresh')
+@format_response
 def post__refresh_calendars(calendar_account_id: str, authorization: str = Header(None)):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         return refresh_calendars(user, calendar_account_id, db)
 
 
-@format_response
 @app.post('/tos')
+@format_response
 def post__tos(authorization: str = Header(None)):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         return accept_tos(user, db)
 
 
-@format_response
 @app.patch('/calendars/{calendar_id}')
+@format_response
 def patch__calendar(calendar_id: str, authorization: str = Header(None), body: Dict[str, str] = Body(...)):
     """
     Update a calendar. Used to set a calendar as active.
@@ -101,8 +111,8 @@ def patch__calendar(calendar_id: str, authorization: str = Header(None), body: D
         return patch_calendar(user, calendar_id, body, db)
 
 
-@format_response
 @app.delete('/calendars/{account_id}')
+@format_response
 def delete__calendar(account_id: str, authorization: str = Header(None), body: Dict[str, str] = Body(...)):
     """
     Update a calendar. Used to set a calendar as active.
@@ -112,8 +122,8 @@ def delete__calendar(account_id: str, authorization: str = Header(None), body: D
         return delete_account(user, account_id)
 
 
-@format_response
 @app.get('/calendars/{calendar_id}')
+@format_response
 def get__calendar(calendar_id: str, authorization: str = Header(None)):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
@@ -121,8 +131,8 @@ def get__calendar(calendar_id: str, authorization: str = Header(None)):
         return {"uuid": c.uuid, "name": c.friendly_name, "active": c.active}
 
 
-@format_response
 @app.get('/whoami')
+@format_response
 def get__whoami(authorization: str = Header(None)):
     """
     Should return profile information, right now only checks
@@ -131,8 +141,21 @@ def get__whoami(authorization: str = Header(None)):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         if user.tos is None:
-            return fastapi.responses.Response(status_code=309)
-        return {}
+            raise ApiError('', code=309)
+        return {"customer_id": user.customer_id, "date_created": user.date_created,
+                "subscription_id": user.subscription_id}
+
+
+@app.get('/paddle/subscription')
+@format_response
+def get__paddle_subscription(authorization: str = Header(None)):
+    """
+    Should return profile information, right now only checks
+    the session
+    """
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = verify_session(authorization)
+        return get_paddle_subscription(user)
 
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -152,6 +175,7 @@ handler = Mangum(app)
 if __name__ == "__main__":
     import uvicorn
     from pathlib import Path
+
     dir = Path().expanduser().resolve().parent
     env_path = dir.joinpath("../.env").resolve()
     reload_dir = dir.joinpath("../").resolve()
