@@ -3,6 +3,8 @@ import json
 import traceback
 from functools import wraps
 from typing import Dict
+
+import pydantic
 from fastapi.responses import JSONResponse, HTMLResponse
 
 
@@ -25,6 +27,10 @@ def with_proxy_event(f):
     return wrapper
 
 
+def json_response(content, status_code: int = 200):
+    return HTMLResponse(json.dumps(content, cls=AugmentedEncoder), headers={"Content-Type": "application/json"}, status_code=status_code)
+
+
 def format_response(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -39,15 +45,18 @@ def format_response(f):
                 return HTMLResponse(**result.to_response())
 
             elif isinstance(result, ApiError):
-                return JSONResponse({"detail": result.message}, status_code=result.code)
+                return JSONResponse({"detail": result.detail}, status_code=result.code)
 
-            return JSONResponse(json.dumps(result, cls=AugmentedEncoder))
+            elif isinstance(result, pydantic.BaseModel):
+                return HTMLResponse(result.json(), headers={"Content-Type": "application/json"})
+
+            return json_response(result)
         except RedirectResponse as result:
             return HTMLResponse(**result.to_response())
         except ApiError as e:
             # For "expected" errors (ApiError), we still return 200 but set internal
             # info differently
-            return JSONResponse(json.dumps({"message": e.message}, cls=AugmentedEncoder), status_code=e.code)
+            return json_response({"detail": e.detail}, e.code)
         except Exception as e:
             # instead for generic server error we return 500
             logger.error(traceback.format_exc())
@@ -95,7 +104,7 @@ class Claims:
 
 class ApiError(Exception):
     def __init__(self, message: str = 'Invalid request', code: int = 400):
-        self.message = message
+        self.detail = message
         self.code = code
-        super().__init__(self.message, self.code)
+        super().__init__(self.detail, self.code)
 
