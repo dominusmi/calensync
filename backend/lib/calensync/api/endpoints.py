@@ -13,7 +13,8 @@ from calensync.api.service import activate_calendar, deactivate_calendar
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session
 from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
 from calensync.log import get_logger
-from calensync.utils import get_client_secret, get_scopes, get_google_sso_scopes, is_local, utcnow
+import calensync.paddle as paddle
+from calensync.utils import get_client_secret, get_scopes, get_google_sso_scopes, is_local, utcnow, get_paddle_token
 
 logger = get_logger(__file__)
 
@@ -304,6 +305,48 @@ def accept_tos(user: User, db: peewee.Database):
     user.tos = utcnow()
     user.save()
     return
+
+
+def paddle_verify_transaction(user: User, transaction_id: str):
+    response = paddle.get_transaction(transaction_id, get_paddle_token())
+    print(response)
+    if response.status_code != 200:
+        logger.error(f"Couldn't confirm transaction {transaction_id} for user {user.uuid}")
+        raise ApiError("Couldn't confirm payment", code=500)
+
+    data = response.json()["data"]
+
+    if data["status"] not in ["paid", "completed"]:
+        raise ApiError(f"The transaction is not completed. Status: {data['status']}")
+
+    customer_id = data["customer_id"]
+    subscription_id = data["subscription_id"]
+
+    if user.customer_id is not None and user.customer_id != customer_id:
+        logger.error(f"User {user.uuid} had customer_id {user.customer_id} and now has {customer_id}")
+        user.customer_id = customer_id
+
+    if user.customer_id is None:
+        user.customer_id = customer_id
+
+    if user.transaction_id is not None:
+        logger.info(f"User {user.uuid} transaction updated from {user.transaction_id} to {transaction_id}")
+    user.transaction_id = transaction_id
+
+    if user.subscription_id is not None:
+        # apparently, the subscription_id is null if I buy another product after the first one
+        # this shouldn't be possible, but good to know
+        logger.info(f"User {user.uuid} subscription updated from {user.subscription_id} to {subscription_id}")
+        user.subscription_id = subscription_id
+
+    user.save()
+    return
+
+
+def get_paddle_subscription(user: User):
+    response = paddle.get_subscription(user.subscription_id, get_paddle_token())
+    return response
+
 
 def process_calendars():
     now = datetime.datetime.utcnow()
