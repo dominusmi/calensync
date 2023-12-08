@@ -70,6 +70,9 @@ class User(UUIDBaseModel):
     email = CharField(unique=True)
     is_admin = peewee.BooleanField(default=False)
     tos = peewee.DateTimeField(default=None, null=True)
+    customer_id = CharField(null=True, default=None)
+    transaction_id = CharField(null=True, default=None)
+    subscription_id = CharField(null=True, default=None)
 
     @staticmethod
     def from_email(email: str) -> User:
