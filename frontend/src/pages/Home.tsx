@@ -22,7 +22,7 @@ const Home: React.FC = () => {
     }
 
     return (
-        <Layout>
+        <Layout verify_session={false}>
             <div className='hero'>
                 <div className="container col-xxl-8 py-5">
                     <div className="row flex-lg-row-reverse align-items-center g-5 py-5">
