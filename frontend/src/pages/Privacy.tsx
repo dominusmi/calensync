@@ -43,16 +43,25 @@ const Privacy: React.FC = () => {
                             and is never shared with any third-party.
                         </li>
                         <li>A first party cookie is used in order to keep track of your logged in session.</li>
-                        <li>Unused monthly events in the paid plan are forfeited at the end of the term.</li>
+                        <li>
+                            A metadata copy of your calendar events is kept in the database. By metadata, we mean only the event_id (a completely anonymous string)
+                            as well as the start and end date of the event. These are required for the application to work properly. These pieces of information 
+                            are not shared in any shape or form with any third-party.
+                        </li>
+                        <li>
+                            Your email will only be used for marketing purposes if you explicitely give use the right to (this can be done at the checkout).
+                            We may contact you by email for non-marketing purposes, such as for updates to the to the policy or to the pricing.
+                        </li>
                         <li>Payment is facilitated by Paddle; as part of the payment, you may
                             be required to submit an email which they process for billing. See their privacy policy for information.
                         </li>
                     </ul>
-                    We use three external providers.
+                    We use four external providers.
 ‍                    <ul>
                         <li>Amazon Web Services, Inc. for the infrastructure. It is fully hosted in Sweden / Stockholm, eu-north-1, and allthe data is kept and processed in this region only</li>
                         <li>Paddle.com Market Ltd for the payment processing</li>
                         <li>Github.com for website hosting</li>
+                        <li>Google.com to be able to connect to your accounts and calendars, as described in this document.</li>
                     </ul>                   
                 </div>
                 <div className="row m-2">
@@ -61,7 +70,7 @@ const Privacy: React.FC = () => {
                 </div>
                 <div className="p-4">
                     If you do not use your account and want to delete your data, please send us 
-                    an email at support@opali.xyz . We will handle the request as fast as possible.
+                    an email at support@calensync.live . We will handle the request as fast as possible.
                 </div>
                 <div className="row m-2">
                     <h2>Retention and Changes to This Policy
