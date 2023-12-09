@@ -11,6 +11,9 @@ const Footer: React.FC = () => {
         <a href={`${PUBLIC_URL}/privacy`}>Privacy Policy</a>
       </div>
       <div className='row'>
+        <a href={`${PUBLIC_URL}/google-privacy`}>Google Usage Disclosure</a>
+      </div>
+      <div className='row'>
         <p>Calensync © 2023</p>
       </div>
     </footer>
