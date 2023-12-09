@@ -41,15 +41,17 @@ const AccountCalendar: React.FC<{calendar: Calendar}> = ({calendar}) => {
       }, [calendar.active]);
 
     return (
-        <div key={calendar.uuid} className="row row-cols-12 row-cols-xs-9 template calendar-row my-1">
-            <div className="col-md-1 form-check form-switch">
+        
+        <div key={calendar.uuid} className="row row-cols-12 row-cols-xs-9 calendar-row my-1 overflow-auto">
+            <div className="col-md-1 d-flex">
+                <div className='form-check form-switch'>
                 <input className="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault"
                     checked={calendar.active}
                     onChange={updateChecked}
                 />
+                </div>
+                <label className="form-check-label">{calendar.name}</label>
             </div>
-            <div className="col-md-11 p-0 name-value">{calendar.name}</div>
-
         </div>
     );
     return (
