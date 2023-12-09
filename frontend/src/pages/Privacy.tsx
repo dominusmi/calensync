@@ -62,7 +62,19 @@ const Privacy: React.FC = () => {
                         <li>Paddle.com Market Ltd for the payment processing</li>
                         <li>Github.com for website hosting</li>
                         <li>Google.com to be able to connect to your accounts and calendars, as described in this document.</li>
-                    </ul>                   
+                    </ul>
+
+                    The scope used for the Google API are: 
+                    <ul>
+                        <li><code>openid, /auth/userinfo.email</code>: used to log the user in and get the email</li>
+
+                        <li><code>/auth/calendar.calendarlist.readonly</code>: be able to list the calendars owned by the user.</li>
+
+                        <li><code>/auth/calendar.events</code>: be able to read, update, and delete events. <b>Note:</b> we 
+                            will only ever delete events created by Calensync. We take special care in our software to 
+                            make it impossible to delete any event not created by us.
+                        </li>
+                    </ul>                 
                 </div>
                 <div className="row m-2">
                     <h2>Deletion of your data
