@@ -7,7 +7,7 @@ const LoadingOverlay = () => {
       <TailSpin
         height="80"
         width="80"
-        color="#4fa94d"
+        color="#577CFF"
         ariaLabel="tail-spin-loading"
         radius="1"
         wrapperStyle={{}}

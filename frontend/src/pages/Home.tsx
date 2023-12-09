@@ -1,25 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
 import Navbar from '../components/Navbar';
-import { PUBLIC_URL } from '../utils/const';
+import { PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
+import { PaddlePricing } from '../components/PaddlePricing';
+import { Paddle, initializePaddle } from '@paddle/paddle-js';
 
 const Home: React.FC = () => {
-    const [isChecked, setIsChecked] = useState(false);
-    const [cost, setCost] = useState(4);
+    const [paddle, setPaddle] = useState<Paddle | null>(null);
+
 
     const signup = () => {
         window.location.href = `${PUBLIC_URL}/login`;
     }
 
-    const changePricingSwitch = () => {
-        if (isChecked) {
-            setCost(4);
-        } else {
-            setCost(25);
+    async function setupPaddle() {
+        const paddleInstance = await initializePaddle({ environment: 'sandbox', token: PADDLE_CLIENT_TOKEN });
+        if (paddleInstance) {
+            setPaddle(paddleInstance);
         }
-        setIsChecked(!isChecked);
     }
+
+    useEffect(() => {
+        setupPaddle();
+    }, [])
 
     return (
         <Layout verify_session={false}>
@@ -67,30 +71,9 @@ const Home: React.FC = () => {
                 </div>
             </div>
             <div className='hero py-5'>
-                <div className='container centered'>
-                    <div className='row mb-4'>
-                        <div className="feature col">
-                            <h1>Pricing</h1>
-                            <p className='lead'>Simple pricing for a simple product. 7 days free trial, no commitment, no credit card. Then..</p>
-                        </div>
-                    </div>
-                    <div className="d-flex justify-content-center">
-                        <h3 className="mb-0 mx-4">Monthly</h3>
-                        <div className="pricing-switch form-check form-switch mx-4">
-                            <input className="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked={isChecked} onChange={changePricingSwitch} />
-                        </div>
-                        <h3 className="mb-0 ml-4">Yearly</h3><p className='text-muted mx-1 align-middle'>48% Off!</p>
-                    </div>
-                    <div className='row mt-3'>
-                        <h2 className='fw-bold display-6 mb-0'>
-                            {cost}$
-                        </h2>
-                        <p className='text-muted small mb-4'>*Excluding VAT</p>
-                        <div className="d-grid gap-2 d-md-flex justify-content-md-center mt-1">
-                            <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>Signup</button>
-                        </div>
-                    </div>
-                </div>
+                { paddle && 
+                    <PaddlePricing paddle={paddle} isHome={true} />
+                }
             </div>
         </Layout>
     );
