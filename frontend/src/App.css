@@ -121,6 +121,11 @@ code {
   transform: scale(2) translateY(12%);
 }
 
+li {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
 .gsi-material-button {
   -moz-user-select: none;
   -webkit-user-select: none;
@@ -158,6 +163,7 @@ code {
   margin-right: 12px;
   min-width: 20px;
   width: 20px;
+  line-height: normal;
 }
 
 .gsi-material-button .gsi-material-button-content-wrapper {

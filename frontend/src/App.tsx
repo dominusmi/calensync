@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import './App.css'; // Make sure the file path is correct
 import Privacy from "./pages/Privacy";
 import { PUBLIC_URL } from "./utils/const";
+import GoogleDisclosure from "./pages/GoogleDisclosure";
 
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/tos" element={<Tos/>} />
         <Route path="/privacy" element={<Privacy/>} />
         <Route path="/plan" element={<Plan/>} />
+        <Route path="/google-privacy" element={<GoogleDisclosure/>}></Route>
       </Routes>
     </Router>
   );
