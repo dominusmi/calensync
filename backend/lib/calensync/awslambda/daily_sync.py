@@ -27,6 +27,7 @@ def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetim
 def execute_update(calendars: List[GoogleCalendarWrapper], db):
     # spooky double loop. Need to save each calendar events in the others
     for i, cal1 in enumerate(calendars):
+        cal1.save_events_in_database()
         for cal2 in calendars[i+1:]:
             cal1.events_handler.add(cal2.events)
             cal2.events_handler.add(cal1.events)

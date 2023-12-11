@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from calensync.awslambda.daily_sync import sync_user_calendars_by_date
 from calensync.database.model import Event
-from calensync.dataclass import GoogleDatetime, AbstractGoogleDate
+from calensync.dataclass import GoogleDatetime, AbstractGoogleDate, EventStatus
 from calensync.tests.fixtures import *
 
 
@@ -14,6 +14,7 @@ class MockEvent:
     source_id: str
     start: AbstractGoogleDate
     end: AbstractGoogleDate
+    status = EventStatus.confirmed
 
 
 def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2: Calendar):
@@ -43,10 +44,10 @@ def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2
                 return {"id": f"e1_{insert_iteration[0]}"}
             elif calendar_id == calendar2.platform_id:
                 insert_iteration[1] += 1
-                return {"id": f"e2_{insert_iteration[0]}"}
+                return {"id": f"e2_{insert_iteration[1]}"}
             elif calendar_id == calendar3.platform_id:
                 insert_iteration[2] += 1
-                return {"id": f"e3_{insert_iteration[0]}"}
+                return {"id": f"e3_{insert_iteration[2]}"}
 
         insert_event.side_effect = mock_insert_event
 
@@ -76,28 +77,28 @@ def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2
 
         sync_user_calendars_by_date(db)
 
-        events = list(Event.select().where(Event.calendar_id == calendar1.id))
+        events = list(Event.select().where(Event.calendar_id == calendar1.id, Event.source.is_null(False)))
         assert len(events) == 2
-        assert next(filter(lambda x: x.source_id == "2", events))
-        assert next(filter(lambda x: x.source_id == "3", events))
+        assert next(filter(lambda x: x.source.event_id == "2", events))
+        assert next(filter(lambda x: x.source.event_id == "3", events))
 
-        events = list(Event.select().where(Event.calendar_id == calendar2.id))
+        events = list(Event.select().where(Event.calendar_id == calendar2.id, Event.source.is_null(False)))
         assert len(events) == 1
-        assert next(filter(lambda x: x.source_id == "1", events))
+        assert next(filter(lambda x: x.source.event_id == "1", events))
 
-        events = list(Event.select().where(Event.calendar_id == calendar3.id))
+        events = list(Event.select().where(Event.calendar_id == calendar3.id, Event.source.is_null(False)))
         assert len(events) == 3
-        assert next(filter(lambda x: x.source_id == "1", events))
-        assert next(filter(lambda x: x.source_id == "2", events))
-        assert next(filter(lambda x: x.source_id == "3", events))
+        assert next(filter(lambda x: x.source.event_id == "1", events))
+        assert next(filter(lambda x: x.source.event_id == "2", events))
+        assert next(filter(lambda x: x.source.event_id == "3", events))
 
         # reset and retry: nothing should happen
         iteration = [0]
         insert_iteration = [0, 0, 0]
         sync_user_calendars_by_date(db)
-        events = list(Event.select().where(Event.calendar_id == calendar1.id))
+        events = list(Event.select().where(Event.calendar_id == calendar1.id, Event.source.is_null(False)))
         assert len(events) == 2
-        events = list(Event.select().where(Event.calendar_id == calendar2.id))
+        events = list(Event.select().where(Event.calendar_id == calendar2.id, Event.source.is_null(False)))
         assert len(events) == 1
-        events = list(Event.select().where(Event.calendar_id == calendar3.id))
+        events = list(Event.select().where(Event.calendar_id == calendar3.id, Event.source.is_null(False)))
         assert len(events) == 3
