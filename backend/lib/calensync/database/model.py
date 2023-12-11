@@ -80,7 +80,7 @@ class User(UUIDBaseModel):
 
 
 class CalendarAccount(UUIDBaseModel):
-    user = ForeignKeyField(User)
+    user = ForeignKeyField(User, backref='accounts')
     key = CharField()
     credentials = JSONField()
 
@@ -89,7 +89,7 @@ class CalendarAccount(UUIDBaseModel):
 
 
 class Calendar(UUIDBaseModel):
-    account = ForeignKeyField(CalendarAccount)
+    account = ForeignKeyField(CalendarAccount, backref='calendars')
     platform_id = CharField(help_text="This is the id provided by the service (e.g. the google id for the calendar)")
     name = CharField(null=True)
     channel_id = UUIDField(default=uuid.uuid4)

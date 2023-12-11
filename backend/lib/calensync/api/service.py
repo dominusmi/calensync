@@ -32,7 +32,6 @@ def activate_calendar(calendar_db: Calendar):
 
         current_google_calendar.get_events(start_date, end_date)
 
-        # get all events for next 3 months for all calendars
         for active_calendar in active_calendars:
             active_calendar.get_events(start_date, end_date)
 

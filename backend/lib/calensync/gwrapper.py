@@ -17,12 +17,19 @@ from calensync.utils import get_api_url, utcnow
 logger = get_logger(__file__)
 
 
+def service_from_account(account: CalendarAccount):
+    creds = google.oauth2.credentials.Credentials.from_authorized_user_info(
+        account.credentials
+    )
+    return build('calendar', 'v3', credentials=creds)
+
+
 def delete_event(service, calendar_id: str, event_id: str):
     logger.info(f"Deleting event {event_id} in {calendar_id}")
     try:
         # todo: handle correctly
         service.events().delete(calendarId=calendar_id, eventId=event_id, sendNotifications=None,
-                                   sendUpdates=None).execute()
+                                sendUpdates=None).execute()
     except Exception as e:
         logger.error(f"Failed to delete event: {e}")
         pass
@@ -77,6 +84,34 @@ def find_calendar_from_event(calendars: List[GoogleCalendarWrapper], event: Even
     return next(filter(lambda x: x.google_id == event.calendar.platform_id, calendars), None)
 
 
+def get_events(service, google_id: str, start_date: datetime.datetime, end_date: datetime.datetime, query_kwargs: Dict):
+    start_date_str = datetime_to_google_time(start_date)
+    end_date_str = datetime_to_google_time(end_date)
+
+    # "UCT" is not a spelling mistake, it's the same as UTC
+    response = service.events().list(
+        calendarId=google_id, timeMin=start_date_str, timeMax=end_date_str, timeZone="UCT",
+        **query_kwargs
+    ).execute()
+
+    events = GoogleEvent.parse_event_list_response(response)
+
+    # handle recurrent events
+    recurrent_events = []
+    indexes = [i for i in range(len(events)) if events[i].recurrence is not None]
+    for index in sorted(indexes, reverse=True):
+        recurrent_events.append(events.pop(index))
+
+    for event in recurrent_events:
+        recurrent_response = service.events().instances(
+            calendarId=google_id, eventId=event.id,
+            timeMin=start_date_str, timeMax=end_date_str, timeZone="UCT"
+        ).execute()
+        events.extend(GoogleEvent.parse_event_list_response(recurrent_response))
+
+    return events
+
+
 class GoogleCalendarWrapper:
     user_db: User
     calendar_db: Calendar
@@ -106,9 +141,7 @@ class GoogleCalendarWrapper:
     def service(self):
         """ Lazy service loader with cache """
         if self._service is None:
-            creds = google.oauth2.credentials.Credentials.from_authorized_user_info(
-                self.calendar_db.account.credentials)
-            self._service = build('calendar', 'v3', credentials=creds)
+            self._service = service_from_account(self.calendar_db.account)
         return self._service
 
     @property
@@ -124,31 +157,7 @@ class GoogleCalendarWrapper:
         query_kwargs = {} if query_kwargs is None else query_kwargs
         start_date = start_date if start_date is not None else datetime.datetime.utcnow()
         end_date = end_date if end_date is not None else datetime.datetime.utcnow()
-
-        start_date_str = datetime_to_google_time(start_date)
-        end_date_str = datetime_to_google_time(end_date)
-
-        # "UCT" is not a spelling mistake, it's the same as UTC
-        response = self.service.events().list(
-            calendarId=self.google_id, timeMin=start_date_str, timeMax=end_date_str, timeZone="UCT",
-            **query_kwargs
-        ).execute()
-
-        events = GoogleEvent.parse_event_list_response(response)
-
-        # handle recurrent events
-        recurrent_events = []
-        indexes = [i for i in range(len(events)) if events[i].recurrence is not None]
-        for index in sorted(indexes, reverse=True):
-            recurrent_events.append(events.pop(index))
-
-        for event in recurrent_events:
-            recurrent_response = self.service.events().instances(
-                calendarId=self.google_id, eventId=event.id,
-                timeMin=start_date_str, timeMax=end_date_str, timeZone="UCT"
-            ).execute()
-            events.extend(GoogleEvent.parse_event_list_response(recurrent_response))
-
+        events = get_events(self.service, self.google_id, start_date, end_date, query_kwargs)
         self.events = events
         return self.events
 
@@ -165,7 +174,7 @@ class GoogleCalendarWrapper:
     def get_user_calendars(self, active=None):
         query = (
             Calendar.select().join(CalendarAccount).join(User)
-                .where(User.id == self.user_db.id, Calendar.id != self.calendar_db.id)
+            .where(User.id == self.user_db.id, Calendar.id != self.calendar_db.id)
         )
         if active is not None:
             query = query.where(Calendar.active == active)
@@ -224,8 +233,11 @@ class GoogleCalendarWrapper:
         self.calendar_db.save()
 
         original_ids = list([event.id for event in self.events_handler.events_to_add])
-        existing_event_ids = [e.source_id for e in
-                              Event.select(Event.source_id).where(Event.source_id.in_(original_ids))]
+        existing_event_ids = [
+            e.source_id for e in
+            Event.select(Event.source_id)
+            .where(Event.source_id.in_(original_ids), Event.calendar_id == self.calendar_db.id)
+        ]
 
         while self.events_handler.events_to_add:
             event = self.events_handler.events_to_add.pop()
@@ -237,6 +249,7 @@ class GoogleCalendarWrapper:
                 EventExtendedProperty.for_source_id(event.id)
             ]
 
+            # todo: should be inside a transaction
             response = insert_event(service=self.service, calendar_id=self.google_id,
                                     start=event.start, end=event.end, properties=properties)
 

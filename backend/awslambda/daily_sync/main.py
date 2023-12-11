@@ -1,11 +1,5 @@
-import datetime
-from typing import Iterable
-
-import peewee
-
-from calensync.database.model import User, Calendar, CalendarAccount
+from calensync.awslambda import daily_sync
 from calensync.database.utils import DatabaseSession
-from calensync.gwrapper import GoogleCalendarWrapper
 from calensync.log import get_logger
 from calensync.utils import get_env
 
@@ -18,4 +12,5 @@ def handler(event, context):
     the event for the furthest in the future, and synchronizes them
     """
     with DatabaseSession(get_env()) as db:
+        daily_sync.sync_user_calendars_by_date(db)
 
