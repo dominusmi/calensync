@@ -18,6 +18,7 @@ const Dashboard: React.FC = () => {
   const [accountsLoaded, setAccountsLoaded] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [daysLeft, setDaysLeft] = useState<number>(0);
 
   useEffect(() => {
     getLoggedUser().then((user) => {
@@ -28,7 +29,11 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     if(user != null && user!.customer_id == null){
-      toast_msg("You have {} days left on your trial", MessageKind.Info);
+      const currentDate = new Date();
+      const targetDate = user.date_created;
+      const timeDifference = targetDate.getTime() - currentDate.getTime();
+      const daysDifference = -1 * Math.ceil(timeDifference / (24 * 60 * 60 * 1000));
+      setDaysLeft(daysDifference);
     }
   }, [user]);
 
@@ -76,7 +81,7 @@ const Dashboard: React.FC = () => {
       { user != null && user.customer_id == null &&
         // show trial message
         <div className='container-sm p-0 mt-2'>
-          <p className='p-0 m-0'>You have { user.date_created.toLocaleDateString() } days left on your free trial. </p>
+          <p className='p-0 m-0'>You have { daysLeft } days left on your free trial. </p>
           <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
         </div>
       }
