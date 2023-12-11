@@ -24,20 +24,14 @@ def get_scopes():
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",
         'https://www.googleapis.com/auth/calendar.calendarlist.readonly',
-        # 'https://www.googleapis.com/auth/calendar.settings.readonly',
-        # 'https://www.googleapis.com/auth/calendar.freebusy',
-        'https://www.googleapis.com/auth/calendar.calendars',
-        'https://www.googleapis.com/auth/calendar.calendars.readonly',
         'https://www.googleapis.com/auth/calendar.events',
-        'https://www.googleapis.com/auth/calendar.events.owned',
-        'https://www.googleapis.com/auth/calendar.events.readonly'
     ]
 
 
 def get_google_sso_scopes():
     return [
         "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/userinfo.profile",
+        # "https://www.googleapis.com/auth/userinfo.profile",
         "openid"
     ]
 
