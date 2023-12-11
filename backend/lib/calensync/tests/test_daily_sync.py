@@ -102,3 +102,19 @@ def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2
         assert len(events) == 1
         events = list(Event.select().where(Event.calendar_id == calendar3.id, Event.source.is_null(False)))
         assert len(events) == 3
+
+
+def test_sync_user_calendars_by_date_multiple_users(db, user, account1, calendar1: Calendar, account2, calendar2: Calendar):
+    user2 = User(email="tes@t.io", is_admin=True, tos=datetime.datetime.now()).save_new()
+    account2_1 = CalendarAccount(user=user2, key="wat", credentials={}).save_new()
+    Calendar(account=account2_1, platform_id="platform2_1", name="name2_1", active=True).save_new()
+
+    with (
+        patch("calensync.awslambda.daily_sync.load_calendars") as load_calendars,
+        patch("calensync.awslambda.daily_sync.execute_update") as execute_update
+    ):
+        load_calendars.return_value = []
+        sync_user_calendars_by_date(db)
+        assert load_calendars.call_count == 2
+        assert execute_update.call_count == 2
+
