@@ -6,6 +6,8 @@ from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
+from calensync.database.model import Calendar
+
 
 class AbstractGoogleDate(BaseModel):
     def to_google_dict(self) -> Dict:
@@ -67,7 +69,7 @@ class EventExtendedProperty(BaseModel):
         return cls(key="calendar-id", value=value)
 
 
-class EventStatus(str, Enum):
+class EventStatus(Enum):
     confirmed = 'confirmed'
     tentative = 'tentative'
     cancelled = 'cancelled'
@@ -98,6 +100,10 @@ class GoogleEvent(BaseModel):
             return self.extendedProperties.get("private", {}).get("source-id")
         return None
 
+
+class AugmentedEvent:
+    google_event: GoogleEvent
+    source_calendar: Calendar
 
 def event_list_to_map(events: List[GoogleEvent]) -> Dict[str, GoogleEvent]:
     """ Given a list of events, returns a dictionary id->event """

@@ -50,63 +50,82 @@ def test_from_channel_id():
 
 
 @patch("calensync.gwrapper.GoogleCalendarWrapper.service", lambda *args, **kwargs: None)
-def test_solve_update():
-    with DatabaseSession("test"):
-        reset_db()
-        user = User(email="test1@test.com").save_new()
-        account = CalendarAccount(user=user, key="test1", credentials={}).save_new()
-        calendar1 = Calendar(account=account, platform_id="platform1", name="name1", active=True).save_new()
+def test_solve_update_one_active_calendar(db, account1, calendar1, account2, calendar2):
+    gcalendar1 = GoogleCalendarWrapper(calendar1)
+
+    # test no active calendars
+    with unittest.mock.patch(
+            "calensync.gwrapper.GoogleCalendarWrapper.get_updated_events") as get_updated_events:
+        gcalendar1.solve_update_in_calendar()
+        get_updated_events.assert_not_called()
+
+
+@patch("calensync.gwrapper.GoogleCalendarWrapper.service", lambda *args, **kwargs: None)
+def test_solve_update_two_active_calendar_tentative(db, account1, calendar1, account2, calendar2):
+    gcalendar1 = GoogleCalendarWrapper(calendar1)
+
+    # test one active calendar, tentative event
+    calendar2.active = True; calendar2.save()
+
+    now = datetime.datetime.utcnow()
+    now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
+
+    original_google_events = [
+        GoogleEvent(htmlLink="", start=now_google, end=now_google, id="123", created=now, updated=now,
+                    status=EventStatus.tentative)
+    ]
+    with unittest.mock.patch("calensync.gwrapper.GoogleCalendarWrapper.get_updated_events",
+                             return_value=original_google_events) as get_updated_events:
+        counter = gcalendar1.solve_update_in_calendar()
+        get_updated_events.assert_called_once()
+        assert counter == 0
+
+    # test one active calendar, confirmed (new) event
+    original_google_events = [
+        GoogleEvent(htmlLink="", start=now_google, end=now_google, id=str(uuid.uuid4()), created=now, updated=now,
+                    status=EventStatus.confirmed)
+    ]
+
+    def mock_google_insert_event(service, calendar_id, start, end, properties):
+        """ Mimics the inset event helper """
+        if calendar_id == calendar2.platform_id:
+            return {"id": str(uuid.uuid4())}
+
+    with (
+        unittest.mock.patch("calensync.gwrapper.insert_event", mock_google_insert_event),
+        unittest.mock.patch("calensync.gwrapper.GoogleCalendarWrapper.get_updated_events",
+                            return_value=original_google_events) as get_updated_events
+    ):
+        counter = gcalendar1.solve_update_in_calendar()
+        get_updated_events.assert_called_once()
+        assert counter == 1
+        event_db: Event = Event.get_or_none(
+            source=Event.select().where(Event.event_id == original_google_events[0].id)
+        )
+
+        assert event_db is not None
+        assert event_db.start == original_google_events[0].start.dateTime
+        assert event_db.end == original_google_events[0].end.dateTime
+        assert event_db.calendar == calendar2
+
+
+@patch("calensync.gwrapper.GoogleCalendarWrapper.service", lambda *args, **kwargs: None)
+def test_solve_update_two_active_calendar_confirmed(db, account1, calendar1, account2, calendar2):
+    def mock_google_insert_event(service, calendar_id, start, end, properties):
+        """ Mimics the inset event helper """
+        if calendar_id == calendar2.platform_id:
+            return {"id": str(uuid.uuid4())}
+
+    with unittest.mock.patch("calensync.gwrapper.insert_event") as insert_event:
+        insert_event.side_effect = mock_google_insert_event
+        calendar1.active = True; calendar1.save()
+        calendar2.active = True; calendar2.save()
+
         gcalendar1 = GoogleCalendarWrapper(calendar1)
+        gcalendar2 = GoogleCalendarWrapper(calendar2)
 
-        account = CalendarAccount(user=user, key="test2", credentials={}).save_new()
-        calendar2 = Calendar(account=account, platform_id="platform2", name="name2", active=False).save_new()
-
-        # test no active calendars
-        with unittest.mock.patch(
-                "calensync.gwrapper.GoogleCalendarWrapper.get_updated_events") as get_updated_events:
-            gcalendar1.solve_update_in_calendar()
-            get_updated_events.assert_not_called()
-
-        # test one active calendar, tentative event
-        calendar2.active = True
-        calendar2.save()
         now = datetime.datetime.utcnow()
         now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
-
-        original_google_events = [
-            GoogleEvent(htmlLink="", start=now_google, end=now_google, id="123", created=now, updated=now,
-                        status=EventStatus.tentative)
-        ]
-        with unittest.mock.patch("calensync.gwrapper.GoogleCalendarWrapper.get_updated_events",
-                                 return_value=original_google_events) as get_updated_events:
-            counter = gcalendar1.solve_update_in_calendar()
-            get_updated_events.assert_called_once()
-            assert counter == 0
-
-        # test one active calendar, confirmed (new) event
-        original_google_events = [
-            GoogleEvent(htmlLink="", start=now_google, end=now_google, id=str(uuid.uuid4()), created=now, updated=now,
-                        status=EventStatus.confirmed)
-        ]
-
-        def mock_google_insert_event(service, calendar_id, start, end, properties):
-            """ Mimics the inset event helper """
-            if calendar_id == calendar2.platform_id:
-                return {"id": "calendar-2-mock-event"}
-
-        with unittest.mock.patch("calensync.gwrapper.insert_event", mock_google_insert_event):
-            with unittest.mock.patch("calensync.gwrapper.GoogleCalendarWrapper.get_updated_events",
-                                     return_value=original_google_events) as get_updated_events:
-                counter = gcalendar1.solve_update_in_calendar()
-                get_updated_events.assert_called_once()
-                assert counter == 1
-                event_db: Event = Event.get_or_none(source_id=original_google_events[0].id)
-
-                assert event_db is not None
-                assert event_db.start == original_google_events[0].start.dateTime
-                assert event_db.end == original_google_events[0].end.dateTime
-                assert event_db.calendar == calendar2
-                assert event_db.event_id == "calendar-2-mock-event"
 
         # test one active calendar, confirmed (updated) event
         # This mock event has start=now, end=now+5min, whereas the db one has start=end=now
@@ -115,26 +134,30 @@ def test_solve_update():
             GoogleEvent(htmlLink="", start=earlier_than_now, end=now_google, id=str(uuid.uuid4()),
                         created=earlier_than_now.dateTime, updated=now, status=EventStatus.confirmed)
         ]
-        Event(calendar=calendar2, source_id=original_google_events[0].id, event_id=str(uuid.uuid4()), start=now,
-              end=now).save()
 
-        with unittest.mock.patch("calensync.gwrapper.update_event") as mock_update_event:
-            with unittest.mock.patch(
-                    "calensync.gwrapper.GoogleCalendarWrapper.get_updated_events",
-                    return_value=original_google_events) as get_updated_events:
+        event_db = Event(calendar=calendar2, source=None, event_id=original_google_events[0].id, start=earlier_than_now.to_datetime(),
+                         end=now).save()
 
-                counter = gcalendar1.solve_update_in_calendar()
-                get_updated_events.assert_called_once()
-                assert counter == 1
-                mock_update_event.assert_called_once()
-                event_db: List[Event] = list(Event.select().where(Event.source_id == original_google_events[0].id))
-                assert len(event_db) == 1
-                event_db = event_db[0]
-                assert event_db.start == original_google_events[0].start.dateTime
-                assert event_db.end == original_google_events[0].end.dateTime
+        Event(calendar=calendar1, source=event_db,
+              event_id=str(uuid.uuid4()), start=now, end=now).save()
+        with (
+            unittest.mock.patch("calensync.gwrapper.update_event") as mock_update_event,
+            unittest.mock.patch("calensync.gwrapper.GoogleCalendarWrapper.get_updated_events",
+                                return_value=original_google_events) as get_updated_events
+        ):
+            counter = gcalendar2.solve_update_in_calendar()
+            get_updated_events.assert_called_once()
+            assert counter == 1
+            mock_update_event.assert_called_once()
+            assert insert_event.call_count == 0
+            event_db: List[Event] = list(Event.select().where(Event.source == event_db, Event.calendar == calendar1))
+            assert len(event_db) == 1
+            event_db: Event = event_db[0]
+            assert event_db.start == original_google_events[0].start.dateTime
+            assert event_db.end == original_google_events[0].end.dateTime
 
 
-def test_insert_events_normal(db, user, calendar1, calendar2):
+def test_insert_events_normal(db, calendar1, calendar2):
     with patch("calensync.gwrapper.insert_event") as insert_event:
         with patch("calensync.gwrapper.GoogleCalendarWrapper.service"):
             insert_event.side_effect = lambda **kwargs: {"id": str(uuid.uuid4())}
@@ -147,13 +170,16 @@ def test_insert_events_normal(db, user, calendar1, calendar2):
                 GoogleEvent(htmlLink="", start=now_google, end=now_google, id="123", created=now, updated=now,
                             status=EventStatus.confirmed)
             ]
+            event_db = Event(calendar=calendar2, source=None, event_id=original_google_events[0].id, start=now,
+                             end=now).save_new()
+
             gcalendar.events_handler.add(original_google_events)
             gcalendar.insert_events()
             insert_event.assert_called_once()
-            assert Event.select().where(Event.source_id=="123").count() == 1
+            assert Event.select().where(Event.source == event_db, Event.calendar == calendar1).count() == 1
 
 
-def test_insert_events_already_exists(user, calendar1, calendar2):
+def test_insert_events_already_exists(calendar1, calendar2):
     with patch("calensync.gwrapper.insert_event") as insert_event:
         with patch("calensync.gwrapper.GoogleCalendarWrapper.service"):
             insert_event.side_effect = lambda **kwargs: {"id": str(uuid.uuid4())}
@@ -163,12 +189,42 @@ def test_insert_events_already_exists(user, calendar1, calendar2):
             now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
 
             original_google_events = [
-                GoogleEvent(htmlLink="", start=now_google, end=now_google, id="123", created=now, updated=now, status=EventStatus.confirmed),
-                GoogleEvent(htmlLink="", start=now_google, end=now_google, id="321", created=now, updated=now, status=EventStatus.confirmed)
+                GoogleEvent(htmlLink="", start=now_google, end=now_google, id="123", created=now, updated=now,
+                            status=EventStatus.confirmed),
             ]
             gcalendar.events_handler.add(original_google_events)
 
-            Event(calendar=calendar1, start=now, end=now, event_id="whatver", source_id="321").save_new()
+            event_db = Event(calendar=calendar2, start=now, end=now, event_id="123").save_new()
+            Event(calendar=calendar1, start=now, end=now, event_id=str(uuid.uuid4()), source=event_db).save_new()
+
             gcalendar.insert_events()
-            insert_event.assert_called_once()
-            assert Event.select().where(Event.source_id=="123").count() == 1
+            insert_event.assert_not_called()
+            assert Event.select().where(Event.event_id == "123").count() == 1
+            query, Source = Event.get_self_reference_query()
+            assert query.where(Source.event_id == "123").count() == 1
+
+
+def test_insert_events_source_doesnt_exist(calendar1, calendar2):
+    with (
+        patch("calensync.gwrapper.insert_event") as insert_event,
+        patch("calensync.gwrapper.GoogleCalendarWrapper.service")
+    ):
+        # shouldn't insert an event if there's no source as it's not supposed to happen
+        insert_event.side_effect = lambda **kwargs: {"id": str(uuid.uuid4())}
+        gcalendar = GoogleCalendarWrapper(calendar1)
+
+        now = datetime.datetime.utcnow()
+        now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
+
+        original_google_events = [
+            GoogleEvent(htmlLink="", start=now_google, end=now_google, id="123", created=now, updated=now,
+                        status=EventStatus.confirmed),
+        ]
+        gcalendar.events_handler.add(original_google_events)
+
+        gcalendar.insert_events()
+        insert_event.assert_called_once()
+        assert Event.select().where(Event.event_id == "123").count() == 0
+        query, Source = Event.get_self_reference_query()
+        assert query.where(Source.event_id == "123").count() == 0
+

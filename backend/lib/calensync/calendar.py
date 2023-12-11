@@ -90,11 +90,16 @@ class EventsModificationHandler:
 
     def __init__(self):
         self.events_to_add = []
+        self._added_ids = set([])
         self.events_to_update = []
         self.events_to_delete = []
 
     def add(self, events: List[GoogleEvent]):
-        self.events_to_add.extend(events)
+        for e in events:
+            if e.id in self._added_ids:
+                continue
+            self._added_ids.add(e.id)
+            self.events_to_add.append(e)
 
     def update(self, events: List[Tuple[Event, GoogleEvent]]):
         self.events_to_update.extend(events)

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import datetime
 import enum
 import uuid
 from abc import ABC
-from typing import Type, TypeVar, Iterable
+from typing import Type, TypeVar, Iterable, List
 
 import peewee
 from peewee import Model, AutoField, CharField, DateTimeField, ForeignKeyField, UUIDField, IntegerField
@@ -57,6 +56,17 @@ class BaseModel(Model, ISerializable):
 
     def refresh(self: TBaseModel) -> TBaseModel:
         return type(self).get(self._pk_expr())
+
+    def get_update_fields(self):
+        """
+        Given an instance, returns the fields to be used for an insert_many onconflict update
+        Can't find a good name for this function.
+        """
+        data = self.__data__
+        if "id" in data:
+            raise RuntimeError("If id is defined, it means this element already exists")
+        data.pop("date_created")
+        return data
 
     class Meta:
         database = db
@@ -122,11 +132,19 @@ class Event(BaseModel):
     calendar = ForeignKeyField(Calendar,
                                help_text="Calendar of this particular copy of the event (not the original calendar)",
                                backref="events")
-    source_id = CharField(null=False)
-    event_id = CharField(null=False)
+    source = ForeignKeyField('self', null=True, default=None)
+    event_id = CharField(null=False, unique=True)
     start = DateTimeField(null=False)
     end = DateTimeField(null=False)
     deleted = peewee.BooleanField(default=False)
+
+    @staticmethod
+    def get_self_reference_query():
+        SourceEvent = Event.alias()
+        return (
+            Event
+            .select().join(SourceEvent, on=(Event.source == SourceEvent.id))
+        ), SourceEvent
 
 
 class OAuthState(BaseModel):

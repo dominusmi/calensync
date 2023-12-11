@@ -79,7 +79,7 @@ def datetime_to_google_time(dt: datetime.datetime) -> str:
     return dt.isoformat() + "Z"
 
 
-def find_calendar_from_event(calendars: List[GoogleCalendarWrapper], event: Event):
+def find_calendar_from_event(calendars: List[GoogleCalendarWrapper], event: Event) -> GoogleCalendarWrapper:
     """ Given a list of calendars and a database event, return the calendar to which this event belongs """
     return next(filter(lambda x: x.google_id == event.calendar.platform_id, calendars), None)
 
@@ -232,11 +232,9 @@ class GoogleCalendarWrapper:
         self.calendar_db.last_inserted = utcnow()
         self.calendar_db.save()
 
-        original_ids = list([event.id for event in self.events_handler.events_to_add])
         existing_event_ids = [
-            e.source_id for e in
-            Event.select(Event.source_id)
-            .where(Event.source_id.in_(original_ids), Event.calendar_id == self.calendar_db.id)
+            e.source.event_id for e in
+            Event.select(Event.source).where(Event.source.is_null(False), Event.calendar == self.calendar_db)
         ]
 
         while self.events_handler.events_to_add:
@@ -253,7 +251,8 @@ class GoogleCalendarWrapper:
             response = insert_event(service=self.service, calendar_id=self.google_id,
                                     start=event.start, end=event.end, properties=properties)
 
-            Event(calendar=self.calendar_db, event_id=response["id"], source_id=event.id,
+            Event(calendar=self.calendar_db, event_id=response["id"],
+                  source=Event.select(Event.id).where(Event.event_id == event.id),
                   start=event.start.to_datetime(), end=event.end.to_datetime()).save()
 
     def update_events(self):
@@ -309,15 +308,30 @@ class GoogleCalendarWrapper:
         events = GoogleEvent.parse_event_list_response(response)
         return [event for event in events if event.source_id is None]
 
+    def save_events_in_database(self):
+        """
+        Used to save events that are currently in self.events in the database
+        """
+        rows = []
+        for event in self.events:
+            if event.status not in [EventStatus.tentative]:
+                rows.append(
+                    Event(calendar=self.calendar_db, event_id=event.id, start=event.start.to_datetime(),
+                          deleted=(event.status == EventStatus.cancelled),
+                          end=event.end.to_datetime()).get_update_fields()
+                )
+
+        Event.insert_many(rows).on_conflict(
+            conflict_target=[Event.event_id],
+            preserve=(Event.date_created,)
+
+        ).execute()
+
     @staticmethod
     def __solve_event_update(event: GoogleEvent, other_calendars: List[GoogleCalendarWrapper]) -> int:
         """
         Solves a single event update (by updating all other calendars where this event exists)
         """
-        if event.source_id is not None:
-            # todo: right now we simply ignore it
-            return 0
-
         counter_event_changed = 0
         if event.status == EventStatus.tentative:
             # this means an invitation was received, but not yet accepted, so nothing to do
@@ -328,6 +342,7 @@ class GoogleCalendarWrapper:
         elif (event.updated - event.created).seconds < 1:
             # new event, we don't need to check anything more
             logger.info(f"Add new event: {event}")
+
             for c in other_calendars:
                 c.events_handler.add([event])
                 c.insert_events()
@@ -336,19 +351,22 @@ class GoogleCalendarWrapper:
             # check status
             if event.status == EventStatus.cancelled:
                 # need to delete
-                fetched_events = list(Event.select().where(Event.source_id == event.id))
+                fetched_events = list(Event.select().where(Event.source.event_id == event.id))
                 for fetched_event in fetched_events:
                     cal = find_calendar_from_event(other_calendars, fetched_event)
-                    if cal is None: continue
+                    if cal is None:
+                        continue
                     cal.events_handler.delete([fetched_event])
                     cal.delete_events()
                     return 1
 
             elif event.status == EventStatus.confirmed:
-                # This means it's an udpated events. Therefore, all the user-associated calendars
+                # This means it's an updated events. Therefore, all the user-associated calendars
                 # must have a version of this event in the database, which we can find through the source_id
                 # We then update each of this events with the new time
-                query = Event.select().join(Calendar).where(Event.source_id == event.id)
+                query, Source = Event.get_self_reference_query()
+                query.where(Source.id == event.id)
+
                 fetched_events: List[Event] = peewee.prefetch(query, Calendar.select())
                 if fetched_events:
                     # If updated, then we should find the events in the database
@@ -396,6 +414,10 @@ class GoogleCalendarWrapper:
         if not events:
             logger.error(f"Something went wrong: no updates found for channel {self.calendar_db.channel_id}")
             return 0
+
+        # auto-update existing
+        self.events = events
+        self.save_events_in_database()
 
         for event in events:
             counter_event_changed += self.__solve_event_update(event, other_calendars)

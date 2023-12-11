@@ -31,6 +31,7 @@ def activate_calendar(calendar_db: Calendar):
         end_date = start_date + datetime.timedelta(days=days)
 
         current_google_calendar.get_events(start_date, end_date)
+        current_google_calendar.save_events_in_database()
 
         for active_calendar in active_calendars:
             active_calendar.get_events(start_date, end_date)
