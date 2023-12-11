@@ -99,6 +99,32 @@ Resources:
           Properties:
             ApiId: !Ref Api
 
+  DailySync:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "Calensync-${Env}-DailySync"
+      Runtime: python3.9
+      CodeUri: awslambda/daily_sync/
+      Handler: main.handler
+      Timeout: 60
+      MemorySize: 512
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref RdsPolicy
+        - !Ref GetSecretsPolicy
+      Layers:
+        - !Ref CalensyncLayer
+      Environment:
+        Variables:
+          ENV: !Ref Env
+      Events:
+        DailySyncEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 1 * * ? *) # every day at 1AM
+            Name: !Sub "Calensync-${Env}-DailySyncCron"
+            Description: Trigger Lambda every hour
 
 #### So this is if you want to do things well, all nicely separated lambdas.. but it's
 #### annoying to maintain so will be resolved if this grows big enough
