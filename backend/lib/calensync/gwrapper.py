@@ -287,10 +287,9 @@ class GoogleCalendarWrapper:
             if event.deleted:
                 continue
             if event.source is not None:
-                logger.info("Would've delete a source event")
-                continue
+                # we only delete non-source events from actual calendar
+                delete_event(self.service, self.google_id, event.event_id)
 
-            delete_event(self.service, self.google_id, event.event_id)
             if include_database:
                 event.delete_instance()
             else:
