@@ -126,6 +126,7 @@ class Calendar(UUIDBaseModel):
                 ((Event.calendar_id == self.id) & (Event.source.is_null(False)) & (Event.deleted == False)) |
                 ((Source.calendar_id == self.id) & (Event.deleted == False)),
             )
+            .order_by(Event.source.desc(nulls='LAST'))
         )
         return events
 
