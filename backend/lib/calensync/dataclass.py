@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel
@@ -101,10 +101,6 @@ class GoogleEvent(BaseModel):
         return None
 
 
-class AugmentedEvent:
-    google_event: GoogleEvent
-    source_calendar: Calendar
-
 def event_list_to_map(events: List[GoogleEvent]) -> Dict[str, GoogleEvent]:
     """ Given a list of events, returns a dictionary id->event """
     return {e.id: e for e in events}
@@ -115,3 +111,17 @@ def event_list_to_source_id_map(events: List[GoogleEvent]) -> Dict[str, GoogleEv
     return {e.source_id: e for e in events if e.source_id is not None}
 
 
+class QueueEvent(IntEnum):
+    GOOGLE_WEBHOOK = 1
+
+
+class GoogleWebhookEvent(BaseModel):
+    channel_id: str
+    token: str
+    state: str
+    resource_id: Optional[str]
+
+
+class SQSEvent(BaseModel):
+    kind: QueueEvent
+    data: Dict

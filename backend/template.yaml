@@ -31,6 +31,13 @@ Resources:
           - "*"
         MaxAge: 300
 
+  SQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "Calensync-${Env}-queue"
+      DelaySeconds: 0
+      VisibilityTimeout: 30
+      MessageRetentionPeriod: 61
 
   RdsPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -93,6 +100,7 @@ Resources:
           ENV: !Ref Env
           FRONTEND: !Ref FrontendUri
           API_ENDPOINT: !Ref ApiEndpoint
+          SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
       Events:
         read:
           Type: HttpApi

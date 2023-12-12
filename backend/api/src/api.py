@@ -9,6 +9,8 @@ from calensync.api.endpoints import *
 from calensync.database.utils import DatabaseSession
 from calensync.utils import get_paddle_token
 
+from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent
+
 app = FastAPI(title="Calensync")  # Here is the magic
 
 
@@ -20,7 +22,12 @@ def post__webhook(event: Request):
     state = event.headers["X-Goog-Resource-State"]
     resource_id = event.headers.get("X-Goog-Resource-Id")
     with DatabaseSession(os.environ["ENV"]) as db:
-        received_webhook(channel_id, state, resource_id, token, db)
+        queue_url = os.environ["SQS_QUEUE_URL"]
+        session = boto3.session.Session()
+        client = session.client("sqs")
+        webhook_event = GoogleWebhookEvent(channel_id=channel_id, token=token, state=state, resource_id=resource_id)
+        sqs_event = SQSEvent(kind=QueueEvent.GOOGLE_WEBHOOK, data=webhook_event)
+        client.send_message(QueueUrl=queue_url, MessageBody=sqs_event.json())
 
 
 @app.get("/paddle/verify_transaction")
