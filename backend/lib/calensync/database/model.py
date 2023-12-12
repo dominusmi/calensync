@@ -118,7 +118,7 @@ class Calendar(UUIDBaseModel):
 
     def get_synced_events(self) -> Iterable['Event']:
         Source = Event.alias()
-        events = (
+        events = peewee.prefetch(
             Event
             .select()
             .join(Source, on=(Event.source == Source.id), join_type=peewee.JOIN.LEFT_OUTER)
@@ -126,7 +126,9 @@ class Calendar(UUIDBaseModel):
                 (Event.calendar_id == self.id) |
                 (Source.calendar_id == self.id),
             )
-            .order_by(Event.source.desc(nulls='LAST'))
+            .order_by(Event.source.desc(nulls='LAST')),
+            Calendar.select().join(Source),
+            Calendar.select().join(Event)
         )
         return events
 

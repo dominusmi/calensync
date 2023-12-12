@@ -56,7 +56,15 @@ def deactivate_calendar(calendar: Calendar):
     current_google_calendar.calendar_db.active = False
     current_google_calendar.calendar_db.save()
     events = list(current_google_calendar.calendar_db.get_synced_events())
-    logger.info(f"Found {len(events)} to delete for {calendar.uuid}")
-    current_google_calendar.events_handler.delete(events)
-    current_google_calendar.delete_events(include_database=True)
-    current_google_calendar.delete_watch()
+    groups = {}
+    for e in events:
+        if (cal_id := e.calendar.id) not in groups:
+            groups[cal_id] = []
+        groups[cal_id].append(e)
+
+    for events in groups.values():
+        logger.info(f"Found {len(events)} to delete for {events[0].calendar.uuid}")
+        wrapper = GoogleCalendarWrapper(events[0].calendar)
+        wrapper.events_handler.delete(events)
+        wrapper.delete_events(include_database=True)
+        wrapper.delete_watch()

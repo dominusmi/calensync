@@ -1,10 +1,6 @@
-import datetime
 import json
-import os
-import random
 import unittest.mock
 from unittest.mock import patch
-import uuid
 from typing import List
 
 from calensync.database.model import Event
@@ -23,14 +19,6 @@ def _list_function(calendarId, timeMin, timeMax, timeZone):
     execute_object = Mock()
     execute_object.execute = lambda: data
     return execute_object
-
-def uuid4():
-    return str(uuid.uuid4())
-
-def random_dates():
-    start = datetime.datetime.now() + datetime.timedelta(days=random.randint(0, 15), hours=random.randint(0, 24))
-    end = start + datetime.timedelta(hours=random.randint(0, 2), minutes=random.randint(30, 59))
-    return start, end
 
 
 def test_google_wrapper_class(db, calendar1):
