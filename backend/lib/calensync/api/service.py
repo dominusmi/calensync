@@ -14,6 +14,8 @@ def activate_calendar(calendar_db: Calendar):
     if calendar_db.active:
         logger.info("Calendar is already active")
         return
+    calendar_db.active = True
+    calendar_db.save()
 
     current_google_calendar = GoogleCalendarWrapper(calendar_db)
 
@@ -23,26 +25,26 @@ def activate_calendar(calendar_db: Calendar):
 
     active_calendars = [GoogleCalendarWrapper(c) for c in calendars]
     logger.info(f"Found {len(active_calendars)} active calendars")
-    if len(active_calendars) > 0:
-        start_date = datetime.datetime.utcnow()
 
-        # number of days to sync in the future
-        days = 5 if is_local() else 30
-        end_date = start_date + datetime.timedelta(days=days)
+    start_date = datetime.datetime.utcnow()
 
-        current_google_calendar.get_events(start_date, end_date)
-        current_google_calendar.save_events_in_database()
+    # number of days to sync in the future
+    days = 5 if is_local() else 30
+    end_date = start_date + datetime.timedelta(days=days)
 
-        for active_calendar in active_calendars:
-            active_calendar.get_events(start_date, end_date)
+    current_google_calendar.get_events(start_date, end_date)
+    current_google_calendar.save_events_in_database()
 
-        # insert all events where needed
-        for other_google_calendar in active_calendars:
-            current_google_calendar.events_handler.add(other_google_calendar.events)
-            other_google_calendar.events_handler.add(current_google_calendar.events)
-            other_google_calendar.insert_events()
+    for active_calendar in active_calendars:
+        active_calendar.get_events(start_date, end_date)
 
-        current_google_calendar.insert_events()
+    # insert all events where needed
+    for other_google_calendar in active_calendars:
+        current_google_calendar.events_handler.add(other_google_calendar.events)
+        other_google_calendar.events_handler.add(current_google_calendar.events)
+        other_google_calendar.insert_events()
+
+    current_google_calendar.insert_events()
 
     # add watch
     logger.info("Creating watch")

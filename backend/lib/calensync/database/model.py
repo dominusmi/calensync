@@ -123,8 +123,8 @@ class Calendar(UUIDBaseModel):
             .select()
             .join(Source, on=(Event.source == Source.id), join_type=peewee.JOIN.LEFT_OUTER)
             .where(
-                ((Event.calendar_id == self.id) & (Event.source.is_null(False)) & (Event.deleted == False)) |
-                ((Source.calendar_id == self.id) & (Event.deleted == False)),
+                (Event.calendar_id == self.id) |
+                (Source.calendar_id == self.id),
             )
             .order_by(Event.source.desc(nulls='LAST'))
         )

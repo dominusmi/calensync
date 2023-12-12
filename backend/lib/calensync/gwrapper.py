@@ -25,13 +25,12 @@ def service_from_account(account: CalendarAccount):
 
 
 def delete_event(service, calendar_id: str, event_id: str):
-    logger.info(f"Deleting event {event_id} in {calendar_id}")
     try:
         # todo: handle correctly
         service.events().delete(calendarId=calendar_id, eventId=event_id, sendNotifications=None,
                                 sendUpdates=None).execute()
     except Exception as e:
-        logger.error(f"Failed to delete event: {e}")
+        logger.warn(f"Failed to delete event: {e}")
         pass
 
 
@@ -288,6 +287,7 @@ class GoogleCalendarWrapper:
                 continue
             if event.source is not None:
                 # we only delete non-source events from actual calendar
+                logger.info(f"Deleting event {event.id} in {self.google_id} from source {event.source.id}")
                 delete_event(self.service, self.google_id, event.event_id)
 
             if include_database:

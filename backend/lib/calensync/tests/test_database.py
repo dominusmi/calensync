@@ -77,6 +77,6 @@ def test_get_synced(db, account1, account2, calendar1: Calendar, calendar2: Cale
     copy2to1 = Event(calendar=calendar2, event_id=uuid4(), start=start, end=end, source=source2_1).save_new()
 
     events = list(calendar1.get_synced_events())
-    assert len(events) == 2
+    assert len(events) == 6
     assert next(filter(lambda x: x.event_id == copy1to2.event_id, events))
     assert next(filter(lambda x: x.event_id == copy1to3.event_id, events))
