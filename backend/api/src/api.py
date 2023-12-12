@@ -4,7 +4,7 @@ import requests
 from fastapi import FastAPI, Request, Query, Header, Body
 from mangum import Mangum
 
-from calensync.api.common import format_response
+from calensync.api.common import format_response, ApiError
 from calensync.api.endpoints import *
 from calensync.database.utils import DatabaseSession
 from calensync.utils import get_paddle_token
@@ -12,8 +12,8 @@ from calensync.utils import get_paddle_token
 app = FastAPI(title="Calensync")  # Here is the magic
 
 
-@format_response
 @app.post("/webhook")
+@format_response
 def post__webhook(event: Request):
     channel_id = event.headers["X-Goog-Channel-Id"]
     token = event.headers["X-Goog-Channel-Token"]
