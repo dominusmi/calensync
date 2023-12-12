@@ -17,3 +17,5 @@ frontend/build*
 build
 /backend/samconfig.toml
 /backend/docker/vol/
+/backend/api/src/calensync/
+/backend/awslambda/**/calensync/

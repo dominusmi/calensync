@@ -68,7 +68,7 @@ Resources:
     Properties:
       LayerName: calensync-python-layer
       Description: Calensync layer
-      ContentUri: layer.zip
+      ContentUri: layer/layer.zip
       CompatibleRuntimes:
         - python3.9
 

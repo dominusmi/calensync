@@ -1,0 +1,9 @@
+FROM public.ecr.aws/sam/build-python3.9:1.104.0-x86_64
+COPY lambda_requirements.txt /lambda_requirements.txt
+RUN mkdir /opt/layer && mkdir /opt/layer/python
+RUN pip3 install -r /lambda_requirements.txt -t /opt/layer/python
+RUN cd /opt/layer && zip -r layer.zip *
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

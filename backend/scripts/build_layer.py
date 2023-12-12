@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import time
 import zipfile
 from pathlib import Path
 
@@ -24,15 +25,9 @@ if __name__ == "__main__":
         shutil.rmtree(layer_dir)
     layer_dir.mkdir()
 
-    print("Installing dependencies")
-    subprocess.run(f"pip3 install -r api/requirements.txt -t {layer_dir.absolute()}", cwd=root_dir, shell=True)
-    subprocess.run(f"pip3 install . -t {layer_dir.absolute()}", cwd=root_dir.joinpath("lib"), shell=True)
+    subprocess.run("docker build -t calensync_python_builder . ", cwd=root_dir.joinpath("docker"), shell=True)
+    subprocess.run(f"docker run --rm -v {root_dir}/layer:/opt/tmp calensync_python_builder",
+                   shell=True)
 
-    print("Zipping")
-    zip_directory(layer_dir, root_dir.joinpath("layer.zip"))
-
-    # make sure to have AWS credentials in global env
-    # print("Saving to S3")
-    # key = f"s3://calensync/deployment/layer_{datetime.datetime.now().isoformat()}.zip"
-    # subprocess.run(f"aws s3 cp layer.zip {key}", cwd=root_dir, shell=True)
-    # subprocess.run(f"aws s3 cp {key} s3://calensync/deployment/layer.zip", cwd=root_dir, shell=True)
+    subprocess.run(f"rsync -av --exclude='tests/' {root_dir}/lib/calensync {root_dir}/awslambda/daily_sync", shell=True)
+    subprocess.run(f"rsync -av --exclude='tests/' {root_dir}/lib/calensync {root_dir}/api/src/", shell=True)
