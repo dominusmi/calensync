@@ -282,7 +282,8 @@ class GoogleCalendarWrapper:
         if self.calendar_db.is_read_only:
             return
 
-        for event in self.events_handler.events_to_delete:
+        while self.events_handler.events_to_delete:
+            event = self.events_handler.events_to_delete.pop()
             if event.deleted:
                 continue
             if event.source is not None:

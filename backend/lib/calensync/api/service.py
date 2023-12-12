@@ -62,9 +62,24 @@ def deactivate_calendar(calendar: Calendar):
             groups[cal_id] = []
         groups[cal_id].append(e)
 
-    for events in groups.values():
-        logger.info(f"Found {len(events)} to delete for {events[0].calendar.uuid}")
-        wrapper = GoogleCalendarWrapper(events[0].calendar)
-        wrapper.events_handler.delete(events)
+    # need to do two passes, one to remove all the non-source, and then remove the source
+    def _delete_events(events, is_source):
+        if is_source:
+            copied_events = list(filter(lambda x: x.source is None, events))
+        else:
+            copied_events = list(filter(lambda x: x.source is not None, events))
+
+        if not copied_events:
+            return
+        logger.info(f"Found {len(copied_events)} to delete for {copied_events[0].calendar.uuid}")
+        wrapper = GoogleCalendarWrapper(copied_events[0].calendar)
+        wrapper.events_handler.delete(copied_events)
         wrapper.delete_events(include_database=True)
-        wrapper.delete_watch()
+
+    for events in groups.values():
+        _delete_events(events, is_source=False)
+
+    for events in groups.values():
+        _delete_events(events, is_source=True)
+
+    current_google_calendar.delete_watch()

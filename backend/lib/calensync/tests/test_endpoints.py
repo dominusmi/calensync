@@ -20,12 +20,14 @@ def test_get_calendar_invalid_user(db, calendar1):
         get_calendar(user, str(calendar1.uuid), db)
 
 
-def test_deactivate_calendars(db, calendar1, calendar2):
+def test_deactivate_calendars(db, calendar1, account2, calendar2):
     with (
         patch("calensync.gwrapper.delete_event") as delete_event,
         patch("calensync.gwrapper.GoogleCalendarWrapper.service") as service
     ):
         service.return_value = "fake"
+
+        calendar3 = Calendar(account=account2, platform_id="p3").save_new()
 
         start, end = random_dates()
         source1_1 = Event(calendar=calendar1, event_id=uuid4(), start=start, end=end).save_new()
@@ -34,12 +36,14 @@ def test_deactivate_calendars(db, calendar1, calendar2):
         start, end = random_dates()
         source2_1 = Event(calendar=calendar2, event_id=uuid4(), start=start, end=end).save_new()
         event2to1 = Event(calendar=calendar1, source=source2_1, event_id=uuid4(), start=start, end=end).save_new()
+        event2to3 = Event(calendar=calendar3, source=source2_1, event_id=uuid4(), start=start, end=end).save_new()
 
         deactivate_calendar(calendar2)
 
-        assert delete_event.call_count == 2
+        assert delete_event.call_count == 3
         assert next(filter(lambda x: x.args[2] == event1to2.event_id, delete_event.call_args_list))
         assert next(filter(lambda x: x.args[2] == event2to1.event_id, delete_event.call_args_list))
+        assert next(filter(lambda x: x.args[2] == event2to3.event_id, delete_event.call_args_list))
 
         calendar2 = calendar2.refresh()
         assert not calendar2.active
@@ -48,5 +52,6 @@ def test_deactivate_calendars(db, calendar1, calendar2):
         assert Event.get_or_none(id=event1to2) is None
         assert Event.get_or_none(id=source2_1) is None
         assert Event.get_or_none(id=event2to1) is None
+        assert Event.get_or_none(id=event2to3) is None
 
 
