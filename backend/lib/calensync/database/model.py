@@ -117,11 +117,17 @@ class Calendar(UUIDBaseModel):
         return self.name if self.name is not None else self.platform_id
 
     def get_synced_events(self) -> Iterable['Event']:
-        return (
+        Source = Event.alias()
+        events = (
             Event
-            .select().join(Calendar)
-            .where(Calendar.id == self.id)
-        ).execute()
+            .select()
+            .join(Source, on=(Event.source == Source.id), join_type=peewee.JOIN.LEFT_OUTER)
+            .where(
+                ((Event.calendar_id == self.id) & (Event.source.is_null(False)) & (Event.deleted == False)) |
+                ((Source.calendar_id == self.id) & (Event.deleted == False)),
+            )
+        )
+        return events
 
     @property
     def is_read_only(self) -> bool:

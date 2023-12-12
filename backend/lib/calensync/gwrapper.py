@@ -286,6 +286,9 @@ class GoogleCalendarWrapper:
         for event in self.events_handler.events_to_delete:
             if event.deleted:
                 continue
+            if event.source is not None:
+                logger.info("Would've delete a source event")
+                continue
 
             delete_event(self.service, self.google_id, event.event_id)
             if include_database:
@@ -351,7 +354,8 @@ class GoogleCalendarWrapper:
             # check status
             if event.status == EventStatus.cancelled:
                 # need to delete
-                fetched_events = list(Event.select().where(Event.source.event_id == event.id))
+                query, Source = Event.get_self_reference_query()
+                fetched_events = list(query.where(Source.event_id == event.id))
                 for fetched_event in fetched_events:
                     cal = find_calendar_from_event(other_calendars, fetched_event)
                     if cal is None:
