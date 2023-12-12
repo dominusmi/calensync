@@ -31,7 +31,7 @@ const AddCalendarAccount: React.FC = () => {
                     <div className="gsi-material-button-state"></div>
                     <div className="gsi-material-button-content-wrapper">
                         <div className="gsi-material-button-icon" >
-                            <svg version="1.1" id="Livello_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 200 200" enable-background="new 0 0 200 200" xmlSpace="preserve">
+                            <svg version="1.1" id="Livello_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 200 200" enableBackground="new 0 0 200 200" xmlSpace="preserve">
                                 <g>
                                     <g transform="translate(3.75 3.75)">
                                         <path fill="#FFFFFF" d="M148.882,43.618l-47.368-5.263l-57.895,5.263L38.355,96.25l5.263,52.632l52.632,6.579l52.632-6.579    l5.263-53.947L148.882,43.618z" />

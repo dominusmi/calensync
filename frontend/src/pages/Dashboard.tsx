@@ -12,6 +12,50 @@ import { toast_msg } from '../components/Toast';
 import Layout from '../components/Layout';
 import { MessageKind, setMessage } from '../utils/common';
 
+interface Window {
+  Tally: any; // Adjust the type accordingly based on the Tally library
+  TallyConfig: any;
+}
+
+
+
+const TallyComponent = () => {
+  useEffect(() => {
+    // Dynamically create and append the script tag
+    const script = document.createElement('script');
+    script.src = 'https://tally.so/widgets/embed.js';
+    script.async = true;
+    document.head.appendChild(script);
+
+    let win = (window as unknown) as Window;
+
+    // Set up Tally configuration after script has loaded
+    script.onload = () => {
+      const options: any = {
+        emoji: {
+          text: '👋',
+          animation: 'wave'
+        },
+        open: {
+          trigger: 'time',
+          ms: 5000
+        }
+      };
+
+      // Initialize Tally popup
+      console.log(win.Tally)
+      const tallyPopup = new win.Tally.openPopup("nroQgv", options);
+    };
+  }, []);
+
+  return (
+    <div id="tally-popup-container">
+      {/* This div will be replaced by Tally's popup */}
+    </div>
+  );
+};
+
+
 const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -28,7 +72,7 @@ const Dashboard: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if(user != null && user!.customer_id == null){
+    if (user != null && user!.customer_id == null) {
       const currentDate = new Date();
       const targetDate = user.date_created;
       const timeDifference = targetDate.getTime() - currentDate.getTime();
@@ -41,9 +85,9 @@ const Dashboard: React.FC = () => {
     let isMounted = true;
 
     const fetchData = async () => {
-        const accountsData = await fetchAccountsData();
-        setAccounts(accountsData);
-        setAccountsLoaded(true);
+      const accountsData = await fetchAccountsData();
+      setAccounts(accountsData);
+      setAccountsLoaded(true);
     };
 
     if (loading) {
@@ -78,10 +122,10 @@ const Dashboard: React.FC = () => {
   return (
     <Layout>
       {loading && <LoadingOverlay />}
-      { user != null && user.customer_id == null &&
+      {user != null && user.customer_id == null &&
         // show trial message
         <div className='container-sm p-0 mt-2'>
-          <p className='p-0 m-0'>You have { daysLeft } days left on your free trial. </p>
+          <p className='p-0 m-0'>You have {daysLeft} days left on your free trial. </p>
           <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
         </div>
       }
@@ -97,6 +141,7 @@ const Dashboard: React.FC = () => {
         </div>
       }
       <AddCalendarAccount />
+      <TallyComponent/>
     </Layout>
   );
 };
