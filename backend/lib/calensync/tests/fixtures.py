@@ -1,4 +1,7 @@
+import datetime
 import functools
+import random
+import uuid
 
 from _pytest.fixtures import fixture
 
@@ -45,3 +48,13 @@ def account2(db, user):
 @fixture
 def calendar2(db, account2):
     return Calendar(account=account2, platform_id="platform2", name="name2", active=False).save_new()
+
+
+def uuid4():
+    return str(uuid.uuid4())
+
+
+def random_dates():
+    start = datetime.datetime.now() + datetime.timedelta(days=random.randint(0, 15), hours=random.randint(0, 24))
+    end = start + datetime.timedelta(hours=random.randint(0, 2), minutes=random.randint(30, 59))
+    return start, end
