@@ -16,3 +16,4 @@ frontend/build*
 /backend/.aws-sam/
 build
 /backend/samconfig.toml
+/backend/docker/vol/
