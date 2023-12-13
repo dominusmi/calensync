@@ -8,6 +8,7 @@ import google_auth_oauthlib.flow
 import peewee
 from google.oauth2.credentials import Credentials
 
+from calensync import dataclass
 from calensync.api.common import ApiError, RedirectResponse
 from calensync.api.service import activate_calendar, deactivate_calendar
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session
@@ -133,13 +134,13 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str, 
         return
 
     if calendar is None:
-        logger.error(f"Received webhook for inexistent calendar with channel {channel_id}")
+        logger.warn(f"Received webhook for inexistent calendar with channel {channel_id}")
         return
 
     calendar.last_received = utcnow()
     calendar.save()
 
-    if (utcnow() - calendar.last_inserted.replace(tzinfo=datetime.timezone.utc)).seconds > 15:
+    if (utcnow() - calendar.last_inserted.replace(tzinfo=datetime.timezone.utc)).seconds > 1:
         # process the event immediately
         wrapper = GoogleCalendarWrapper(calendar)
         wrapper.solve_update_in_calendar()
@@ -264,30 +265,23 @@ def refresh_calendars(user: User, account_id: str, db: peewee.Database):
     return [{"uuid": c.uuid, "name": c.friendly_name, "active": c.active} for c in calendars_db]
 
 
-def patch_calendar(user: User, calendar_id: str, body: Dict, db: peewee.Database):
-    # Type can be activate, deactivate
-    kind = body.get("kind")
-    if kind is None:
-        raise ApiError("Invalid body")
-
+def patch_calendar(user_id: int, calendar_uuid: str, kind: dataclass.CalendarStateEnum, db: peewee.Database):
     query = (
         Calendar.select().join(CalendarAccount).join(User)
-        .where(User.id == user.id, Calendar.uuid == calendar_id)
+        .where(User.id == user_id, Calendar.uuid == calendar_uuid)
     )
     calendars: List[Calendar] = peewee.prefetch(query, CalendarAccount)
 
     if len(calendars) == 0:
         raise ApiError("The calendar does not exist or you dot not have permissions to access it")
 
-    if kind == "activate":
+    if kind == dataclass.CalendarStateEnum.ACTIVE:
         logger.info(f"Activating {calendars[0].uuid}")
         return activate_calendar(calendars[0])
 
-    elif kind == "deactivate":
+    elif kind == dataclass.CalendarStateEnum.INACTIVE:
         logger.info(f"De-activating {calendars[0].uuid}")
         return deactivate_calendar(calendars[0])
-
-    raise ApiError("Invalid request")
 
 
 def delete_account(user: User, account_id: str):

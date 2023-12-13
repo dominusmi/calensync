@@ -1,14 +1,12 @@
 import boto3
-import fastapi.responses
-import requests
 from fastapi import FastAPI, Request, Query, Header, Body
 from mangum import Mangum
+from pydantic import BaseModel
 
-from calensync.api.common import format_response, ApiError
+from calensync import sqs
+from calensync.api.common import format_response
 from calensync.api.endpoints import *
 from calensync.database.utils import DatabaseSession
-from calensync.utils import get_paddle_token
-
 from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent
 
 app = FastAPI(title="Calensync")  # Here is the magic
@@ -22,12 +20,9 @@ def post__webhook(event: Request):
     state = event.headers["X-Goog-Resource-State"]
     resource_id = event.headers.get("X-Goog-Resource-Id")
     with DatabaseSession(os.environ["ENV"]) as db:
-        queue_url = os.environ["SQS_QUEUE_URL"]
-        session = boto3.session.Session()
-        client = session.client("sqs")
         webhook_event = GoogleWebhookEvent(channel_id=channel_id, token=token, state=state, resource_id=resource_id)
         sqs_event = SQSEvent(kind=QueueEvent.GOOGLE_WEBHOOK, data=webhook_event)
-        client.send_message(QueueUrl=queue_url, MessageBody=sqs_event.json())
+        sqs.send_event(boto3.session.Session(), sqs_event.json())
 
 
 @app.get("/paddle/verify_transaction")
@@ -107,15 +102,29 @@ def post__tos(authorization: str = Header(None)):
         return accept_tos(user, db)
 
 
+class PatchCalendarBody(BaseModel):
+    kind: str
+
+
 @app.patch('/calendars/{calendar_id}')
 @format_response
-def patch__calendar(calendar_id: str, authorization: str = Header(None), body: Dict[str, str] = Body(...)):
+def patch__calendar(calendar_id: str, body: PatchCalendarBody, authorization: str = Header(None)):
     """
     Update a calendar. Used to set a calendar as active.
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        return patch_calendar(user, calendar_id, body, db)
+        event = dataclass.UpdateCalendarStateEvent(kind=dataclass.CalendarStateEnum.ACTIVE, calendar_id=calendar_id,
+                                                   user_id=user.id)
+        if body.kind == "activate":
+            pass
+        elif body.kind == "deactivate":
+            event.kind = dataclass.CalendarStateEnum.INACTIVE
+        else:
+            raise ApiError()
+
+        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.UPDATE_CALENDAR_STATE, data=event)
+        sqs.send_event(boto3.Session(), sqs_event.json())
 
 
 @app.delete('/calendars/{account_id}')

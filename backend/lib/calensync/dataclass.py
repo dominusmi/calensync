@@ -113,6 +113,7 @@ def event_list_to_source_id_map(events: List[GoogleEvent]) -> Dict[str, GoogleEv
 
 class QueueEvent(IntEnum):
     GOOGLE_WEBHOOK = 1
+    UPDATE_CALENDAR_STATE = 2
 
 
 class GoogleWebhookEvent(BaseModel):
@@ -120,6 +121,17 @@ class GoogleWebhookEvent(BaseModel):
     token: str
     state: str
     resource_id: Optional[str]
+
+
+class CalendarStateEnum(IntEnum):
+    ACTIVE = 1
+    INACTIVE = 2
+
+
+class UpdateCalendarStateEvent(BaseModel):
+    kind: CalendarStateEnum
+    calendar_id: str
+    user_id: int
 
 
 class SQSEvent(BaseModel):
