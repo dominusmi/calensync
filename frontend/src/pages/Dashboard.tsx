@@ -1,16 +1,14 @@
 // Home.tsx
 
 import React, { useEffect, useState } from 'react';
-import verify_session_id, { VerifySession, get_session_id, getLoggedUser, User } from '../utils/session'; // Adjust the import path
+import { get_session_id, getLoggedUser, User } from '../utils/session'; // Adjust the import path
 import API, { PUBLIC_URL } from '../utils/const';
 import AccountCard, { Account } from '../components/AccountCard';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import LoadingOverlay from '../components/LoadingOverlay';
 import AddCalendarAccount from '../components/AddCalendarAccount';
 import { toast_msg } from '../components/Toast';
 import Layout from '../components/Layout';
-import { MessageKind, setMessage } from '../utils/common';
+import { MessageKind } from '../utils/common';
 
 interface Window {
   Tally: any; // Adjust the type accordingly based on the Tally library
@@ -74,9 +72,9 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (user != null && user!.customer_id == null) {
       const currentDate = new Date();
-      const targetDate = user.date_created;
-      const timeDifference = targetDate.getTime() - currentDate.getTime();
-      const daysDifference = -1 * Math.ceil(timeDifference / (24 * 60 * 60 * 1000));
+      const targetDate = user.date_created.getTime() + 24 * 60 * 60 * 1000 * 7;
+      const timeDifference = targetDate - currentDate.getTime();
+      const daysDifference = Math.ceil(timeDifference / (24 * 60 * 60 * 1000));
       setDaysLeft(daysDifference);
     }
   }, [user]);
