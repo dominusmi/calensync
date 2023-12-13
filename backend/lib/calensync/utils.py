@@ -2,6 +2,8 @@ import datetime
 import json
 import os
 
+import boto3
+
 
 def get_env():
     return os.environ["ENV"]
@@ -51,8 +53,19 @@ def utcnow():
     return datetime.datetime.now(datetime.timezone.utc)
 
 
-def get_paddle_token():
-    return os.environ["PADDLE_TOKEN"]
+def get_paddle_token(session: boto3.Session = None):
+    env = get_env()
+    if env == "test" or env == "local":
+        return os.environ["PADDLE_TOKEN"]
+
+    if (token := os.environ.get("PADDLE_TOKEN")) is not None:
+        return token
+    client = session.client("secretsmanager")
+    response = client.get_secret_value(SecretId="paddle_token")
+    secret_value = json.loads(response['SecretString'])
+    token = secret_value[env]
+    os.environ["PADDLE_TOKEN"] = token
+    return token
 
 
 def get_product_id():
