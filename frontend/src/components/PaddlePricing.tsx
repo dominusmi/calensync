@@ -1,7 +1,8 @@
-import { Paddle, initializePaddle } from "@paddle/paddle-js";
+import { Paddle } from "@paddle/paddle-js";
 import { LineItem, Price } from "@paddle/paddle-js/types/price-preview/price-preview";
 import { useEffect, useState } from "react";
 import { TailSpin } from "react-loader-spinner";
+import { PADDLE_PRICING } from "../utils/const";
 
 
 export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedBuy?: (price: Price) => void, isReady?: () => void }> = ({ isHome, clickedBuy, paddle, isReady }) => {
@@ -25,13 +26,14 @@ export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedB
     }
 
     async function getPricing() {
+        const pricings = PADDLE_PRICING!.split("|")
         try {
             // Make sure both state updates have taken place before calling paddle?.PricePreview
             if (paddle && IP) {
                 return paddle.PricePreview({
                     items: [
-                        { priceId: "pri_01hgz5b0s7qtqt28zt4b5tp4s9", quantity: 1 },
-                        { priceId: "pri_01hgz5ahsecaqtrc7sxe6z23wy", quantity: 1 }
+                        { priceId: pricings[0], quantity: 1 },
+                        { priceId: pricings[1], quantity: 1 }
                     ],
                     customerIpAddress: IP
                 });

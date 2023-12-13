@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import API, { PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
+import API, { ENV, PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
 import { CheckoutEventNames, Paddle, PaddleEventData, initializePaddle } from '@paddle/paddle-js';
 import Layout from '../components/Layout';
-import { LineItem, Price } from '@paddle/paddle-js/types/price-preview/price-preview';
+import { Price } from '@paddle/paddle-js/types/price-preview/price-preview';
 import LoadingOverlay from '../components/LoadingOverlay';
 import { get_session_id, getLoggedUser, User } from '../utils/session';
 import { MessageKind, setMessage } from '../utils/common';
@@ -88,7 +88,7 @@ const Plan: React.FC = () => {
   }
 
   async function setupPaddle() {
-    const paddleInstance = await initializePaddle({ environment: 'sandbox', token: PADDLE_CLIENT_TOKEN, eventCallback: paddleCallback });
+    const paddleInstance = await initializePaddle({ environment: ENV == "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN, eventCallback: paddleCallback });
     if (paddleInstance) {
       setPaddle(paddleInstance);
     }
