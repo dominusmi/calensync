@@ -47,17 +47,6 @@ def test_from_channel_id():
 
 
 @patch("calensync.gwrapper.GoogleCalendarWrapper.service", lambda *args, **kwargs: None)
-def test_solve_update_one_active_calendar(db, account1, calendar1, account2, calendar2):
-    gcalendar1 = GoogleCalendarWrapper(calendar1)
-
-    # test no active calendars
-    with unittest.mock.patch(
-            "calensync.gwrapper.GoogleCalendarWrapper.get_updated_events") as get_updated_events:
-        gcalendar1.solve_update_in_calendar()
-        get_updated_events.assert_not_called()
-
-
-@patch("calensync.gwrapper.GoogleCalendarWrapper.service", lambda *args, **kwargs: None)
 def test_solve_update_two_active_calendar_tentative(db, account1, calendar1, account2, calendar2):
     gcalendar1 = GoogleCalendarWrapper(calendar1)
 

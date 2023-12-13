@@ -6,6 +6,7 @@ import pytest
 
 from calensync.api.common import ApiError
 from calensync.api.endpoints import patch_calendar, received_webhook, process_calendars
+from calensync.dataclass import CalendarStateEnum
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
 
@@ -14,27 +15,19 @@ class TestPatchCalendar:
     @staticmethod
     def test_doesnt_exist(db, user):
         with pytest.raises(ApiError):
-            patch_calendar(user, uuid.uuid4().__str__(), {"kind": "activate"}, db)
+            patch_calendar(user.id, uuid4(), CalendarStateEnum.ACTIVE, db)
 
     @staticmethod
     def test_user_doesnt_own_calendar(db, user, calendar1):
         other_user = User(email="random@test.com").save_new()
         with pytest.raises(ApiError):
-            patch_calendar(other_user, calendar1.uuid.__str__(), {"kind": "activate"}, db)
-
-    @staticmethod
-    def test_invalid_kind(db, user, calendar1):
-        with pytest.raises(ApiError):
-            patch_calendar(user, calendar1.uuid.__str__(), {"kind": "inexistent"}, db)
-
-        with pytest.raises(ApiError):
-            patch_calendar(user, calendar1.uuid.__str__(), {"missing": "kind"}, db)
+            patch_calendar(other_user.id, str(calendar1.uuid), CalendarStateEnum.ACTIVE, db)
 
     @staticmethod
     def test_no_active_calendars(db, user, account1, calendar1, calendar2):
         with unittest.mock.patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as mock_get_events:
             with unittest.mock.patch("calensync.gwrapper.GoogleCalendarWrapper.create_watch") as mock_create_watch:
-                patch_calendar(user, str(calendar1.uuid), {"kind": "activate"}, db)
+                patch_calendar(user, str(calendar1.uuid), CalendarStateEnum.ACTIVE, db)
                 mock_get_events.assert_not_called()
                 mock_create_watch.assert_called_once()
 
