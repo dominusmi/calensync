@@ -149,6 +149,11 @@ class Event(BaseModel):
 
     @staticmethod
     def get_self_reference_query():
+        """
+        WARNING: do not use this in conjuction with prefetch, it doesn't work. If you
+        need to use prefetch, then you can't use this function but instead but do the
+        aliasing in the same scope
+        """
         SourceEvent = Event.alias()
         return (
             Event

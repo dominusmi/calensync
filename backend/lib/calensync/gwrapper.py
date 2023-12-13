@@ -264,10 +264,13 @@ class GoogleCalendarWrapper:
             event.end = source_event.end.dateTime
             start = GoogleDatetime(dateTime=event.start, timeZone="UCT")
             end = GoogleDatetime(dateTime=event.end, timeZone="UCT")
-            with db.atomic():
-                event.save()
-                update_event(service=self.service, calendar_id=self.google_id, event_id=event.event_id, start=start,
-                             end=end)
+            try:
+                with db.atomic():
+                    event.save()
+                    update_event(service=self.service, calendar_id=self.google_id, event_id=event.event_id, start=start,
+                                 end=end)
+            except Exception as e:
+                logger.warn(f"Failed to process event {event.event_id}: {e}")
 
     def delete_events(self, include_database: bool = False):
         """
@@ -309,6 +312,7 @@ class GoogleCalendarWrapper:
             .execute()
         )
         events = GoogleEvent.parse_event_list_response(response)
+        logger.info(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
         return [event for event in events if event.source_id is None]
 
     def save_events_in_database(self):
@@ -368,17 +372,24 @@ class GoogleCalendarWrapper:
                 # This means it's an updated events. Therefore, all the user-associated calendars
                 # must have a version of this event in the database, which we can find through the source_id
                 # We then update each of this events with the new time
-                query, Source = Event.get_self_reference_query()
-                query.where(Source.id == event.id)
+                logger.info(f"Event status: confirmed. Event id: {event.id}")
+                SourceEvent = Event.alias()
+                query = (
+                    Event
+                    .select().join(SourceEvent, on=(Event.source == SourceEvent.id))
+                    .where(SourceEvent.event_id == event.id)
+                )
+                fetched_events: List[Event] = peewee.prefetch(query, Calendar.select(), prefetch_type=peewee.PREFETCH_TYPE.WHERE)
 
-                fetched_events: List[Event] = peewee.prefetch(query, Calendar.select())
                 if fetched_events:
                     # If updated, then we should find the events in the database
                     for fetched_event in fetched_events:
+                        logger.info(f"Updating {fetched_event.id} for {fetched_event.event_id}")
                         same_start = fetched_event.start == event.start.dateTime
                         same_end = fetched_event.end == event.end.dateTime
                         if same_start and same_end:
                             # time was not modified, ignore
+                            logger.info("Same start, ignored")
                             continue
 
                         fetched_event_cal = find_calendar_from_event(other_calendars, fetched_event)
@@ -386,6 +397,10 @@ class GoogleCalendarWrapper:
                             continue
 
                         # Update event
+                        (
+                            Event.update({Event.start: event.start.to_datetime(), Event.end: event.end.to_datetime()})
+                            .where(Event.event_id == event.id).execute()
+                         )
                         fetched_event_cal.events_handler.update([(fetched_event, event)])
                         fetched_event_cal.update_events()
                         counter_event_changed += 1
@@ -405,11 +420,6 @@ class GoogleCalendarWrapper:
         """ Called when we receive a webhook event saying the calendar requires an update """
         other_calendars = [GoogleCalendarWrapper(c) for c in self.get_user_calendars(active=True)]
         counter_event_changed = 0
-
-        if not other_calendars:
-            # No need to do anything
-            logger.info("no calendars for user, exiting without changes")
-            return counter_event_changed
 
         logger.info(f"Found {len(other_calendars)} other active calendars for user")
 
