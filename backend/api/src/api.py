@@ -30,7 +30,7 @@ def post__webhook(event: Request):
 def post__paddle_verify_transaction(authorization: str = Header(None), transaction_id: str = Query()):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        paddle_verify_transaction(user, transaction_id)
+        paddle_verify_transaction(user, transaction_id, boto3.Session())
 
 
 @app.get('/oauth2')

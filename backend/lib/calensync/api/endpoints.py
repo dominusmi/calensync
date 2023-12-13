@@ -3,6 +3,7 @@ import json
 import os
 from typing import Optional, Dict, List
 
+import boto3
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import peewee
@@ -301,8 +302,9 @@ def accept_tos(user: User, db: peewee.Database):
     return
 
 
-def paddle_verify_transaction(user: User, transaction_id: str):
-    response = paddle.get_transaction(transaction_id, get_paddle_token())
+def paddle_verify_transaction(user: User, transaction_id: str, session: boto3.Session):
+
+    response = paddle.get_transaction(transaction_id, get_paddle_token(session))
     print(response)
     if response.status_code != 200:
         logger.error(f"Couldn't confirm transaction {transaction_id} for user {user.uuid}")
@@ -331,7 +333,7 @@ def paddle_verify_transaction(user: User, transaction_id: str):
         # apparently, the subscription_id is null if I buy another product after the first one
         # this shouldn't be possible, but good to know
         logger.info(f"User {user.uuid} subscription updated from {user.subscription_id} to {subscription_id}")
-        user.subscription_id = subscription_id
+    user.subscription_id = subscription_id
 
     user.save()
     return
