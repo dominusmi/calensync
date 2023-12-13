@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import Footer from '../components/Footer';
-import Navbar from '../components/Navbar';
-import { PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
+import { ENV, PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
 import { PaddlePricing } from '../components/PaddlePricing';
 import { Paddle, initializePaddle } from '@paddle/paddle-js';
+import { Helmet } from "react-helmet";
 
 const Home: React.FC = () => {
     const [paddle, setPaddle] = useState<Paddle | null>(null);
@@ -15,7 +14,7 @@ const Home: React.FC = () => {
     }
 
     async function setupPaddle() {
-        const paddleInstance = await initializePaddle({ environment: 'sandbox', token: PADDLE_CLIENT_TOKEN });
+        const paddleInstance = await initializePaddle({ environment: ENV == "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
         if (paddleInstance) {
             setPaddle(paddleInstance);
         }
@@ -27,6 +26,17 @@ const Home: React.FC = () => {
 
     return (
         <Layout verify_session={false}>
+            <Helmet>
+                <meta charSet="utf-8" />
+                <title>Sync your Google Calendars</title>
+                <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}`} />
+                <meta name="description" content="Calensync allows you to synchronize multiple Google calendars easily, while keeping the privacy 
+                of the event description. It copies events between calendars and replaces them with a Blocker. The product uses as a SaaS subscription model. On top of that, it's open-source!" />
+                <meta name="og:title" content="Synchronize your Google Calendars"/>
+                <meta name="og:url" content="{`https://calensync.live${PUBLIC_URL}`}"/>
+                <meta name="og:description" content="Calensync allows you to synchronize multiple Google calendars easily, while keeping the privacy 
+                of the event description. It copies events between calendars and replaces them with a Blocker. The product uses as a SaaS subscription model. On top of that, it's open-source!" />
+            </Helmet>
             <div className='hero'>
                 <div className="container col-xxl-8 py-5">
                     <div className="row flex-lg-row-reverse align-items-center g-5 py-5">
@@ -71,7 +81,7 @@ const Home: React.FC = () => {
                 </div>
             </div>
             <div className='hero py-5'>
-                { paddle && 
+                {paddle &&
                     <PaddlePricing paddle={paddle} isHome={true} />
                 }
             </div>
