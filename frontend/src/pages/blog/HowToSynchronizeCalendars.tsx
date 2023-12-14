@@ -1,10 +1,10 @@
 import React from 'react';
-import Layout from '../components/Layout';
+import Layout from '../../components/Layout';
 import { Helmet } from 'react-helmet';
-import { PUBLIC_URL } from '../utils/const';
+import { PUBLIC_URL } from '../../utils/const';
 
 
-const BlogPage: React.FC = () => {
+const HowToSynchronizeCalendars: React.FC = () => {
   return (
     <Layout verify_session={false}>
             <Helmet>
@@ -17,7 +17,7 @@ const BlogPage: React.FC = () => {
                 <meta name="og:description" content="In this post, we describe the two ways to synchronize Google Calendars together" />
             </Helmet>
       <div className="container mt-4 d-flex m-auto d-flex justify-content-center">
-        <article className='col-7'>
+        <article className='col-lg-8 col-sm-11 col-12'>
           <header className="mb-4 mt-4">
             <h1 className="fw-bolder mb-1">How to sync multiple Google Calendars</h1>
             <div className="text-muted fst-italic mb-2">December 2023</div>
@@ -83,4 +83,4 @@ const BlogPage: React.FC = () => {
   );
 };
 
-export default BlogPage;
+export default HowToSynchronizeCalendars;
