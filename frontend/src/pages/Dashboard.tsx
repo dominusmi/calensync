@@ -6,7 +6,7 @@ import API, { PUBLIC_URL } from '../utils/const';
 import AccountCard, { Account } from '../components/AccountCard';
 import LoadingOverlay from '../components/LoadingOverlay';
 import AddCalendarAccount from '../components/AddCalendarAccount';
-import { toast_msg } from '../components/Toast';
+import { createToast } from '../components/Toast';
 import Layout from '../components/Layout';
 import { MessageKind } from '../utils/common';
 import ContactButton, { TallyComponent } from '../components/FeedbackButton';
@@ -65,7 +65,7 @@ const Dashboard: React.FC = () => {
     });
     if (!response.ok) {
       const error = await response.json();
-      toast_msg(error.message || "Internal server error", MessageKind.Error);
+      createToast(error.message || "Internal server error", MessageKind.Error);
 
       throw new Error(`Error fetching accounts data: ${error.message}`);
     }

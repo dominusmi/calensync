@@ -3,7 +3,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { MessageKind } from '../utils/common';
 
-export function toast_msg(message: string, kind: MessageKind) {
+export function createToast(message: string, kind: MessageKind) {
   let f = toast.info;
   if(kind == MessageKind.Error){
     f = toast.error;

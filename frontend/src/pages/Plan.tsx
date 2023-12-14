@@ -7,7 +7,7 @@ import LoadingOverlay from '../components/LoadingOverlay';
 import { get_session_id, getLoggedUser, User } from '../utils/session';
 import { MessageKind, setMessage } from '../utils/common';
 import { toast } from 'react-toastify';
-import { toast_msg } from '../components/Toast';
+import { createToast } from '../components/Toast';
 import { PaddlePricing } from '../components/PaddlePricing';
 
 interface PaddleSubscription {
@@ -118,7 +118,7 @@ const Plan: React.FC = () => {
         });
 
         if (!response.ok) {
-          toast_msg("Error occured while fetching your subscription. If this continues, please contact support.", MessageKind.Error);
+          createToast("Error occured while fetching your subscription. If this continues, please contact support.", MessageKind.Error);
           return;
         }
         let data: PaddleSubscription = await response.json();

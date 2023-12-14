@@ -4,7 +4,7 @@ import Footer from '../components/Footer';
 import { toast } from 'react-toastify';
 import API, { PUBLIC_URL } from '../utils/const';
 import { get_session_id } from '../utils/session';
-import Toast, { toast_msg } from '../components/Toast';
+import Toast, { createToast } from '../components/Toast';
 import Layout from '../components/Layout';
 import { MessageKind } from '../utils/common';
 
@@ -19,7 +19,7 @@ const Tos: React.FC = () => {
 
     const acceptTos = async () => {
         if (!isChecked) {
-            toast_msg("You must accept the Terms and Conditions", MessageKind.Error);
+            createToast("You must accept the Terms and Conditions", MessageKind.Error);
             return
         }
         try {
@@ -38,9 +38,9 @@ const Tos: React.FC = () => {
             else {
                 try {
                     let error = await response.json();
-                    toast_msg(error.detail || "Unknown error", MessageKind.Error)
+                    createToast(error.detail || "Unknown error", MessageKind.Error)
                 } catch(e) {
-                    toast_msg(`Unknown error, status ${response.status}`, MessageKind.Error)
+                    createToast(`Unknown error, status ${response.status}`, MessageKind.Error)
                 }
             }
         }
