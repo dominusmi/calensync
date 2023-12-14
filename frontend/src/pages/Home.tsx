@@ -85,13 +85,23 @@ const Home: React.FC = () => {
                     <PaddlePricing paddle={paddle} isHome={true} />
                 }
             </div>
-            <div className='col-6 container content card mt-4 pt-4 pb-2'>
+            <div className='col-6 col-sm-8 container content card mt-4 pt-4 pb-2'>
                 <a className='block-link' href={`${PUBLIC_URL}/blog/sync-multiple-google-calendars`}>
                     <p className='text-muted small p-0 m-0'>Blog</p>
                     <h2>How to Synchronize Google Calendars together</h2>
                     <p className='text-muted'>
                         If you're looking for how to sync multiple Google Calendars together, look no further.
                         This brief article will explain all there is to know.
+                    </p>
+                </a>
+            </div>
+            <div className='col-6 col-sm-8 container content card mt-4 pt-4 pb-2'>
+                <a className='block-link' href={`${PUBLIC_URL}/blog/avoid-calendly-conflicts`}>
+                    <p className='text-muted small p-0 m-0'>Blog</p>
+                    <h2>Avoid Calendly conflicts</h2>
+                    <p className='text-muted'>
+                    Calendly conflicts can be terrible, so how can you avoid them? We discuss how Calensync helps
+                    you solve this issue in two minutes!
                     </p>
                 </a>
             </div>
