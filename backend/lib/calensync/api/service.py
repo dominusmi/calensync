@@ -26,7 +26,7 @@ def activate_calendar(calendar_db: Calendar):
     active_calendars = [GoogleCalendarWrapper(c) for c in calendars]
     logger.info(f"Found {len(active_calendars)} active calendars")
 
-    start_date = datetime.datetime.utcnow()
+    start_date = datetime.datetime.now()
 
     # number of days to sync in the future
     days = 5 if is_local() else 30
