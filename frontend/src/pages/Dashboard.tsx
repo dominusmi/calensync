@@ -9,49 +9,7 @@ import AddCalendarAccount from '../components/AddCalendarAccount';
 import { toast_msg } from '../components/Toast';
 import Layout from '../components/Layout';
 import { MessageKind } from '../utils/common';
-
-interface Window {
-  Tally: any; // Adjust the type accordingly based on the Tally library
-  TallyConfig: any;
-}
-
-
-
-const TallyComponent = () => {
-  useEffect(() => {
-    // Dynamically create and append the script tag
-    const script = document.createElement('script');
-    script.src = 'https://tally.so/widgets/embed.js';
-    script.async = true;
-    document.head.appendChild(script);
-
-    let win = (window as unknown) as Window;
-
-    // Set up Tally configuration after script has loaded
-    script.onload = () => {
-      const options: any = {
-        emoji: {
-          text: '👋',
-          animation: 'wave'
-        },
-        open: {
-          trigger: 'time',
-          ms: 5000
-        }
-      };
-
-      // Initialize Tally popup
-      console.log(win.Tally)
-      const tallyPopup = new win.Tally.openPopup("nroQgv", options);
-    };
-  }, []);
-
-  return (
-    <div id="tally-popup-container">
-      {/* This div will be replaced by Tally's popup */}
-    </div>
-  );
-};
+import ContactButton, { TallyComponent } from '../components/FeedbackButton';
 
 
 const Dashboard: React.FC = () => {
@@ -138,6 +96,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       }
+      <ContactButton/>
       <AddCalendarAccount />
       <TallyComponent/>
     </Layout>
