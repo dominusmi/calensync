@@ -6,8 +6,6 @@ from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
-from calensync.database.model import Calendar
-
 
 class AbstractGoogleDate(BaseModel):
     def to_google_dict(self) -> Dict:
@@ -81,8 +79,8 @@ class GoogleEvent(BaseModel):
     start: Union[GoogleDatetime, GoogleDate]
     end: Union[GoogleDatetime, GoogleDate]
     id: str
-    created: datetime.datetime
-    updated: datetime.datetime
+    created: Optional[datetime.datetime] = None
+    updated: Optional[datetime.datetime] = None
     status: EventStatus
     recurrence: Optional[List[str]] = None
 

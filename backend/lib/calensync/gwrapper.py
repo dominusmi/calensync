@@ -346,7 +346,11 @@ class GoogleCalendarWrapper:
 
         # for some reason the created and updated time are not exactly the same, even when the event is new
         # it looks like google doesn't use a transaction. Bad google. So 1 second threshold for equality
-        elif (event.updated - event.created).seconds < 1:
+        elif (
+                event.created is not None
+                and event.updated is not None
+                and (event.updated - event.created).seconds < 1
+        ):
             # new event, we don't need to check anything more
             logger.info(f"Add new event: {event}")
 
