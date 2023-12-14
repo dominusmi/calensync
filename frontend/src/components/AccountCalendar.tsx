@@ -3,6 +3,8 @@ import { Calendar } from './AccountCard';
 import API from '../utils/const';
 import { get_session_id } from '../utils/session';
 import axios from 'axios';
+import { createToast } from './Toast';
+import { MessageKind } from '../utils/common';
 
 const AccountCalendar: React.FC<{calendar: Calendar}> = ({calendar}) => {
     const [isChecked, setChecked] = useState(calendar.active);
@@ -23,6 +25,12 @@ const AccountCalendar: React.FC<{calendar: Calendar}> = ({calendar}) => {
                     }
                 );
                 calendar.active = !isChecked
+                if(calendar.active){
+                    createToast("The synchronization has begun! You should see the events within 30 seconds", MessageKind.Success);
+                }
+                else{
+                    createToast("Succesfully un-synced calendar", MessageKind.Success);
+                }
                 setChecked(!isChecked);
             } catch (error: any) {
                 // Handle error if needed
