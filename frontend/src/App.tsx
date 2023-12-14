@@ -13,6 +13,7 @@ import './App.css'; // Make sure the file path is correct
 import Privacy from "./pages/Privacy";
 import { PUBLIC_URL } from "./utils/const";
 import GoogleDisclosure from "./pages/GoogleDisclosure";
+import BlogPage from "./pages/BlogPage";
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Route path="/privacy" element={<Privacy/>} />
         <Route path="/plan" element={<Plan/>} />
         <Route path="/google-privacy" element={<GoogleDisclosure/>}></Route>
+        <Route path="/blog/sync-multiple-google-calendars" element={<BlogPage/>}></Route>
       </Routes>
     </Router>
   );

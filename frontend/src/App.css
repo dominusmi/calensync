@@ -126,6 +126,13 @@ li {
   padding-bottom: 6px;
 }
 
+.block-link {
+  display: block;
+  height: 100%;
+  width: 100%;
+  text-decoration: none;
+}
+
 .gsi-material-button {
   -moz-user-select: none;
   -webkit-user-select: none;

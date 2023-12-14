@@ -32,8 +32,8 @@ const Home: React.FC = () => {
                 <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}`} />
                 <meta name="description" content="Calensync allows you to synchronize multiple Google calendars easily, while keeping the privacy 
                 of the event description. It copies events between calendars and replaces them with a Blocker. The product uses as a SaaS subscription model. On top of that, it's open-source!" />
-                <meta name="og:title" content="Synchronize your Google Calendars"/>
-                <meta name="og:url" content="{`https://calensync.live${PUBLIC_URL}`}"/>
+                <meta name="og:title" content="Synchronize your Google Calendars" />
+                <meta name="og:url" content="{`https://calensync.live${PUBLIC_URL}`}" />
                 <meta name="og:description" content="Calensync allows you to synchronize multiple Google calendars easily, while keeping the privacy 
                 of the event description. It copies events between calendars and replaces them with a Blocker. The product uses as a SaaS subscription model. On top of that, it's open-source!" />
             </Helmet>
@@ -84,6 +84,16 @@ const Home: React.FC = () => {
                 {paddle &&
                     <PaddlePricing paddle={paddle} isHome={true} />
                 }
+            </div>
+            <div className='col-6 container content card mt-4 pt-4 pb-2'>
+                <a className='block-link' href={`${PUBLIC_URL}/blog/sync-multiple-google-calendars`}>
+                    <p className='text-muted small p-0 m-0'>Blog</p>
+                    <h2>How to Synchronize Google Calendars together</h2>
+                    <p className='text-muted'>
+                        If you're looking for how to sync multiple Google Calendars together, look no further.
+                        This brief article will explain all there is to know.
+                    </p>
+                </a>
             </div>
         </Layout>
     );
