@@ -4,8 +4,12 @@ import datetime
 from enum import Enum, IntEnum
 from typing import Dict, List, Optional, Union
 
+import pydantic
 from pydantic import BaseModel
 
+from calensync.log import get_logger
+
+logger = get_logger("dataclass")
 
 class AbstractGoogleDate(BaseModel):
     def to_google_dict(self) -> Dict:
@@ -88,8 +92,10 @@ class GoogleEvent(BaseModel):
     def parse_event_list_response(response: Dict) -> List[GoogleEvent]:
         events = []
         for item in response["items"]:
-            events.append(GoogleEvent.parse_obj(item))
-
+            try:
+                events.append(GoogleEvent.parse_obj(item))
+            except pydantic.ValidationError:
+                logger.error(f"Couldn't parse item with id {item.get('id')}")
         return events
 
     @property
