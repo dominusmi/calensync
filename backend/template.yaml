@@ -6,8 +6,6 @@ Parameters:
     Type: String
   FrontendUri:
     Type: String
-  SecretArn:
-    Type: String
   GoogleSecretArn:
     Type: String
   DatabaseSecretArn:
@@ -38,20 +36,6 @@ Resources:
       DelaySeconds: 0
       VisibilityTimeout: 30
       MessageRetentionPeriod: 61
-
-  RdsPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Gives access to RDS secrets"
-      ManagedPolicyName: !Sub "Calensync-${Env}-GetRDSSecret"
-      Path: /LambdaPolicies/
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action:
-              - secretsmanager:GetSecretValue
-            Resource: !Ref SecretArn
 
   GetSecretsPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -91,7 +75,6 @@ Resources:
       Policies:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        - !Ref RdsPolicy
         - !Ref GetSecretsPolicy
         - Version: '2012-10-17'
           Statement:
@@ -125,7 +108,6 @@ Resources:
       Policies:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        - !Ref RdsPolicy
         - !Ref GetSecretsPolicy
       Layers:
         - !Ref CalensyncLayer
@@ -152,7 +134,6 @@ Resources:
       Policies:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        - !Ref RdsPolicy
         - !Ref GetSecretsPolicy
         - Version: '2012-10-17'
           Statement:
@@ -168,6 +149,7 @@ Resources:
       Environment:
         Variables:
           ENV: !Ref Env
+          API_ENDPOINT: !Ref ApiEndpoint
       Events:
         SQSPutVisit:
           Type: SQS
