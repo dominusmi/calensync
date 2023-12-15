@@ -11,6 +11,7 @@ from calensync.log import get_logger
 
 logger = get_logger("dataclass")
 
+
 class AbstractGoogleDate(BaseModel):
     def to_google_dict(self) -> Dict:
         raise NotImplementedError()

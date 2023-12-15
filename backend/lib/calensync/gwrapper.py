@@ -430,7 +430,7 @@ class GoogleCalendarWrapper:
         events = self.get_updated_events()
         logger.info(f"Updated events: {[e.dict() for e in events]}")
         if not events:
-            logger.error(f"Something went wrong: no updates found for channel {self.calendar_db.channel_id}")
+            logger.warn(f"Something went wrong: no updates found for channel {self.calendar_db.channel_id}")
             return 0
 
         # auto-update existing

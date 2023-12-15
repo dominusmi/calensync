@@ -122,7 +122,7 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str, 
     calendar = Calendar.get_or_none(Calendar.channel_id == channel_id)
 
     if calendar is None or str(calendar.token) != token:
-        logger.error(f"The token {token} does not match the database token {channel_id} ignoring.")
+        logger.warn(f"The token {token} does not match the database token {channel_id} ignoring.")
         return
 
     if calendar.resource_id is None and resource_id is not None:
