@@ -124,7 +124,10 @@ def patch__calendar(calendar_id: str, body: PatchCalendarBody, authorization: st
             raise ApiError()
 
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.UPDATE_CALENDAR_STATE, data=event)
-        sqs.send_event(boto3.Session(), sqs_event.json())
+        if is_local():
+            sqs.handle_sqs_event(sqs_event, db)
+        else:
+            sqs.send_event(boto3.Session(), sqs_event.json())
 
 
 @app.delete('/calendars/{account_id}')
