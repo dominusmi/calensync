@@ -2,6 +2,7 @@ from calensync.api.endpoints import received_webhook, patch_calendar
 from calensync.database.utils import DatabaseSession
 from calensync.dataclass import SQSEvent, QueueEvent, GoogleWebhookEvent, UpdateCalendarStateEvent
 from calensync.log import get_logger
+from calensync.sqs import handle_sqs_event
 from calensync.utils import get_env
 
 logger = get_logger("sqs_receiver")
@@ -18,14 +19,7 @@ def handler(event, context):
         for record in event["Records"]:
             try:
                 sqs_event = SQSEvent.parse_raw(record["body"])
-                if sqs_event.kind == QueueEvent.GOOGLE_WEBHOOK:
-                    we: GoogleWebhookEvent = GoogleWebhookEvent.parse_obj(sqs_event.data)
-                    received_webhook(we.channel_id, we.state, we.resource_id, we.token, db)
-                elif sqs_event.kind == QueueEvent.UPDATE_CALENDAR_STATE:
-                    e: UpdateCalendarStateEvent = UpdateCalendarStateEvent.parse_obj(sqs_event.data)
-                    patch_calendar(e.user_id, e.calendar_id, e.kind, db)
-                else:
-                    logger.error("Unknown event type")
+                handle_sqs_event(sqs_event, db)
             except Exception as e:
                 logger.error(f"Failed to process record: {e}")
                 batch_item_failures.append({"itemIdentifier": record['messageId']})
