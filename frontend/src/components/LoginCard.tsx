@@ -67,9 +67,9 @@ const LoginCard: React.FC = () => {
     return (
         <div className="d-flex align-items-center justify-content-center mx-sm-4 mx-2">
             <div
-                className="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-3 container-sm card shadow-sm rounded border-0 p-4" style={loginCardStyle}>
+                className="col-4 col-sm-4 col-md-4 col-lg-5 container card shadow-sm rounded border-0 p-4" style={loginCardStyle}>
                 <div className="my-2 text-center">
-                    <h2>Login</h2>
+                    <h2>Log in / Sign up</h2>
                     <p className="text-muted">Log in to calensync and sync your calendars in 30 seconds!</p>
                 </div>
                 <div className="row text-center">
@@ -95,7 +95,7 @@ const LoginCard: React.FC = () => {
                                         <path fill="none" d="M0 0h48v48H0z"></path>
                                     </svg>
                                 </div>
-                                <span className="gsi-material-button-contents">Sign in with Google</span>
+                                <span className="gsi-material-button-contents">Log in / Sign up with Google</span>
                             </div>
                         </button>
                     </div>
