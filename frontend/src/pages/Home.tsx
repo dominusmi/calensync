@@ -44,9 +44,8 @@ const Home: React.FC = () => {
                             <img src="hero.gif" className="d-block mx-lg-auto img-fluid hero-gif" alt="Bootstrap Themes" width="700" height="500" loading="lazy" />
                         </div>
                         <div className="col-lg-6">
-                            <h1 className="display-5 fw-bold lh-1 mb-3">No more calendar event conflicts.</h1>
+                            <h1 className="display-5 fw-bold lh-1 mb-3">No more event conflicts.</h1>
                             <p className="lead">
-                                Save yourself the pain of rescheduling.
                                 Sync all your Google calendars together and save yourself trouble of having to reschedule appointments.
                                 Make sure no one ever books a meeting when you're already busy.
                             </p>
@@ -85,7 +84,7 @@ const Home: React.FC = () => {
                     <PaddlePricing paddle={paddle} isHome={true} />
                 }
             </div>
-            <div className='col-6 col-sm-8 container content card mt-4 pt-4 pb-2'>
+            <div className='col-lg-7 col-md-8 col-12 container content card mt-4 pt-4 pb-2'>
                 <a className='block-link' href={`${PUBLIC_URL}/blog/sync-multiple-google-calendars`}>
                     <p className='text-muted small p-0 m-0'>Blog</p>
                     <h2>How to Synchronize Google Calendars together</h2>
@@ -95,7 +94,7 @@ const Home: React.FC = () => {
                     </p>
                 </a>
             </div>
-            <div className='col-6 col-sm-8 container content card mt-4 pt-4 pb-2'>
+            <div className='col-lg-7 col-md-8 col-12 container content card mt-4 pt-4 pb-2'>
                 <a className='block-link' href={`${PUBLIC_URL}/blog/avoid-calendly-conflicts`}>
                     <p className='text-muted small p-0 m-0'>Blog</p>
                     <h2>Avoid Calendly conflicts</h2>
