@@ -43,8 +43,8 @@ def get__oauth2(state: str = Query(), code: str = Query()):
         return get_oauth_token(state, code, db, boto3.Session())
 
 
-@format_response
 @app.get("/google/sso/prepare")
+@format_response
 def get__prepare_google_sso_oauth(authorization: str = Header(None)):
     """
     Create unique authorization URL
@@ -57,8 +57,8 @@ def get__prepare_google_sso_oauth(authorization: str = Header(None)):
         return prepare_google_sso_oauth(session_id, db, boto3.Session())
 
 
-@format_response
 @app.get('/google/calendar/prepare')
+@format_response
 def get__prepare_google_calendar_oauth(authorization: str = Header(None)):
     """
     Create unique authorization URL
@@ -69,16 +69,16 @@ def get__prepare_google_calendar_oauth(authorization: str = Header(None)):
         return prepare_calendar_oauth(user, db, boto3.Session())
 
 
-@format_response
 @app.get('/accounts')
+@format_response
 def get__calendar_accounts(authorization: str = Header(None)):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         return get_calendar_accounts(user, db)
 
 
-@format_response
 @app.get('/accounts/{calendar_account_id}/calendars')
+@format_response
 def get__calendars(calendar_account_id: str, authorization: str = Header(None)):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
