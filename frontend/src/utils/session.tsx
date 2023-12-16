@@ -56,7 +56,6 @@ export function get_session_id() {
 export const getLoggedUser: () => Promise<User> = async () => {
   const result = await verify_session_id();
   if (result == VerifySession.TOS) {
-    setMessage("Must accept Terms of Use", MessageKind.Info)
     window.location.href = `${PUBLIC_URL}/tos`;
   } else if (result == VerifySession.LOGIN || result === VerifySession.INVALID) {
     window.location.href = `${PUBLIC_URL}/login`;
