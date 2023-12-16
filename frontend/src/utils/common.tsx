@@ -1,4 +1,4 @@
-import { toast_msg } from "../components/Toast";
+import { createToast } from "../components/Toast";
 
 export interface ApiError {
     message: string
@@ -25,19 +25,19 @@ export function setMessage(msg: string, kind: MessageKind){
 export function consumeMessages(){
     const err = sessionStorage.getItem("error-msg");
     if(err){
-        toast_msg(err, MessageKind.Error);
+        createToast(err, MessageKind.Error);
         sessionStorage.removeItem("error-msg")
     }
 
     const info = sessionStorage.getItem("info-msg");
     if(info){
-        toast_msg(info, MessageKind.Info);
+        createToast(info, MessageKind.Info);
         sessionStorage.removeItem("info-msg")
     }
 
     const success = sessionStorage.getItem("success-msg");
     if(success){
-        toast_msg(success, MessageKind.Success);
+        createToast(success, MessageKind.Success);
         sessionStorage.removeItem("success-msg")
     }
 }
