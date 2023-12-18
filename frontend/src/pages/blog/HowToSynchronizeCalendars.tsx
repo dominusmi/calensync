@@ -72,11 +72,16 @@ const HowToSynchronizeCalendars: React.FC = () => {
               <li>Privacy protected</li>
               <li>Setup in 2 minutes</li>
             </ul>
-            <h3 className="fw-bolder mt-3">Cons of manual syncing</h3>
+            <h3 className="fw-bolder mt-3">Cons of Calensync</h3>
             <ul>
               <li>It's not free (but it's affordable)</li>
             </ul>
           </section>
+          <div className='d-flex justify-content-center'>
+            <div className='row'>
+            <button className='btn btn-primary centered' onClick={() => window.location.href="/login"}>Get started now and use the coupon HAPPY23 for a free month!</button>
+            </div>
+          </div>
         </article>
       </div>
     </Layout>

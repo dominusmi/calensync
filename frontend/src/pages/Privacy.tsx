@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import API from '../utils/const';
-import { get_session_id } from '../utils/session';
+import { getLocalSession } from '../utils/session';
 
 const Privacy: React.FC = () => {
     return (

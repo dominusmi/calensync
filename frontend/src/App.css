@@ -25,7 +25,7 @@ code {
 
 .content {
   flex: 1;
-  overflow-y: auto; /* Allow the content to scroll when it overflows */
+  /* overflow-y: hidden; Allow the content to scroll when it overflows */
 }
 
 .centered {
@@ -93,7 +93,6 @@ code {
   padding: 10px;
   position: relative;
   bottom: 0;
-  width: 100%;
 }
 
 .navbar-logo {
@@ -107,7 +106,7 @@ code {
 }
 
 .hero {
-  background-color: rgba(87, 124, 255, 0.2);
+  background-color: #D8E0FB;
 }
 
 .hero-gif {
@@ -131,6 +130,10 @@ li {
   height: 100%;
   width: 100%;
   text-decoration: none;
+}
+
+input[type='checkbox'] {
+  border-color: black;
 }
 
 .gsi-material-button {

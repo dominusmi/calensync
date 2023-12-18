@@ -39,7 +39,7 @@ const Home: React.FC = () => {
             </Helmet>
             <div className='hero'>
                 <div className="container col-xxl-8 py-5">
-                    <div className="row flex-lg-row-reverse align-items-center g-5 py-5">
+                    <div className="row flex-lg-row-reverse align-items-center g-4 py-5 justify-content-center">
                         <div className="col-10 col-sm-8 col-lg-6">
                             <img src="hero.gif" className="d-block mx-lg-auto img-fluid hero-gif" alt="Bootstrap Themes" width="700" height="500" loading="lazy" />
                         </div>
@@ -84,7 +84,7 @@ const Home: React.FC = () => {
                     <PaddlePricing paddle={paddle} isHome={true} />
                 }
             </div>
-            <div className='col-lg-7 col-md-8 col-12 container content card mt-4 pt-4 pb-2'>
+            <div className='col-lg-7 col-md-8 col-11 container content card mt-4 pt-4 pb-2 mx-auto'>
                 <a className='block-link' href={`${PUBLIC_URL}/blog/sync-multiple-google-calendars`}>
                     <p className='text-muted small p-0 m-0'>Blog</p>
                     <h2>How to Synchronize Google Calendars together</h2>
@@ -94,7 +94,7 @@ const Home: React.FC = () => {
                     </p>
                 </a>
             </div>
-            <div className='col-lg-7 col-md-8 col-12 container content card mt-4 pt-4 pb-2'>
+            <div className='col-lg-7 col-md-8 col-11 container content card mt-4 pt-4 pb-2 mx-auto'>
                 <a className='block-link' href={`${PUBLIC_URL}/blog/avoid-calendly-conflicts`}>
                     <p className='text-muted small p-0 m-0'>Blog</p>
                     <h2>Avoid Calendly conflicts</h2>

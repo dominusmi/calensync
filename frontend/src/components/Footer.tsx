@@ -3,7 +3,7 @@ import { PUBLIC_URL } from '../utils/const';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="container mt-5 footer bg-light p-3">
+    <footer className="container mt-5 footer bg-light p-3 col-xxl-8  ">
       <div className='row'>
         <a href={`${PUBLIC_URL}/tos`}>Terms of Use</a>
       </div>

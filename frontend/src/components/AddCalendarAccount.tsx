@@ -2,7 +2,7 @@
 import React from 'react';
 import API from '../utils/const';
 import axios from 'axios';
-import { get_session_id } from '../utils/session';
+import { getLocalSession } from '../utils/session';
 
 const AddCalendarAccount: React.FC = () => {
 
@@ -13,7 +13,7 @@ const AddCalendarAccount: React.FC = () => {
                 {
                     method: 'GET',
                     headers: {
-                        Authorization: get_session_id()!
+                        Authorization: getLocalSession()!
                     }
                 }
             );

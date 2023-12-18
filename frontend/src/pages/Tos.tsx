@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { toast } from 'react-toastify';
 import API, { PUBLIC_URL } from '../utils/const';
-import { get_session_id } from '../utils/session';
+import { getLocalSession } from '../utils/session';
 import Toast, { createToast } from '../components/Toast';
 import Layout from '../components/Layout';
 import { MessageKind } from '../utils/common';
@@ -15,7 +15,8 @@ const Tos: React.FC = () => {
         setIsChecked(!isChecked);
     };
 
-    const isConnected = get_session_id() !== null;
+    
+    const isConnected = getLocalSession() !== null || window.location.search.includes("logged");
 
     const acceptTos = async () => {
         if (!isChecked) {
@@ -27,9 +28,7 @@ const Tos: React.FC = () => {
                 `${API}/tos`,
                 {
                     method: 'POST',
-                    headers: {
-                        Authorization: get_session_id()!
-                    }
+                    credentials: 'include'
                 }
             );
             if(response.ok){

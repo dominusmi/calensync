@@ -1,12 +1,14 @@
 import datetime
 import json
 import os
+import uuid
 from typing import Optional, Dict, List
 
 import boto3
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import peewee
+import starlette.responses
 from google.oauth2.credentials import Credentials
 
 from calensync import dataclass
@@ -16,6 +18,7 @@ from calensync.database.model import User, OAuthState, Calendar, OAuthKind, Cale
 from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
 from calensync.log import get_logger
 import calensync.paddle as paddle
+from calensync.session import create_session_and_user
 from calensync.utils import get_client_secret, get_scopes, get_google_sso_scopes, is_local, utcnow, get_paddle_token
 
 logger = get_logger(__file__)
@@ -31,9 +34,11 @@ def get_frontend_env():
 
 def verify_session(session_id: Optional[str]) -> User:
     """ Returns the claimed email """
-    logger.debug(f"Verifying {session_id}")
 
     if session_id is None:
+        raise ApiError("Credentials missing", 403)
+
+    elif session_id == 'null':
         raise ApiError("Credentials missing", 403)
 
     query = peewee.prefetch(Session.select().where(Session.session_id == session_id).limit(1), User.select())
@@ -72,7 +77,6 @@ def get_oauth_token(state: str, code: str, db: peewee.Database, session):
     else:
         scopes = get_scopes()
 
-    logger.info(scopes)
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         client_secret,
         scopes=scopes, state=state, redirect_uri=f'{get_host_env()}/oauth2'
@@ -90,13 +94,8 @@ def get_oauth_token(state: str, code: str, db: peewee.Database, session):
 
     if is_login:
         with db.atomic():
-            user = User.get_or_none(email=email)
-            if user is None:
-                user = User(email=email).save_new()
-
-            Session(session_id=state_db.session_id, user=user).save()
-            state_db.delete_instance()
-        return RedirectResponse(location=f"{get_frontend_env()}/dashboard")
+            create_session_and_user(email, state_db)
+        return RedirectResponse(location=f"{get_frontend_env()}/dashboard", cookie={"authorization": state_db.session_id})
 
     else:
         account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
@@ -174,14 +173,14 @@ def prepare_calendar_oauth(user: User, db: peewee.Database, session):
     return {"url": authorization_url}
 
 
-def prepare_google_sso_oauth(session_id: str, db: peewee.Database, session):
+def prepare_google_sso_oauth(tos: int, db: peewee.Database, boto3_session):
     """
     Function used for login / signup purposes. Creates and anonymous OAuthState model
     object to keep track of the state reason.
     """
     scopes = get_google_sso_scopes()
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
-        get_client_secret(session),
+        get_client_secret(boto3_session),
         scopes=scopes)
 
     logger.info(f"Scopes: {scopes}")
@@ -191,9 +190,14 @@ def prepare_google_sso_oauth(session_id: str, db: peewee.Database, session):
         access_type='offline')
 
     with db.atomic():
-        OAuthState(state=state, kind=OAuthKind.GOOGLE_SSO, session_id=session_id).save()
+        oauth_state = OAuthState(state=state, kind=OAuthKind.GOOGLE_SSO, session_id=uuid.uuid4())
+        if tos:
+            oauth_state.tos = True
+        oauth_state.save()
 
-    return {"url": authorization_url}
+    response = starlette.responses.JSONResponse(content={"url": authorization_url})
+    response.set_cookie("authorization", oauth_state.session_id, secure=True, httponly=True, max_age=3600, domain="127.0.0.1:8080")
+    return response
 
 
 def get_calendar_accounts(user: User, db: peewee.Database):
@@ -303,15 +307,14 @@ def accept_tos(user: User, db: peewee.Database):
 
 
 def paddle_verify_transaction(user: User, transaction_id: str, session: boto3.Session):
-
+    logger.info(f"Verifying transaction {transaction_id}")
     response = paddle.get_transaction(transaction_id, get_paddle_token(session))
-    print(response)
     if response.status_code != 200:
         logger.error(f"Couldn't confirm transaction {transaction_id} for user {user.uuid}")
         raise ApiError("Couldn't confirm payment", code=500)
 
     data = response.json()["data"]
-
+    print(data)
     if data["status"] not in ["paid", "completed"]:
         raise ApiError(f"The transaction is not completed. Status: {data['status']}")
 
@@ -339,8 +342,8 @@ def paddle_verify_transaction(user: User, transaction_id: str, session: boto3.Se
     return
 
 
-def get_paddle_subscription(user: User):
-    response = paddle.get_subscription(user.subscription_id, get_paddle_token())
+def get_paddle_subscription(user: User, session: boto3.Session):
+    response = paddle.get_subscription(user.subscription_id, get_paddle_token(session))
     return response
 
 

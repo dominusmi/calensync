@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar } from './AccountCard';
 import API from '../utils/const';
-import { get_session_id } from '../utils/session';
+import { getLocalSession } from '../utils/session';
 import axios from 'axios';
 import { createToast } from './Toast';
 import { MessageKind } from '../utils/common';
@@ -19,7 +19,7 @@ const AccountCalendar: React.FC<{calendar: Calendar}> = ({calendar}) => {
                     { kind },
                     {
                         headers: {
-                            Authorization: get_session_id()!,
+                            Authorization: getLocalSession()!,
                             'Content-Type': 'application/json',
                         },
                     }

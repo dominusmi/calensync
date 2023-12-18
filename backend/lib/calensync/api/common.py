@@ -5,6 +5,7 @@ from functools import wraps
 from typing import Dict
 
 import pydantic
+import starlette.responses
 from fastapi.responses import JSONResponse, HTMLResponse
 
 
@@ -42,13 +43,16 @@ def format_response(f):
                 result = {}
 
             elif isinstance(result, RedirectResponse):
-                return HTMLResponse(**result.to_response())
+                return result.to_response()
 
             elif isinstance(result, ApiError):
                 return JSONResponse({"detail": result.detail}, status_code=result.code)
 
             elif isinstance(result, pydantic.BaseModel):
                 return HTMLResponse(result.json(), headers={"Content-Type": "application/json"})
+
+            elif isinstance(result, starlette.responses.Response):
+                return result
 
             return json_response(result)
         except RedirectResponse as result:
@@ -85,16 +89,22 @@ class Response(ISerializable):
 
 
 class RedirectResponse(Exception):
-    def __init__(self, location: str):
+    def __init__(self, location: str, cookie: Dict = None):
         self.location = location
+        self.cookie = cookie
 
     def to_response(self):
-        return {
-            "status_code": 302,
-            "headers": {"location": self.location, "Content-Type": "text/html; charset=UTF-8"},
-            "content": """<html>If you are not redirected, <a href="{}">please click here</a></html>"""
-                .format(self.location)
-        }
+        response = starlette.responses.Response(
+            content="""<html>If you are not redirected, <a href="{}">please click here</a></html>"""
+                .format(self.location),
+            headers={"location": self.location},
+            status_code=302
+        )
+
+        if self.cookie:
+            for k, v in self.cookie.items():
+                response.set_cookie(k, v, secure=True, httponly=True)
+        return response
 
 
 @dataclasses.dataclass

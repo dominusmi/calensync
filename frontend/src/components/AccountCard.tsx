@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import AccountCalendar from './AccountCalendar';
 import API from '../utils/const';
-import { get_session_id } from '../utils/session';
+import { getLocalSession } from '../utils/session';
 import axios from 'axios';
 import { createToast } from './Toast';
 
@@ -33,9 +33,7 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
                     `${API}/accounts/${account.uuid}/calendars`,
                     {
                         method: 'GET',
-                        headers: {
-                            Authorization: get_session_id()!
-                        }
+                        withCredentials: true
                     }
                 );
                 setCalendars(response.data);

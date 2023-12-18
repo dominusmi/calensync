@@ -1,7 +1,7 @@
 // Home.tsx
 
 import React, { useEffect, useState } from 'react';
-import { get_session_id, getLoggedUser, User } from '../utils/session'; // Adjust the import path
+import { getLocalSession, getLoggedUser, User } from '../utils/session'; // Adjust the import path
 import API, { PUBLIC_URL } from '../utils/const';
 import AccountCard, { Account } from '../components/AccountCard';
 import LoadingOverlay from '../components/LoadingOverlay';
@@ -59,10 +59,9 @@ const Dashboard: React.FC = () => {
 
     const response = await fetch(`${API}/accounts`, {
       method: 'GET',
-      headers: {
-        Authorization: get_session_id()!,
-      },
+      credentials: 'include'
     });
+
     if (!response.ok) {
       const error = await response.json();
       createToast(error.message || "Internal server error", MessageKind.Error);
@@ -77,28 +76,30 @@ const Dashboard: React.FC = () => {
   // Render AccountCards for each account
   return (
     <Layout>
-      {loading && <LoadingOverlay />}
-      {user != null && user.customer_id == null &&
-        // show trial message
-        <div className='container-sm p-0 mt-2'>
-          <p className='p-0 m-0'>You have {daysLeft} days left on your free trial. </p>
-          <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
-        </div>
-      }
-      {accounts && accounts.map((account) => (
-        <AccountCard key={account.uuid} account={account} />
-      ))}
-      {accounts && accounts.length === 0 &&
-        <div className="container-sm card my-4 py-4 shadow-sm rounded border-0 template account-row">
-          <div className="row mx-2">
-            <h2>You're set 🎉</h2>
-            <p>You can connect your Google calendars with the button below</p>
+      <div className='container col-xxl-8'>
+        {loading && <LoadingOverlay />}
+        {user != null && user.customer_id == null &&
+          // show trial message
+          <div className='container-sm p-0 mt-2'>
+            <p className='p-0 m-0'>You have {daysLeft} days left on your free trial. </p>
+            <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
           </div>
-        </div>
-      }
-      <ContactButton/>
-      <AddCalendarAccount />
-      <TallyComponent/>
+        }
+        {accounts && accounts.map((account) => (
+          <AccountCard key={account.uuid} account={account} />
+        ))}
+        {accounts && accounts.length === 0 &&
+          <div className="container-sm card my-4 py-4 shadow-sm rounded border-0 template account-row">
+            <div className="row mx-2">
+              <h2>You're set 🎉</h2>
+              <p>You can connect your Google calendars with the button below</p>
+            </div>
+          </div>
+        }
+        <ContactButton />
+        <AddCalendarAccount />
+        <TallyComponent />
+      </div>
     </Layout>
   );
 };

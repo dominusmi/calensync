@@ -1,22 +1,27 @@
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Container from 'react-bootstrap/Container';
-import { get_session_id } from '../utils/session';
+import { optimisticIsConnected, logout } from '../utils/session';
 import { PUBLIC_URL } from '../utils/const';
+import { useEffect, useState } from 'react';
 
 function NavBar() {
-  const isConnected = get_session_id();
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+
+  useEffect(() => {
+    optimisticIsConnected().then((loggedIn) => setIsConnected(loggedIn))
+  }, [])
 
   function handleLogout(){
+    logout().then(() => window.location.href = `/login`)
     localStorage.removeItem('session-id');
-    window.location.href = `${PUBLIC_URL}/login`
   }
 
   return (
     <div>
       {isConnected &&
-        <Navbar expand="md" className="hero py-2 hero-navbar">
-          <Container className='p-0'>
+        <Navbar expand="md" className="hero py-2 hero-navbar d-flex justify-content-center px-3">
+          <Container className='container col-xxl-8'>
             <Navbar.Brand href={`${PUBLIC_URL}/`}> <img
               src={`${PUBLIC_URL}/logo.png`}
               width="30"
@@ -37,7 +42,7 @@ function NavBar() {
         </Navbar>
       }
       {!isConnected &&
-        <Navbar expand="md" className="hero pt-2 hero-navbar ">
+        <Navbar expand="md" className="hero py-2 hero-navbar d-flex justify-content-center px-3">
           <Container className='p-0'>
             <Navbar.Brand href={`${PUBLIC_URL}/`}> <img
               src={`${PUBLIC_URL}/logo.png`}

@@ -4,7 +4,7 @@ import { CheckoutEventNames, Paddle, PaddleEventData, initializePaddle } from '@
 import Layout from '../components/Layout';
 import { Price } from '@paddle/paddle-js/types/price-preview/price-preview';
 import LoadingOverlay from '../components/LoadingOverlay';
-import { get_session_id, getLoggedUser, User } from '../utils/session';
+import { getLocalSession, getLoggedUser, User } from '../utils/session';
 import { MessageKind, setMessage } from '../utils/common';
 import { toast } from 'react-toastify';
 import { createToast } from '../components/Toast';
@@ -42,6 +42,25 @@ const Plan: React.FC = () => {
     setPricingLoaded(true);
   };
 
+  async function verifyTransactionId(transaction_id: string) {
+    const response = await fetch(`${API}/paddle/verify_transaction?transaction_id=${transaction_id}`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      toast.error(`Failed to verify transaction ${transaction_id} - this should mean no payment was made. If you believe there was, please email at support@calensync.live`, {
+        position: 'top-center',
+        autoClose: false,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+      return
+    }
+  }
+
   async function paddleCallback(event: PaddleEventData) {
     if (event.name == CheckoutEventNames.CHECKOUT_COMPLETED) {
 
@@ -51,24 +70,7 @@ const Plan: React.FC = () => {
         const data = event.data!;
         const transaction_id = data.transaction_id;
 
-        const response = await fetch(`${API}/paddle/verify_transaction?transaction_id=${transaction_id}`, {
-          method: 'GET',
-          headers: {
-            Authorization: get_session_id()!,
-          }
-        });
-
-        if (!response.ok) {
-          toast.error(`Failed to verify transaction ${transaction_id} - this should mean no payment was made. If you believe there was, please email at support@calensync.live`, {
-            position: 'top-center',
-            autoClose: false,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          })
-          return
-        }
+        await verifyTransactionId(transaction_id)
       } finally {
         setIsLoading(false);
       }
@@ -112,9 +114,7 @@ const Plan: React.FC = () => {
       try {
         const response = await fetch(`${API}/paddle/subscription`, {
           method: 'GET',
-          headers: {
-            Authorization: get_session_id()!,
-          }
+          credentials: 'include'
         });
 
         if (!response.ok) {
@@ -125,11 +125,30 @@ const Plan: React.FC = () => {
         data.next_billed_at = new Date(data.next_billed_at);
         setSubscription(data)
       } finally {
-        console.log("ch3ck")
         setIsLoading(false);
       }
     } else {
-      setShowPricing(true);
+      setIsLoading(true);
+      if(user!.transaction_id !== null){
+        let iteration = 0;
+        createToast("Transaction confirmed, verifying your subscription", MessageKind.Info);
+        while(iteration < 3){
+          await verifyTransactionId(user!.transaction_id);
+          let updatedUser = await getLoggedUser();
+          if(updatedUser.subscription_id !== null){
+            setUser(updatedUser);
+            return
+          }
+          // wait one second before trying again
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          iteration += 1;
+        }
+        setIsLoading(false);
+        createToast("We were unable to confirm your subscription, but the transaction is confirmed. Please check this page again later", MessageKind.Error);
+      }
+      else{
+        setShowPricing(true);
+      }
     }
   }
 

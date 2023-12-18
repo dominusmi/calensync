@@ -15,23 +15,27 @@ import { PUBLIC_URL } from "./utils/const";
 import GoogleDisclosure from "./pages/GoogleDisclosure";
 import HowToSynchronizeCalendars from "./pages/blog/HowToSynchronizeCalendars";
 import HowToAvoidCalendlyConflicts from "./pages/blog/HowToAvoidCalendlyConflicts";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 
 function App() {
+
   return (
+    <ErrorBoundary>
     <Router basename={PUBLIC_URL}>
       <Routes>
-        <Route path="/" element={<Home/>} />
-        <Route path="/dashboard" element={<Dashboard/>} />
-        <Route path="/login" element={<Login/>} />
-        <Route path="/tos" element={<Tos/>} />
-        <Route path="/privacy" element={<Privacy/>} />
-        <Route path="/plan" element={<Plan/>} />
-        <Route path="/google-privacy" element={<GoogleDisclosure/>}></Route>
-        <Route path="/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars/>}></Route>
-        <Route path="/blog/avoid-calendly-conflicts" element={<HowToAvoidCalendlyConflicts/>}></Route>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/tos" element={<Tos />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/plan" element={<Plan />} />
+        <Route path="/google-privacy" element={<GoogleDisclosure />}></Route>
+        <Route path="/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route>
+        <Route path="/blog/avoid-calendly-conflicts" element={<HowToAvoidCalendlyConflicts />}></Route>
       </Routes>
     </Router>
+    </ErrorBoundary>
   );
 }
 

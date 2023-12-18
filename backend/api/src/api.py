@@ -1,5 +1,7 @@
+from typing import Annotated, Union
+
 import boto3
-from fastapi import FastAPI, Request, Query, Header, Body
+from fastapi import FastAPI, Request, Query, Header, Body, Cookie
 from mangum import Mangum
 from pydantic import BaseModel
 
@@ -27,7 +29,7 @@ def post__webhook(event: Request):
 
 @app.get("/paddle/verify_transaction")
 @format_response
-def post__paddle_verify_transaction(authorization: str = Header(None), transaction_id: str = Query()):
+def post__paddle_verify_transaction(authorization: Annotated[Union[str, None], Cookie()] = None, transaction_id: str = Query()):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         paddle_verify_transaction(user, transaction_id, boto3.Session())
@@ -45,21 +47,18 @@ def get__oauth2(state: str = Query(), code: str = Query()):
 
 @app.get("/google/sso/prepare")
 @format_response
-def get__prepare_google_sso_oauth(authorization: str = Header(None)):
+def get__prepare_google_sso_oauth(tos: int = Query(0)):
     """
     Create unique authorization URL
     todo: only signin/signup or also for calendar?
     """
-    session_id = authorization
-    if session_id is None:
-        raise ApiError("Session ID must be defined")
     with DatabaseSession(os.environ["ENV"]) as db:
-        return prepare_google_sso_oauth(session_id, db, boto3.Session())
+        return prepare_google_sso_oauth(tos, db, boto3.Session())
 
 
 @app.get('/google/calendar/prepare')
 @format_response
-def get__prepare_google_calendar_oauth(authorization: str = Header(None)):
+def get__prepare_google_calendar_oauth(authorization: Annotated[Union[str, None], Cookie()] = None):
     """
     Create unique authorization URL
     todo: only signin/signup or also for calendar?
@@ -71,7 +70,7 @@ def get__prepare_google_calendar_oauth(authorization: str = Header(None)):
 
 @app.get('/accounts')
 @format_response
-def get__calendar_accounts(authorization: str = Header(None)):
+def get__calendar_accounts(authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         return get_calendar_accounts(user, db)
@@ -79,7 +78,7 @@ def get__calendar_accounts(authorization: str = Header(None)):
 
 @app.get('/accounts/{calendar_account_id}/calendars')
 @format_response
-def get__calendars(calendar_account_id: str, authorization: str = Header(None)):
+def get__calendars(calendar_account_id: str, authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         calendars = get_calendars(user, calendar_account_id, db)
@@ -88,7 +87,7 @@ def get__calendars(calendar_account_id: str, authorization: str = Header(None)):
 
 @app.post('/accounts/{calendar_account_id}/calendars/refresh')
 @format_response
-def post__refresh_calendars(calendar_account_id: str, authorization: str = Header(None)):
+def post__refresh_calendars(calendar_account_id: str, authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         return refresh_calendars(user, calendar_account_id, db)
@@ -96,7 +95,7 @@ def post__refresh_calendars(calendar_account_id: str, authorization: str = Heade
 
 @app.post('/tos')
 @format_response
-def post__tos(authorization: str = Header(None)):
+def post__tos(authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         return accept_tos(user, db)
@@ -108,7 +107,7 @@ class PatchCalendarBody(BaseModel):
 
 @app.patch('/calendars/{calendar_id}')
 @format_response
-def patch__calendar(calendar_id: str, body: PatchCalendarBody, authorization: str = Header(None)):
+def patch__calendar(calendar_id: str, body: PatchCalendarBody, authorization: Annotated[Union[str, None], Cookie()] = None):
     """
     Update a calendar. Used to set a calendar as active.
     """
@@ -132,7 +131,7 @@ def patch__calendar(calendar_id: str, body: PatchCalendarBody, authorization: st
 
 @app.delete('/calendars/{account_id}')
 @format_response
-def delete__calendar(account_id: str, authorization: str = Header(None), body: Dict[str, str] = Body(...)):
+def delete__calendar(account_id: str, authorization: Annotated[Union[str, None], Cookie()] = None, body: Dict[str, str] = Body(...)):
     """
     Update a calendar. Used to set a calendar as active.
     """
@@ -143,7 +142,7 @@ def delete__calendar(account_id: str, authorization: str = Header(None), body: D
 
 @app.get('/calendars/{calendar_id}')
 @format_response
-def get__calendar(calendar_id: str, authorization: str = Header(None)):
+def get__calendar(calendar_id: str, authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         c = get_calendar(user, calendar_id, db)
@@ -152,7 +151,7 @@ def get__calendar(calendar_id: str, authorization: str = Header(None)):
 
 @app.get('/whoami')
 @format_response
-def get__whoami(authorization: str = Header(None)):
+def get__whoami(authorization: Annotated[Union[str, None], Cookie()] = None):
     """
     Should return profile information, right now only checks
     the session
@@ -162,19 +161,32 @@ def get__whoami(authorization: str = Header(None)):
         if user.tos is None:
             raise ApiError('', code=309)
         return {"customer_id": user.customer_id, "date_created": user.date_created,
-                "subscription_id": user.subscription_id}
+                "subscription_id": user.subscription_id, "transaction_id": user.transaction_id}
+
+
+@app.get('/logout')
+@format_response
+def get__logout(authorization: Annotated[Union[str, None], Cookie()] = None):
+    """
+    Should return profile information, right now only checks
+    the session
+    """
+    response = starlette.responses.Response()
+    response.set_cookie("authorization", httponly=True, secure=True, expires=utcnow())
+    return response
 
 
 @app.get('/paddle/subscription')
 @format_response
-def get__paddle_subscription(authorization: str = Header(None)):
+def get__paddle_subscription(authorization: Annotated[Union[str, None], Cookie()] = None):
     """
     Should return profile information, right now only checks
     the session
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        return get_paddle_subscription(user)
+
+        return get_paddle_subscription(user, boto3.Session())
 
 
 from fastapi.middleware.cors import CORSMiddleware

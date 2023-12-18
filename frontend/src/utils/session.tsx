@@ -1,4 +1,3 @@
-import { MessageKind, setMessage } from "./common";
 import API, { PUBLIC_URL } from "./const";
 
 export enum VerifySession {
@@ -11,21 +10,14 @@ export interface User {
   customer_id: string;
   date_created: Date;
   subscription_id: string | null;
+  transaction_id: string | null;
 }
 
-export async function verify_session_id(): Promise<VerifySession | User> {
-  const session_id = get_session_id();
-
-  if (session_id == null) {
-    return VerifySession.INVALID;
-  }
-
+export async function whoami() {
   try {
     const response = await fetch(`${API}/whoami`, {
       method: 'GET',
-      headers: {
-        Authorization: session_id,
-      },
+      credentials: 'include'
     });
 
     if (response.status === 309) {
@@ -33,34 +25,62 @@ export async function verify_session_id(): Promise<VerifySession | User> {
     }
     else if (!response.ok) {
       if (response.status == 403) {
-        localStorage.removeItem("session-id")
+        removeLocalSession()
         return VerifySession.LOGIN;
       }
+      removeLocalSession()
       return VerifySession.INVALID;
     }
     let user = await response.json();
+    
     user.date_created = new Date(user.date_created);
+    setLocalSession(user);
     return user;
 
   } catch (error) {
+    removeLocalSession()
     return VerifySession.INVALID;
   }
 }
 
-export function get_session_id() {
-  // Implement the logic to retrieve the session ID from localStorage or wherever it is stored
-  return localStorage.getItem("session-id")
+export async function optimisticIsConnected(): Promise<boolean> {
+  const session_id = getLocalSession();
+  if(session_id == null) {
+    let response = await whoami();
+    if(typeof response === 'number'){
+      return false;
+    }
+  }
+  return true;
 }
 
+export function setLocalSession(user: User) {
+  return sessionStorage.setItem("session-id", JSON.stringify(user))
+}
+
+export function getLocalSession() {
+  // Implement the logic to retrieve the session ID from localStorage or wherever it is stored
+  return sessionStorage.getItem("session-id")
+}
+
+export function removeLocalSession() {
+  sessionStorage.removeItem("session-id")
+}
 
 export const getLoggedUser: () => Promise<User> = async () => {
-  const result = await verify_session_id();
+  const result = await whoami();
   if (result == VerifySession.TOS) {
-    window.location.href = `${PUBLIC_URL}/tos`;
+    window.location.href = `${PUBLIC_URL}/tos?logged=true`;
   } else if (result == VerifySession.LOGIN || result === VerifySession.INVALID) {
     window.location.href = `${PUBLIC_URL}/login`;
   }
   return result as User;
 }
 
-export default verify_session_id;
+export async function logout() {
+  removeLocalSession();
+  return fetch(`${API}/logout`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+}
