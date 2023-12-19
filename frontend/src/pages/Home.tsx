@@ -57,23 +57,23 @@ const Home: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <div className='container col-xxl-8 '>
-                <div className="row g-4 mt-5 mb-3 pt-5 pb-0 row-cols-1 row-cols-lg-2">
-                    <div className="feature col">
+            <div className='container col-xxl-8 gy-4'>
+                <div className="row g-lg-4 mt-4 mt-lg-3 mb-lg-3 pt-lg-3 pb-lg-2 row-cols-1 row-cols-lg-2">
+                    <div className="feature col py-2">
                         <h2>Unlimited Calendars</h2>
                         <p className='lead'>No limit on the number of accounts and calendars you want to sync together. Gotta catch them all!</p>
                     </div>
-                    <div className="feature col">
+                    <div className="feature col py-2">
                         <h2>Synchronized in seconds</h2>
                         <p className='lead'>When an event is created or modified, it is updated on all calendars in seconds.</p>
                     </div>
                 </div>
-                <div className="row g-4 mt-3 mb-5 pt-3 pb-5 row-cols-1 row-cols-lg-2">
-                    <div className="feature col">
+                <div className="row mt-0 mb-4 g-lg-4 mt-lg-3 mb-lg-2 pt-lg-3 pb-lg-5 row-cols-1 row-cols-lg-2">
+                    <div className="feature col  py-2">
                         <h2>Privacy first</h2>
                         <p className='lead'>Information about events is not synchronized between calendars - instead, a blocker event is created in order to protect your privacy.</p>
                     </div>
-                    <div className="feature col">
+                    <div className="feature col  py-2">
                         <h2>Ready to go in 30 Seconds</h2>
                         <p className='lead'>You can have all your calendars synchronized in less than a minute. Don't believe us? Go ahead and get started right now!</p>
                     </div>
@@ -84,27 +84,31 @@ const Home: React.FC = () => {
                     <PaddlePricing paddle={paddle} isHome={true} />
                 }
             </div>
-            <div className='col-lg-7 col-md-8 col-11 container content card mt-4 pt-4 pb-2 mx-auto'>
-                <a className='block-link' href={`${PUBLIC_URL}/blog/sync-multiple-google-calendars`}>
-                    <p className='text-muted small p-0 m-0'>Blog</p>
-                    <h2>How to Synchronize Google Calendars together</h2>
-                    <p className='text-muted'>
-                        If you're looking for how to sync multiple Google Calendars together, look no further.
-                        This brief article will explain all there is to know.
-                    </p>
-                </a>
+            <div className='container'>
+                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
+                    <a className='block-link' href={`${PUBLIC_URL}/blog/sync-multiple-google-calendars`}>
+                        <p className='text-muted small p-0 m-0'>Blog</p>
+                        <h2>How to Synchronize Google Calendars together</h2>
+                        <p className='text-muted'>
+                            If you're looking for how to sync multiple Google Calendars together, look no further.
+                            This brief article will explain all there is to know.
+                        </p>
+                    </a>
+                </div>
             </div>
-            <div className='col-lg-7 col-md-8 col-11 container content card mt-4 pt-4 pb-2 mx-auto'>
-                <a className='block-link' href={`${PUBLIC_URL}/blog/avoid-calendly-conflicts`}>
-                    <p className='text-muted small p-0 m-0'>Blog</p>
-                    <h2>Avoid Calendly conflicts</h2>
-                    <p className='text-muted'>
-                    Calendly conflicts can be terrible, so how can you avoid them? We discuss how Calensync helps
-                    you solve this issue in two minutes!
-                    </p>
-                </a>
+            <div className='container'>
+                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
+                    <a className='block-link' href={`${PUBLIC_URL}/blog/avoid-calendly-conflicts`}>
+                        <p className='text-muted small p-0 m-0'>Blog</p>
+                        <h2>Avoid Calendly conflicts</h2>
+                        <p className='text-muted'>
+                            Calendly conflicts can be terrible, so how can you avoid them? We discuss how Calensync helps
+                            you solve this issue in two minutes!
+                        </p>
+                    </a>
+                </div>
             </div>
-        </Layout>
+        </Layout >
     );
 };
 
