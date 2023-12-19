@@ -1,0 +1,9 @@
+{
+    "title_sync_calendars": "Synchronise tes Calendriers Google",
+    "sign_up": "S'inscrire",
+    "home": {
+        "meta": {
+            "description": "Calensync vous permet de synchroniser plusieurs calendriers Google, tout en protegeant votre vie prive dans la description de l'evenement. Le service marche en creants de nouveaux evenement 'Blocker' dans tout les calendriers synchronisé."
+        }
+    }
+}

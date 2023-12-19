@@ -4,8 +4,10 @@ import Container from 'react-bootstrap/Container';
 import { optimisticIsConnected, logout, getLocalSession } from '../utils/session';
 import { PUBLIC_URL } from '../utils/const';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const NavBar: React.FC<{ verify_session?: boolean }> = ({ verify_session = true }) => {
+  const { t } = useTranslation();
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
@@ -35,16 +37,16 @@ const NavBar: React.FC<{ verify_session?: boolean }> = ({ verify_session = true 
         <Navbar.Collapse id="basic-navbar-nav">
           {isConnected &&
             <Nav className="me-auto lead">
-              <Nav.Link href={`${PUBLIC_URL}/`}>Home</Nav.Link>
-              <Nav.Link href={`${PUBLIC_URL}/dashboard`}>Dashboard</Nav.Link>
-              <Nav.Link href={`${PUBLIC_URL}/plan`}>Plan</Nav.Link>
-              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+              <Nav.Link href={`${PUBLIC_URL}/`}>{t('navbar.home')}</Nav.Link>
+              <Nav.Link href={`${PUBLIC_URL}/dashboard`}>{t('navbar.dashboard')}</Nav.Link>
+              <Nav.Link href={`${PUBLIC_URL}/plan`}>{t('navbar.plan')}</Nav.Link>
+              <Nav.Link onClick={handleLogout}>{t('navbar.logout')}</Nav.Link>
             </Nav>
           }
           {!isConnected &&
             <Nav className="me-auto lead">
-              <Nav.Link href={`${PUBLIC_URL}/`}>Home</Nav.Link>
-              <Nav.Link href={`${PUBLIC_URL}/login`}>Login</Nav.Link>
+              <Nav.Link href={`${PUBLIC_URL}/`}>{t('navbar.home')}</Nav.Link>
+              <Nav.Link href={`${PUBLIC_URL}/dashboard`}>{t('navbar.dashboard')}</Nav.Link>
             </Nav>
           }
         </Navbar.Collapse>

@@ -2,6 +2,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
+  useParams,
 } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -16,25 +17,53 @@ import GoogleDisclosure from "./pages/GoogleDisclosure";
 import HowToSynchronizeCalendars from "./pages/blog/HowToSynchronizeCalendars";
 import HowToAvoidCalendlyConflicts from "./pages/blog/HowToAvoidCalendlyConflicts";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { initReactI18next, I18nextProvider } from "react-i18next";
+import i18next from "i18next";
+import LanguageDetector from 'i18next-browser-languagedetector';
+
+i18next
+  .use(initReactI18next)
+  .use(LanguageDetector)
+  .init({
+    resources: {
+      en: {
+        translation: require('./locales/en/common.json'),
+      },
+      fr: {
+        translation: require('./locales/fr/common.json'),
+      }
+    },
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false,
+    },
+    detection: { order: ['sessionStorage', 'path', 'navigator'] }
+  });
+
 
 
 function App() {
+  const { lang } = useParams(); 
+  
+  if(i18next.resolvedLanguage && sessionStorage.getItem("i18nextLng") === null){
+    sessionStorage.setItem("i18nextLng", i18next.resolvedLanguage);
+  }
 
   return (
     <ErrorBoundary>
-    <Router basename={PUBLIC_URL}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/tos" element={<Tos />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/plan" element={<Plan />} />
-        <Route path="/google-privacy" element={<GoogleDisclosure />}></Route>
-        <Route path="/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route>
-        <Route path="/blog/avoid-calendly-conflicts" element={<HowToAvoidCalendlyConflicts />}></Route>
-      </Routes>
-    </Router>
+        <Router basename={PUBLIC_URL}>
+          <Routes>
+            <Route path="/:lang?/" element={<Home />} />
+            <Route path="/:lang?/dashboard" element={<Dashboard />} />
+            <Route path="/:lang?/login" element={<Login />} />
+            <Route path="/:lang?/tos" element={<Tos />} />
+            <Route path="/:lang?/privacy" element={<Privacy />} />
+            <Route path="/:lang?/plan" element={<Plan />} />
+            <Route path="/:lang?/google-privacy" element={<GoogleDisclosure />}></Route>
+            <Route path="/:lang?/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route>
+            <Route path="/:lang?/blog/avoid-calendly-conflicts" element={<HowToAvoidCalendlyConflicts />}></Route>
+          </Routes>
+        </Router>
     </ErrorBoundary>
   );
 }

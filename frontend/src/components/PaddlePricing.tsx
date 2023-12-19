@@ -3,9 +3,11 @@ import { LineItem, Price } from "@paddle/paddle-js/types/price-preview/price-pre
 import { useEffect, useState } from "react";
 import { TailSpin } from "react-loader-spinner";
 import { PADDLE_PRICING } from "../utils/const";
+import { useTranslation } from "react-i18next";
 
 
 export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedBuy?: (price: Price) => void, isReady?: () => void }> = ({ isHome, clickedBuy, paddle, isReady }) => {
+    const { t } = useTranslation();
     const [prices, setPrices] = useState<LineItem[]>([]);
     const [currentPrice, setCurrentPrice] = useState<number>(0);
     const [isChecked, setIsChecked] = useState(false);
@@ -74,7 +76,7 @@ export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedB
             <div className='row mb-4'>
                 <div className="feature col">
                     <h1>Pricing</h1>
-                    <p className='lead'>Simple pricing for a simple product. 7 days free trial, no commitment, no credit card. Then..</p>
+                    <p className='lead'>{t('paddle_pricing.free_trial')}</p>
                 </div>
             </div>
             {isHome && prices.length == 0 && 
@@ -94,27 +96,27 @@ export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedB
             {prices.length > 0 &&
                 <div>
                     <div className="d-flex justify-content-center">
-                        <h3 className="mb-0 mx-4">Monthly</h3>
+                        <h3 className="mb-0 mx-4">{t('paddle_pricing.monthly')}</h3>
                         <div className="pricing-switch form-check form-switch mx-4">
                             <input className="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked={isChecked} onChange={changePricingSwitch} />
                         </div>
-                        <h3 className="mb-0 ml-4">Yearly</h3><p className='text-muted mx-1 align-middle'>48% Off!</p>
+                        <h3 className="mb-0 ml-4">{t('paddle_pricing.yearly')}</h3><p className='text-muted mx-1 align-middle'>48% Off!</p>
                     </div>
                     <div className='row mt-3'>
                         <h2 className='fw-bold display-6 mb-0'>
-                            {prices[currentPrice].formattedTotals.subtotal}$
+                            {prices[currentPrice].formattedTotals.subtotal}
                         </h2>
                         <div>
                             {isHome &&
-                                <p className='text-muted small mb-4'>*Exluding VAT</p>
+                                <p className='text-muted small mb-4'>{t('paddle_pricing.excluding_vat')}</p>
                             }
                         </div>
 
                         {!isHome &&
                             <div>
-                                <p className='text-muted small mb-4'>*Excluding {prices[currentPrice].formattedTotals.tax} VAT</p>
+                                <p className='text-muted small mb-4'>{t('paddle_pricing.excluding_vat')} {prices[currentPrice].formattedTotals.tax}</p>
                                 <div className="d-grid gap-2 d-md-flex justify-content-md-center mt-1">
-                                    <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={onClick}>Buy</button>
+                                    <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={onClick}>{t('paddle_pricing.buy')}</button>
                                 </div>
                             </div>
                         }

@@ -5,6 +5,7 @@ import LoadingOverlay from './LoadingOverlay';
 import { MessageKind, setMessage } from '../utils/common';
 import { whoami, getLocalSession, optimisticIsConnected } from '../utils/session';
 import { createToast } from './Toast';
+import { useTranslation } from 'react-i18next';
 
 const cardContainerStyle: React.CSSProperties = {
     display: 'flex',
@@ -20,9 +21,11 @@ const loginCardStyle: React.CSSProperties = {
 };
 
 const LoginCard: React.FC = () => {
+    const { t } = useTranslation();
     const [isLoading, setLoading] = useState(false);
     const [isLogin, setIsLogin] = useState(false);
     const [acceptedTos, setAcceptedTos] = useState(false);
+
 
     const checkedTos = (e: any) => {
         setAcceptedTos(e.target.checked);
@@ -68,15 +71,13 @@ const LoginCard: React.FC = () => {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'A server error occurred');
+                const message = error.message || 'A server error occurred'
+                createToast(message, MessageKind.Error);
+                throw new Error(message);
             }
 
             const data = await response.json();
             window.location.href = data.url;
-        } catch (error) {
-            // Handle errors, for example, show an error toast
-            console.error(error);
-            // create_toast(error.message || "A server error occurred");
         } finally {
             setLoading(false);
         }
@@ -93,7 +94,7 @@ const LoginCard: React.FC = () => {
                 {!isLogin &&
                     <div>
                         <div className="my-2 text-center">
-                            <h3>Sign up</h3>
+                            <h3>{t("sign_up")}</h3>
                             <p className="text-muted">Sign up and get started in 30 seconds!</p>
                         </div>
                         <div className="row text-center">

@@ -1,0 +1,55 @@
+{
+    "title_sync_calendars": "Sync your Google Calendars",
+    "sign_up": "Sign up",
+    "free_trial": "7 days free trial, no credit-card or commitment, give us a try!",
+    "home": {
+        "meta": {
+            "description": "Calensync allows you to synchronize multiple Google calendars easily, while keeping the privacy of the event description. It copies events between calendars and replaces them with a Blocker. The product uses as a SaaS subscription model. On top of that, it's open-source!",
+            "og:title": "Synchronize your Google Calendars"
+
+        },
+        "hero": {
+            "title": "No more event conflicts.",
+            "heading": "Sync all your Google calendars together and save yourself trouble of having to reschedule appointments. Make sure no one ever books a meeting when you're already busy.",
+            "cta": "Get Started"
+        },
+        "value": {
+            "1_head": "Unlimited Calendars",
+            "1_content": "No limit on the number of accounts and calendars you want to sync together. Gotta catch them all!",
+            "2_head": "Synchronized in seconds",
+            "2_content": "When an event is created or modified, it is updated on all calendars in seconds.",
+            "3_head": "Privacy first",
+            "3_content": "Information about events is not synchronized between calendars - instead, a blocker event is created in order to protect your privacy.",
+            "4_head": "Ready to go in 30 Seconds",
+            "4_content": "You can have all your calendars synchronized in less than a minute. Don't believe us? Go ahead and get started right now!"
+        }
+    },
+    "blog_list": {
+        "sync_google_calendars": {
+            "title": "How to Synchronize Google Calendars together",
+            "headline": "If you're looking for how to sync multiple Google Calendars together, look no further. This brief article will explain all there is to know.",
+        },
+        "avoid_calendly_conflicts": {
+            "title": "Avoid Calendly conflicts",
+            "headline": "Calendly conflicts can be terrible, so how can you avoid them? We discuss how Calensync helps you solve this issue in two minutes!"
+        }
+    },
+    "paddle_pricing": {
+        "excluding_vat": "*Excluding VAT",
+        "monthly": "Monthly",
+        "yearly": "Yearly",
+        "buy": "Buy",
+        "free_trial": "7 days free trial, no credit-card or commitment. Then.."
+    },
+    "navbar": {
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "plan": "Plan",
+        "logout": "Logout"
+    },
+    "footer": {
+        "tos": "Terms of Use",
+        "privacy": "Privacy Policy",
+        "google_disclosure": "Google Usage Disclosure"
+    }
+}
