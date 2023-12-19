@@ -1,7 +1,6 @@
 from typing import Annotated, Union
 
-import boto3
-from fastapi import FastAPI, Request, Query, Header, Body, Cookie
+from fastapi import FastAPI, Request, Query, Body, Cookie
 from mangum import Mangum
 from pydantic import BaseModel
 
@@ -10,8 +9,10 @@ from calensync.api.common import format_response
 from calensync.api.endpoints import *
 from calensync.database.utils import DatabaseSession
 from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent
+from calensync.log import get_logger
 
 app = FastAPI(title="Calensync")  # Here is the magic
+logger = get_logger("api")
 
 
 @app.post("/webhook")
@@ -29,7 +30,8 @@ def post__webhook(event: Request):
 
 @app.get("/paddle/verify_transaction")
 @format_response
-def post__paddle_verify_transaction(authorization: Annotated[Union[str, None], Cookie()] = None, transaction_id: str = Query()):
+def post__paddle_verify_transaction(authorization: Annotated[Union[str, None], Cookie()] = None,
+                                    transaction_id: str = Query()):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         paddle_verify_transaction(user, transaction_id, boto3.Session())
@@ -107,7 +109,8 @@ class PatchCalendarBody(BaseModel):
 
 @app.patch('/calendars/{calendar_id}')
 @format_response
-def patch__calendar(calendar_id: str, body: PatchCalendarBody, authorization: Annotated[Union[str, None], Cookie()] = None):
+def patch__calendar(calendar_id: str, body: PatchCalendarBody,
+                    authorization: Annotated[Union[str, None], Cookie()] = None):
     """
     Update a calendar. Used to set a calendar as active.
     """
@@ -131,7 +134,8 @@ def patch__calendar(calendar_id: str, body: PatchCalendarBody, authorization: An
 
 @app.delete('/calendars/{account_id}')
 @format_response
-def delete__calendar(account_id: str, authorization: Annotated[Union[str, None], Cookie()] = None, body: Dict[str, str] = Body(...)):
+def delete__calendar(account_id: str, authorization: Annotated[Union[str, None], Cookie()] = None,
+                     body: Dict[str, str] = Body(...)):
     """
     Update a calendar. Used to set a calendar as active.
     """
@@ -189,6 +193,16 @@ def get__paddle_subscription(authorization: Annotated[Union[str, None], Cookie()
         return get_paddle_subscription(user, boto3.Session())
 
 
+@app.put('/console-error')
+@format_response
+def put__console_error(error: Dict):
+    """
+    Should return profile information, right now only checks
+    the session
+    """
+    logger.error(error)
+
+
 from fastapi.middleware.cors import CORSMiddleware
 
 origins = ["http://localhost:8000", "http://127.0.0.1:8080"]
@@ -201,7 +215,17 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-handler = Mangum(app)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"{request.url.path}")
+
+    response = await call_next(request)
+    logger.info(f"{response.status_code}")
+
+    return response
+
+handler = Mangum(app, lifespan='off')
 
 if __name__ == "__main__":
     import uvicorn
