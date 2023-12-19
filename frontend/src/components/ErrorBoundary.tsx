@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { ENV } from '../utils/const';
+import API, { ENV } from '../utils/const';
 
 interface ErrorBoundaryProps {
     children: ReactNode;
@@ -14,8 +14,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
         });
 
         if (ENV == "development" || ENV == "production") {
-            fetch('https://api.hook2email.com/hook/4b262ccb-a724-4bf7-b362-092b7407dba0/send', {
-                method: 'POST',
+            fetch(`${API}/console-error`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
