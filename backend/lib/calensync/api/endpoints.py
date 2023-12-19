@@ -48,7 +48,6 @@ def verify_session(session_id: Optional[str]) -> User:
         logger.debug(f"No session found for {session_id}")
         raise ApiError("Invalid or expired credentials", 403)
 
-    logger.debug(f"Session found for user {result[0].user.email}")
     user: User = result[0].user
     if not user.tos:
         logger.info("User has not accepted tos")
