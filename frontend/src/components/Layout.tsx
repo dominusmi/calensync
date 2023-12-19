@@ -51,7 +51,7 @@ const Layout: React.FC<LayoutProps> = ({ children, verify_session = true }) => {
     return (
         <div className='App bg-light'>
             <div className='content justify-content-center'>
-                <NavBar />
+            <NavBar verify_session={verify_session} />
                 <main className=''>
                     {children}
                 </main>
