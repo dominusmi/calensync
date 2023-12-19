@@ -56,7 +56,7 @@ def format_response(f):
 
             return json_response(result)
         except RedirectResponse as result:
-            return HTMLResponse(**result.to_response())
+            return result.to_response()
         except ApiError as e:
             # For "expected" errors (ApiError), we still return 200 but set internal
             # info differently
