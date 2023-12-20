@@ -32,6 +32,9 @@ const Home: React.FC = () => {
                 <meta charSet="utf-8" />
                 <title>{t('title_sync_calendars')}</title>
                 <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}`} />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr"/>
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}`} hrefLang="en"/>
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}`} hrefLang="x-default" />
                 <meta name="description" content={t("home.meta.description")} />
                 <meta name="og:title" content={t("home.meta.og:title")} />
                 <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}`} />
