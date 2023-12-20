@@ -14,7 +14,7 @@ const HowToSynchronizeCalendars: React.FC = () => {
                 <meta charSet="utf-8" />
                 <title>{ts("title")}</title>
                 <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}/blog/sync-multiple-google-calendars`} />
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/blog/sync-multiple-google-calendars`} hrefLang="en"/>
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en/blog/sync-multiple-google-calendars`} hrefLang="en"/>
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr/blog/sync-multiple-google-calendars`} hrefLang="fr"/>
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/blog/sync-multiple-google-calendars`} hrefLang="x-default" />
                 <meta name="description" content={ts("meta.description")} />
