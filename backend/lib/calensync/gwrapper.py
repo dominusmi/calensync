@@ -7,7 +7,9 @@ from typing import List, Dict, Any, Optional
 import google.oauth2.credentials
 import peewee
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
+from calensync.api.common import ApiError
 from calensync.calendar import EventsModificationHandler
 from calensync.database.model import Calendar, CalendarAccount, db, User, Event
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus
@@ -70,8 +72,13 @@ def get_google_email(credentials):
 
 def get_google_calendars(credentials) -> List[GoogleCalendar]:
     service = build('calendar', 'v3', credentials=credentials)
-    items = service.calendarList().list().execute()["items"]
-    return [GoogleCalendar.parse_obj(item) for item in items]
+    try:
+        items = service.calendarList().list().execute()["items"]
+        return [GoogleCalendar.parse_obj(item) for item in items]
+    except HttpError as e:
+        logger.error(e)
+        raise ApiError("Failed to process request due to Google credentials error")
+
 
 
 def datetime_to_google_time(dt: datetime.datetime) -> str:
