@@ -1,0 +1,58 @@
+{
+    "sync_google_calendars": {
+      "title": "Come sincronizzare i calendari Google insieme",
+      "date": "Dicembre 2023",
+      "headline": "Se stai cercando come sincronizzare più calendari Google insieme, non cercare oltre. Questo breve articolo spiegherà tutto ciò che c'è da sapere.",
+      "meta": {
+        "description": "In questo post, descriviamo i due modi per sincronizzare i calendari Google insieme",
+        "og_title": "Come sincronizzare i calendari Google"
+      },
+      "manually": {
+        "title": "Sincronizzazione manuale",
+        "headline": "La sincronizzazione manuale dei tuoi calendari coinvolge diverse fasi.",
+        "steps": {
+          "1": "Dalla pagina del tuo Google Calendar (su desktop), fai clic sulle tre icone dei pulsanti accanto al calendario",
+          "2": "Vai alla scheda Importa/Esporta",
+          "3": "Vai a Esporta",
+          "4": "Esporta i calendari che desideri sincronizzare",
+          "5": "Questo attiverà il download del file",
+          "6": "Vai al tuo secondo calendario",
+          "7": "Utilizzando lo stesso menu, questa volta vai a Importa",
+          "8": "Carica il file scaricato"
+        },
+        "end": "Hai ora sincronizzato con successo il tuo primo calendario con il secondo e dovrai ripetere questo in ogni direzione di sincronizzazione.",
+        "pros": {
+          "title": "Vantaggi della sincronizzazione manuale",
+          "free": "È gratuito"
+        },
+        "cons": {
+          "title": "Svantaggi della sincronizzazione manuale",
+          "privacy": "Nessun controllo sulla privacy: i tuoi eventi appariranno come sono",
+          "slow": "La sincronizzazione è lenta, di solito giornaliera",
+          "long": "La configurazione è lunga, soprattutto per più calendari"
+        }
+      },
+      "calensync": {
+        "title": "Usare Calensync",
+        "headline": "Ecco precisamente perché abbiamo creato Calensync: per fornire un servizio migliore a un prezzo molto equo. Ecco come funziona la configurazione:",
+        "steps": {
+          "1_span": "Accesso",
+          "1_text": "usando uno qualsiasi dei tuoi account Google",
+          "2": "Fai clic su \"Connetti calendari Google\" e collega ogni account",
+          "3": "Attiva la sincronizzazione dei calendari secondo necessità"
+        },
+        "pros": {
+          "title": "Vantaggi di Calensync",
+          "fast": "Sincronizzazione istantanea",
+          "privacy": "Privacy protetta",
+          "onboarding": "Configurazione in 2 minuti"
+        },
+        "cons": {
+          "title": "Svantaggi di Calensync",
+          "free": "Non è gratuito (ma costa poco)"
+        }
+      },
+      "cta": "Inizia ora e usa il coupon HAPPY23 per un mese gratuito!"
+    }
+  }
+  
