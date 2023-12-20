@@ -48,10 +48,10 @@ class GoogleDatetime(AbstractGoogleDate):
 class GoogleCalendar(BaseModel):
     kind: str
     id: str
-    summary: str
-    timeZone: str
-    selected: bool
-    accessRole: str
+    summary: Optional[str]
+    timeZone: Optional[str]
+    selected: Optional[bool]
+    accessRole: Optional[str]
     primary: bool = False
 
 
