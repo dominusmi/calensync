@@ -52,7 +52,7 @@ def verify_session(session_id: Optional[str]) -> User:
     if not user.tos:
         logger.info("User has not accepted tos")
         # raise RedirectResponse("tos.html")
-
+    logger.info(f"Verified {user.uuid}")
     return user
 
 
