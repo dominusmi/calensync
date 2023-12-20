@@ -1,9 +1,54 @@
 {
-    "title_sync_calendars": "Synchronise tes Calendriers Google",
+    "title_sync_calendars": "Synchronisez vos calendriers Google",
     "sign_up": "S'inscrire",
+    "free_trial": "Essai gratuit de 7 jours, sans engagements, essayez!",
     "home": {
         "meta": {
-            "description": "Calensync vous permet de synchroniser plusieurs calendriers Google, tout en protegeant votre vie prive dans la description de l'evenement. Le service marche en creants de nouveaux evenement 'Blocker' dans tout les calendriers synchronisé."
+            "description": "Calensync vous permet de synchroniser facilement plusieurs calendriers Google tout en préservant la confidentialité de la description de l'événement. Il copie les événements entre les calendriers et les remplace par un bloqueur.",
+            "og:title": "Synchronisez vos calendriers Google"
+        },
+        "hero": {
+            "title": "Fini les conflits d'événements.",
+            "heading": "Synchronisez tous vos calendriers Google ensemble et évitez les tracas de devoir reprogrammer des rendez-vous. Assurez-vous que personne ne réserve jamais une réunion lorsque vous êtes déjà occupé.",
+            "cta": "Let's go!"
+        },
+        "value": {
+            "1_head": "Calendriers illimités",
+            "1_content": "Aucune limite sur le nombre de comptes et de calendriers que vous souhaitez synchroniser. Attrapez-les tous !",
+            "2_head": "Synchronisé en quelques secondes",
+            "2_content": "Lorsqu'un événement est créé ou modifié, il est mis à jour sur tous les calendriers en quelques secondes.",
+            "3_head": "La confidentialité d'abord",
+            "3_content": "Les informations sur les événements ne sont pas synchronisées entre les calendriers - à la place, un événement bloqueur est créé pour protéger votre vie privée.",
+            "4_head": "Prêt en 30 secondes",
+            "4_content": "Vous pouvez avoir tous vos calendriers synchronisés en moins d'une minute. Vous ne nous croyez pas ? Allez-y et commencez dès maintenant !"
         }
+    },
+    "blog_list": {
+        "sync_google_calendars": {
+            "title": "Comment synchroniser les calendriers Google ensemble",
+            "headline": "Si vous cherchez comment synchroniser plusieurs calendriers Google ensemble, ne cherchez pas plus loin. Cet article bref expliquera tout ce qu'il y a à savoir."
+        },
+        "avoid_calendly_conflicts": {
+            "title": "Évitez les conflits avec Calendly",
+            "headline": "Les conflits Calendly peuvent être terribles, alors comment les éviter ? Nous expliquons comment Calensync vous aide à résoudre ce problème en deux minutes !"
+        }
+    },
+    "paddle_pricing": {
+        "excluding_vat": "*Hors TVA",
+        "monthly": "Mensuel",
+        "yearly": "Annuel",
+        "buy": "Acheter",
+        "free_trial": "Essai gratuit de 7 jours, sans engagements. Ensuite..."
+    },
+    "navbar": {
+        "home": "Accueil",
+        "dashboard": "Tableau de bord",
+        "plan": "Plan",
+        "logout": "Déconnexion"
+    },
+    "footer": {
+        "tos": "Conditions d'utilisation",
+        "privacy": "Politique de confidentialité",
+        "google_disclosure": "Divulgation de l'utilisation de Google"
     }
 }

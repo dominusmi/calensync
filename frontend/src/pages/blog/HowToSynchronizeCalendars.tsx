@@ -2,84 +2,87 @@ import React from 'react';
 import Layout from '../../components/Layout';
 import { Helmet } from 'react-helmet';
 import { PUBLIC_URL } from '../../utils/const';
+import { useTranslation } from 'react-i18next';
 
 
 const HowToSynchronizeCalendars: React.FC = () => {
+  const { t } = useTranslation(['blog']);
+  const ts = (s: string) => t(`sync_google_calendars.${s}`)
   return (
     <Layout verify_session={false}>
             <Helmet>
                 <meta charSet="utf-8" />
-                <title>How to sync Google Calendars</title>
+                <title>{ts("title")}</title>
                 <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}/blog/sync-multiple-google-calendars`} />
-                <meta name="description" content="In this post, we describe the two ways to synchronize Google Calendars together" />
-                <meta name="og:title" content="How to sync Google Calendars" />
-                <meta name="og:url" content="{`https://calensync.live${PUBLIC_URL}/blog/sync-multiple-google-calendars`}" />
-                <meta name="og:description" content="In this post, we describe the two ways to synchronize Google Calendars together" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/blog/sync-multiple-google-calendars`} hrefLang="en"/>
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr/blog/sync-multiple-google-calendars`} hrefLang="fr"/>
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/blog/sync-multiple-google-calendars`} hrefLang="x-default" />
+                <meta name="description" content={ts("meta.description")} />
+                <meta name="og:title" content={ts("meta.og_title")} />
+                <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}/blog/sync-multiple-google-calendars`} />
+                <meta name="og:description" content={ts("meta.description")} />
             </Helmet>
       <div className="container mt-4 d-flex m-auto d-flex justify-content-center">
         <article className='col-lg-8 col-sm-11 col-12'>
           <header className="mb-4 mt-4">
-            <h1 className="fw-bolder mb-1">How to sync multiple Google Calendars</h1>
-            <div className="text-muted fst-italic mb-2">December 2023</div>
+            <h1 className="fw-bolder mb-1">{ts("title")}</h1>
+            <div className="text-muted fst-italic mb-2">{ts("date")}</div>
           </header>
           {/* <figure className="mb-4"><img className="img-fluid rounded" src="https://dummyimage.com/900x400/ced4da/6c757d.jpg" alt="..." /></figure> */}
           <section className="mb-5">
             <p className="fs-5 mb-4">
-              If you're looking for how to sync multiple Google Calendars together, look no further.
-              This brief article will explain all there is to know.
+            {ts("headline")}
             </p>
-            <h2 className="fw-bolder mb-4 mt-5">Syncing manually</h2>
+            <h2 className="fw-bolder mb-4 mt-5">{ts("manually.title")}</h2>
             <p className="fs-5 mb-4">
-              Syncing your calendars manually involves multiple steps.
+              {ts("manually.headline")}
             </p>
             <ol>
-              <li>From your Google Calendar page (on desktop), click the three button icons next to the calendar</li>
-              <li>Go to the Import/Export tab</li>
-              <li>Go to Export</li>
-              <li>Export the calendars you wish to synchronize</li>
-              <li>This will trigger a file download</li>
-              <li>Go to your second calendar</li>
-              <li>Using the same menu, this time go to Import</li>
-              <li>Upload the downloaded file</li>
+              <li>{ts("manually.steps.1")}</li>
+              <li>{ts("manually.steps.2")}</li>
+              <li>{ts("manually.steps.3")}</li>
+              <li>{ts("manually.steps.4")}</li>
+              <li>{ts("manually.steps.5")}</li>
+              <li>{ts("manually.steps.6")}</li>
+              <li>{ts("manually.steps.7")}</li>
+              <li>{ts("manually.steps.8")}</li>
             </ol>
             <p className="fs-5 mb-4">
-              You have now succesfully synced your first calendar to the second, and you will have to repeat this in every
-              syncing direction.
+              {ts("manually.end")}
             </p>
-            <h3 className="fw-bolder mt-3">Pros of manual syncing</h3>
+            <h3 className="fw-bolder mt-3">{ts("manually.pros.title")}</h3>
             <ul>
-              <li>It's free</li>
+              <li>{ts("manually.pros.free")}</li>
             </ul>
-            <h3 className="fw-bolder mt-3">Cons of manual syncing</h3>
+            <h3 className="fw-bolder mt-3">{ts("manually.cons.title")}</h3>
             <ul>
-              <li>No privacy control: your events will appear as they are</li>
-              <li>Syncing is slow, usually daily</li>
-              <li>Setup is long, especially for multiple calendars</li>
+              <li>{ts("manually.cons.privacy")}</li>
+              <li>{ts("manually.cons.slow")}</li>
+              <li>{ts("manually.cons.long")}</li>
             </ul>
-            <h2 className="fw-bolder mb-4 mt-5">Using Calensync</h2>
+            <h2 className="fw-bolder mb-4 mt-5">{ts("calensync.title")}</h2>
             <p className="fs-5 mb-4">
-              That's precisely why we created Calensync: to provide a better service at a very fair price.
-              Here's how the setup works:
+              {ts("calensync.headline")}
             </p>
             <ol>
-              <li><a href="/login">Login</a> using any of your Google Accounts</li>
-              <li>Click "Connect Google Calendars" and connect each account</li>
-              <li>Switch on synchronization of the calendars as needed</li>
+              <li><a href="/login">{ts("calensync.steps.1_span")}</a> {ts("calensync.steps.1_text")}</li>
+              <li>{ts("calensync.steps.2")}</li>
+              <li>{ts("calensync.steps.3")}</li>
             </ol>
-            <h3 className="fw-bolder mt-3">Pros of Calensync</h3>
+            <h3 className="fw-bolder mt-3">{ts("calensync.pros.title")}</h3>
             <ul>
-              <li>Instant synchronization</li>
-              <li>Privacy protected</li>
-              <li>Setup in 2 minutes</li>
+              <li>{ts("calensync.pros.fast")}</li>
+              <li>{ts("calensync.pros.privacy")}</li>
+              <li>{ts("calensync.pros.onboarding")}</li>
             </ul>
-            <h3 className="fw-bolder mt-3">Cons of Calensync</h3>
+            <h3 className="fw-bolder mt-3">{ts("calensync.cons.title")}</h3>
             <ul>
-              <li>It's not free (but it's affordable)</li>
+              <li>{ts("calensync.cons.free")}</li>
             </ul>
           </section>
           <div className='d-flex justify-content-center'>
             <div className='row'>
-            <button className='btn btn-primary centered' onClick={() => window.location.href="/login"}>Get started now and use the coupon HAPPY23 for a free month!</button>
+            <button className='btn btn-primary centered' onClick={() => window.location.href="/login"}>{ts("cta")}</button>
             </div>
           </div>
         </article>
