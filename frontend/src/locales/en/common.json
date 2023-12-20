@@ -5,7 +5,7 @@
     "home": {
         "meta": {
             "description": "Calensync allows you to synchronize multiple Google calendars easily, while keeping the privacy of the event description. It copies events between calendars and replaces them with a Blocker.",
-            "og:title": "Synchronize your Google Calendars"
+            "og_title": "Synchronize your Google Calendars"
 
         },
         "hero": {
