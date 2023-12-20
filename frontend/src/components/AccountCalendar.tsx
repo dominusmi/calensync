@@ -43,7 +43,6 @@ const AccountCalendar: React.FC<{calendar: Calendar}> = ({calendar}) => {
     };
 
     useEffect(() => {
-        console.log("checked")
         // Update the local state when the calendar prop changes
         setChecked(calendar.active);
       }, [calendar.active]);

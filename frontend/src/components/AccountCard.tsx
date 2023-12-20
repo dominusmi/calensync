@@ -47,11 +47,11 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
     }, [account.uuid]);
 
     return (
-        <div className="container-sm card my-4 py-4 shadow-sm rounded border-0 template account-row">
-            <div className="row mx-2">
+        <div className="container-sm card my-xs-2 my-sm-4 py-4 shadow-sm rounded border-0 template account-row">
+            <div className="row mx-xs-0 mx-sm-2">
                 <div className="row my-2">
                     <div className="col-10">
-                        <h4 className="mb-1 email-value">{account.key}</h4>
+                        <h5 className="mb-1 email-value">{account.key}</h5>
                     </div>
                     <div className="col-2">
                         <button className="btn btn-lg refresh-account"><svg xmlns="http://www.w3.org/2000/svg" width="20"

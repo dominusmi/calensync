@@ -85,19 +85,32 @@ const Dashboard: React.FC = () => {
             <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
           </div>
         }
+        <AddCalendarAccount />
         {accounts && accounts.map((account) => (
           <AccountCard key={account.uuid} account={account} />
         ))}
         {accounts && accounts.length === 0 &&
-          <div className="container-sm card my-4 py-4 shadow-sm rounded border-0 template account-row">
-            <div className="row mx-2">
-              <h2>You're set 🎉</h2>
-              <p>You can connect your Google calendars with the button below</p>
+          <div className="container-sm card my-2 py-4 shadow-sm rounded border-0 template account-row">
+            <div className="row">
+              <h2>Welcome! 🎉</h2>
+              <p>
+                Let's get started. Give permission to your current account by clicking the button above.
+              </p>
+            </div>
+          </div>
+        }
+        {accounts && accounts.length === 1 &&
+          <div className="container-sm card my-2 py-4 shadow-sm rounded border-0 template account-row">
+            <div className="row mx-sm-0">
+              <h2>One down. ✅</h2>
+              <p>
+                Your first account is connected. You can now synchronize calendars inside of it, 
+                or add another Google Account and do cross-account syncing!
+              </p>
             </div>
           </div>
         }
         <ContactButton />
-        <AddCalendarAccount />
         <TallyComponent />
       </div>
     </Layout>

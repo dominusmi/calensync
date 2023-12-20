@@ -36,7 +36,7 @@ const Home: React.FC = () => {
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}`} hrefLang="en"/>
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}`} hrefLang="x-default" />
                 <meta name="description" content={t("home.meta.description")} />
-                <meta name="og:title" content={t("home.meta.og:title")} />
+                <meta name="og:title" content={t("home.meta.og_title")} />
                 <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}`} />
                 <meta name="og:description" content={t("home.meta.description")} />
             </Helmet>

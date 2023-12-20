@@ -7,7 +7,7 @@ export enum VerifySession {
 }
 
 export interface User {
-  customer_id: string;
+  customer_id: string | null;
   date_created: Date;
   subscription_id: string | null;
   transaction_id: string | null;
@@ -68,11 +68,13 @@ export function removeLocalSession() {
 }
 
 export const getLoggedUser: () => Promise<User> = async () => {
-  const result = await whoami();
+  let result = await whoami();
   if (result == VerifySession.TOS) {
     window.location.href = `${PUBLIC_URL}/tos?logged=true`;
-  } else if (result == VerifySession.LOGIN || result === VerifySession.INVALID) {
-    window.location.href = `${PUBLIC_URL}/login`;
+    result = {date_created: new Date()}
+  } else if (result == VerifySession.LOGIN || result == VerifySession.INVALID) {
+    window.location.replace(`${PUBLIC_URL}/login`);
+    result = {date_created: new Date()} as User;
   }
   return result as User;
 }

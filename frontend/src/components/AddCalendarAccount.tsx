@@ -12,9 +12,7 @@ const AddCalendarAccount: React.FC = () => {
                 `${API}/google/calendar/prepare`,
                 {
                     method: 'GET',
-                    headers: {
-                        Authorization: getLocalSession()!
-                    }
+                    withCredentials: true
                 }
             );
             const data = await response.data;
@@ -25,7 +23,7 @@ const AddCalendarAccount: React.FC = () => {
     }
 
     return (
-        <div className="d-flex align-items-center justify-content-center mx-sm-4 mx-2">
+        <div className="d-flex align-items-center justify-content-center mx-sm-4 mx-2 mt-4">
             <div className="mx-auto mt-2 mb-4" id="google-sso">
                 <button className="gsi-material-button" onClick={addAccount}>
                     <div className="gsi-material-button-state"></div>
@@ -48,7 +46,7 @@ const AddCalendarAccount: React.FC = () => {
                             </svg>
                             {/* <img style={{ height: "25px", marginRight: "12px", minWidth: "20px", width: "25px"}} src='https://lh3.googleusercontent.com/K0vgpnn9Vour8ByU3htR3ou5Cx70Me-lW_51VEAIS5dfzXCQ0otXakVuPiQVc0V6qcf9aP_vkVul59airN27m3mttf4zQ1TPv4MVrw'></img> */}
                         </div>
-                        <span className="gsi-material-button-contents">Connect Google Calendars</span>
+                        <span className="gsi-material-button-contents">Connect a Google Account</span>
                     </div>
                 </button>
             </div>
