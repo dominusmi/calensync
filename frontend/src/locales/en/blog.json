@@ -53,5 +53,40 @@
             }
         },
         "cta": "Get started now and use the coupon HAPPY23 for a free month!"
+    },
+    "avoid_calendly_conflicts": {
+        "title": "How to avoid Calendly Conflicts",
+        "date": "December 2023",
+        "headline": "Calendly conflicts can be terrible, so how can you avoid them?",
+        "meta": {
+            "description": "Calendly conflicts can be terrible, so how can you avoid them?",
+            "title": "How to avoid Calendly Conflicts"
+        },
+        "intro": "Automated event creation has been one of the simplest yet greatest inventions for productivity enhancement. However, in this day and age, it is common for people to have multiple calendars, including a mix of personal and professional, and it's never nice having to reschedule events because of a conflict between your medical appointment and a demo for a lead. So how do you avoid these conflicts?",
+        "s1": {
+            "title": "Using .ics file",
+            "content": "Your calendar can be exported into a .ics file and then added to other calendars. This is a cumbersome but entirely free way of doing it. Without going into more depth, some of the issues with it include syncing is quite delayed, and there's no privacy so your events are literally copy pasted.",
+            "link": "You can read more about it in",
+            "link-span": "this post",
+            "link-post": "we recently wrote."
+        },
+        "s2": {
+            "title": "Set compulsory confirmation",
+            "content": "On Calendly, you can set the option \"require confirmation\". Everytime an event is booked, it will not be immediately confirmed and instead, you will have to manually confirm it on top of it. Of course, this comes with two main issues: worst experience for the booker, and more work for you."
+        },
+        "s3": {
+            "title": "Add buffer time",
+            "content": "Buffer time is a fundamental feature of Calendly, which you should use as much as possible. Especially for sales calls, you can never know if you'll need those extra five minutes, which could make the difference between deal or no-deal. So don't be shy with it! "
+        },
+        "calensync": {
+            "title": "Using Calensync",
+            "content": "However, Calendly can't handle multiple calendars. In that case, you will need to use an external solution. Calensync allows you to create blockers between your calendars, so that people won't be able to book events at those times. This is a simple way to avoid having to reschedule which, let's be honest, everyone hates.",
+            "steps": {
+                "1": "Login to the ",
+                "2": "Connect as many Google Accounts as needed",
+                "3": "Pick which calendars to synchronize"
+            },
+            "conclusion": "Synchronization is near instantaneous. You will see \"Blocker\" events appearing in the synced calendars, and will avoid all Calendly conflicts in the future!"
+        }
     }
 }
