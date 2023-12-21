@@ -64,7 +64,7 @@
         },
         "intro": "La creazione automatica di eventi è stata una delle invenzioni più semplici ma più grandi per l'aumento della produttività. Tuttavia, al giorno d'oggi è comune che le persone abbiano diversi calendari, tra cui una combinazione di personali e professionali. Non è mai piacevole dover riprogrammare eventi a causa di un conflitto tra un appuntamento medico e una presentazione per un potenziale cliente. Quindi, come evitare questi conflitti?",
         "s1": {
-          "title": "Utilizzo del file .ics",
+          "title": "Usando il file .ics",
           "content": "Il tuo calendario può essere esportato in un file .ics e poi aggiunto ad altri calendari. Si tratta di un metodo complicato ma completamente gratuito. Senza entrare troppo nei dettagli, alcuni dei problemi includono una sincronizzazione abbastanza ritardata e nessuna privacy, i tuoi eventi sono letteralmente copiati e incollati.",
           "link": "Puoi leggere ulteriori dettagli in",
           "link-span": "questo post",
@@ -75,11 +75,11 @@
           "content": "Su Calendly, puoi impostare l'opzione \"richiedi conferma\". Ogni volta che viene prenotato un evento, non verrà confermato immediatamente e dovrai confermarlo manualmente. Naturalmente, questo comporta due problemi principali: un'esperienza peggiore per chi prenota e più lavoro per te."
         },
         "s3": {
-          "title": "Aggiungere tempo di buffer",
+          "title": "Aggiungere un tempo di buffer",
           "content": "Il tempo di buffer è una caratteristica fondamentale di Calendly, che dovresti utilizzare il più possibile. Specialmente per le chiamate di vendita, non si sa mai se avrai bisogno di quei cinque minuti extra, che potrebbero fare la differenza tra un accordo e un rifiuto. Quindi, non esitare a utilizzarlo!"
         },
         "calensync": {
-          "title": "Utilizzo di Calensync",
+          "title": "Usando Calensync",
           "content": "Tuttavia, Calendly non può gestire più calendari contemporaneamente. In tal caso, sarà necessario utilizzare una soluzione esterna. Calensync consente di creare blocchi tra i tuoi calendari, in modo che le persone non possano prenotare eventi in quei momenti. Questo è un modo semplice per evitare di dover riprogrammare, che, diciamocelo, tutti odiano.",
           "steps": {
             "1": "Accedi al ",
