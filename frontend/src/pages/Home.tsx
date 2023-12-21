@@ -34,6 +34,7 @@ const Home: React.FC = () => {
                 <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}`} />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr"/>
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en`} hrefLang="en"/>
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it`} hrefLang="it"/>
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}`} hrefLang="x-default" />
                 <meta name="description" content={t("home.meta.description")} />
                 <meta name="og:title" content={t("home.meta.og_title")} />
@@ -88,7 +89,7 @@ const Home: React.FC = () => {
             </div>
             <div className='container'>
                 <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href={`${PUBLIC_URL}/blog/sync-multiple-google-calendars`}>
+                    <a className='block-link' href={`/blog/sync-multiple-google-calendars`}>
                         <p className='text-muted small p-0 m-0'>Blog</p>
                         <h2>{t("blog_list.sync_google_calendars.title")}</h2>
                         <p className='text-muted'>
@@ -99,7 +100,7 @@ const Home: React.FC = () => {
             </div>
             <div className='container'>
                 <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href={`${PUBLIC_URL}/blog/avoid-calendly-conflicts`}>
+                    <a className='block-link' href={`/blog/avoid-calendly-conflicts`}>
                         <p className='text-muted small p-0 m-0'>Blog</p>
                         <h2>{t("blog_list.avoid_calendly_conflicts.title")}</h2>
                         <p className='text-muted'>
