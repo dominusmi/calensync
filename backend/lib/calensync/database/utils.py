@@ -11,8 +11,12 @@ CONFIG_CACHE = {}
 class DatabaseSession:
     def __init__(self, env: str, session: boto3.Session = None):
         if env in ["local", "test"]:
+            if env == "local":
+                db_name = "postgres"
+            else:
+                db_name = "test"
             configs = {
-                "db": "test",
+                "db": db_name,
                 "username": "yoda",
                 "password": "admin",
                 "host": "0.0.0.0",

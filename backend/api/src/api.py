@@ -203,6 +203,17 @@ def put__console_error(error: Dict):
     logger.error(error)
 
 
+@app.get('/user/{user_id}/unsubscribe')
+@format_response
+def get__unsubscribe(user_id: str):
+    """
+    Should return profile information, right now only checks
+    the session
+    """
+    with DatabaseSession(os.environ["ENV"]) as db:
+        return unsubscribe(user_id)
+
+
 from fastapi.middleware.cors import CORSMiddleware
 
 origins = ["http://localhost:8000", "http://127.0.0.1:8080"]

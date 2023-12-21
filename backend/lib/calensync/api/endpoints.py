@@ -346,6 +346,28 @@ def get_paddle_subscription(user: User, session: boto3.Session):
     return response
 
 
+def unsubscribe(user_id: str):
+    user = User.get_or_none(uuid=user_id)
+    if user:
+        user.marketing = False
+        user.save()
+        return starlette.responses.HTMLResponse("""
+                <html>
+                <body>
+                    <h1>You have successfully been unsubscribed.</h1> 
+                    You should be redirected. If you're not, please <a href="https://calensync.live">click here</a>
+                </body>
+                <script>
+                    window.setTimeout(function(){
+                        window.location.href = "https://calensync.live";
+                    }, 2500);
+                </script>
+                </html>""")
+    else:
+        logger.error(f"No user with if {user_id}")
+        return starlette.responses.HTMLResponse(status_code=404)
+
+
 def process_calendars():
     now = datetime.datetime.utcnow()
     query = Calendar.select().where(

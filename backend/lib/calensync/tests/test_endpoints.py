@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from calensync.api.common import ApiError
-from calensync.api.endpoints import get_calendar
+from calensync.api.endpoints import get_calendar, unsubscribe
 from calensync.api.service import deactivate_calendar
 from calensync.database.model import Event
 from calensync.tests.fixtures import *
@@ -55,3 +55,16 @@ def test_deactivate_calendars(db, calendar1, account2, calendar2):
         assert Event.get_or_none(id=event2to3) is None
 
 
+class TestUnsubscribe:
+    @staticmethod
+    def test_valid(user: User):
+        assert user.marketing
+        response = unsubscribe(str(user.uuid))
+        assert response.status_code == 200
+        user1 = user.refresh()
+        assert not user1.marketing
+
+    @staticmethod
+    def test_invalid(db):
+        response = unsubscribe(uuid4().__str__())
+        assert response.status_code == 404
