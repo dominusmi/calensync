@@ -81,7 +81,12 @@ const Dashboard: React.FC = () => {
         {user != null && user.customer_id == null &&
           // show trial message
           <div className='container-sm p-0 mt-2'>
-            <p className='p-0 m-0'>You have {daysLeft} days left on your free trial. </p>
+            { daysLeft < 0 &&
+              <p className='p-0 m-0 text-danger'>Your trial has ended. Upgrade now or risk losing all synchronised events. </p>
+            }
+            { daysLeft >= 0 && 
+              <p className='p-0 m-0'>You have {daysLeft} days left on your free trial. </p>
+            }
             <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
           </div>
         }
