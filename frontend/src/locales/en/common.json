@@ -22,6 +22,16 @@
             "3_content": "Information about events is not synchronized between calendars - instead, a blocker event is created in order to protect your privacy.",
             "4_head": "Ready to go in 30 Seconds",
             "4_content": "You can have all your calendars synchronized in less than a minute. Don't believe us? Go ahead and get started right now!"
+        },
+        "faq": {
+            "q1": "Will it affect existing events?",
+            "a1": "No, Calensync only creates new events (Blockers) and doesn't ever modify or delete existing events. When these events are modified, their related blocker is also automatically updated",
+            "q2": "How many different calendars can I sync together?",
+            "a2": "You can sync as many calendars from as many different Google accounts together.",
+            "q3": "Is the name of the event and description copied?",
+            "a3": "No, in order to preserve your privacy, the event created is named Blocker and the description is not copied.",
+            "q4": "How fast are events synchronized?",
+            "a4": "This slightly depends on Google, but count between 1 second to a maximum of 30 seconds."
         }
     },
     "blog_list": {

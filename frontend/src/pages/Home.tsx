@@ -120,31 +120,20 @@ const Home: React.FC = () => {
                     </div>
                         <Accordion>
                             <Accordion.Item eventKey="0">
-                                <Accordion.Header>Will it affect existing events?</Accordion.Header>
-                                <Accordion.Body>
-                                    No, Calensync only creates new events (Blockers) and doesn't ever modify or delete
-                                    existing events. When these events are modified, their related blocker is also
-                                    automatically updated
-                                </Accordion.Body>
+                                <Accordion.Header>{t("home.faq.q1")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a1")}</Accordion.Body>
                             </Accordion.Item>
                             <Accordion.Item eventKey="1">
-                                <Accordion.Header>How many different calendars can I sync together?</Accordion.Header>
-                                <Accordion.Body>
-                                    You can sync as many calendars from as many different Google accounts together.
-                                </Accordion.Body>
+                                <Accordion.Header>{t("home.faq.q2")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a2")}</Accordion.Body>
                             </Accordion.Item>
                             <Accordion.Item eventKey="2">
-                                <Accordion.Header>Is the name of the event and description copied?</Accordion.Header>
-                                <Accordion.Body>
-                                    No, in order to preserve your privacy, the event created is named Blocker and the description
-                                    is not copied.
-                                </Accordion.Body>
+                                <Accordion.Header>{t("home.faq.q3")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a3")}</Accordion.Body>
                             </Accordion.Item>
                             <Accordion.Item eventKey="3">
-                                <Accordion.Header>How fast are events synchronized?</Accordion.Header>
-                                <Accordion.Body>
-                                    This slightly depends on Google, but count between 1 second to a maximum of 30 seconds.
-                                </Accordion.Body>
+                                <Accordion.Header>{t("home.faq.q4")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a4")}</Accordion.Body>
                             </Accordion.Item>
                         </Accordion>
                     </div>

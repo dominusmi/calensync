@@ -21,6 +21,16 @@
       "3_content": "Le informazioni sugli eventi non vengono sincronizzate tra i calendari. Invece, viene creato un evento bloccante per proteggere la tua privacy.",
       "4_head": "Pronto in 30 secondi",
       "4_content": "Puoi avere tutti i tuoi calendari sincronizzati in meno di un minuto. Non ci credi? Vai avanti e inizia subito!"
+    },
+    "faq": {
+      "q1": "Influirà sugli eventi esistenti?",
+      "a1": "No, Calensync crea solo nuovi eventi (Blocchi) e non modifica mai o cancella eventi esistenti. Quando questi eventi vengono modificati, il loro bloccante correlato viene automaticamente aggiornato.",
+      "q2": "Quanti calendari diversi posso sincronizzare insieme?",
+      "a2": "Puoi sincronizzare quanti calendari desideri da qualsiasi account Google differente.",
+      "q3": "Il nome dell'evento e la descrizione vengono copiati?",
+      "a3": "No, per preservare la tua privacy, l'evento creato è chiamato Bloccante e la descrizione non viene copiata.",
+      "q4": "A che velocità vengono sincronizzati gli eventi?",
+      "a4": "Questo dipende leggermente da Google, ma conta tra 1 secondo e un massimo di 30 secondi."
     }
   },
   "blog_list": {
