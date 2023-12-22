@@ -19,10 +19,10 @@ const AccountCalendar: React.FC<{calendar: Calendar}> = ({calendar}) => {
                     { kind },
                     {
                         headers: {
-                            Authorization: getLocalSession()!,
                             'Content-Type': 'application/json',
                         },
-                    }
+                        withCredentials: true
+                    },
                 );
                 calendar.active = !isChecked
                 if(calendar.active){
