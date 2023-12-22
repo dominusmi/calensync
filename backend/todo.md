@@ -1,0 +1,1 @@
+- [] `db` variabel in gwrapper.py should be passed and not imported
