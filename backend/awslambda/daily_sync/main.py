@@ -13,4 +13,5 @@ def handler(event, context):
     """
     with DatabaseSession(get_env()) as db:
         daily_sync.sync_user_calendars_by_date(db)
+        daily_sync.update_watches(db)
 

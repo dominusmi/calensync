@@ -1,10 +1,11 @@
 import datetime
+import time
 from typing import Iterable, List
 
 import peewee
 
 from calensync.database.model import User, Calendar, CalendarAccount
-from calensync.gwrapper import GoogleCalendarWrapper, service_from_account
+from calensync.gwrapper import GoogleCalendarWrapper, service_from_account, delete_google_watch
 from calensync.log import get_logger
 
 logger = get_logger("daily_sync.main")
@@ -28,7 +29,7 @@ def execute_update(calendars: List[GoogleCalendarWrapper], db):
     # spooky double loop. Need to save each calendar events in the others
     for i, cal1 in enumerate(calendars):
         cal1.save_events_in_database()
-        for cal2 in calendars[i+1:]:
+        for cal2 in calendars[i + 1:]:
             cal1.events_handler.add(cal2.events)
             cal2.events_handler.add(cal1.events)
 
@@ -57,3 +58,40 @@ def sync_user_calendars_by_date(db):
         logger.info(f"Syncing {user.uuid}")
         calendars = load_calendars(user.accounts, start_date, end_date)
         execute_update(calendars, db)
+
+
+def update_watches(db: peewee.Database):
+    now = datetime.datetime.now()
+    calendars_db: Iterable[Calendar] = peewee.prefetch(
+        Calendar.select().where(
+            Calendar.expiration.is_null(False),
+            Calendar.expiration <= now + datetime.timedelta(hours=36),
+            Calendar.active),
+        CalendarAccount.select(),
+        User.select()
+    )
+
+    for calendar_db in calendars_db:
+        iteration = 0
+        deleted = False
+        while iteration < 3:
+            try:
+                logger.info(f"Updating watch of calendar {calendar_db.uuid}")
+                gcalendar = GoogleCalendarWrapper(calendar_db)
+
+                try:
+                    if not deleted:
+                        gcalendar.delete_watch()
+                    deleted = True
+                except Exception as e:
+                    logger.error(
+                        f"Failed to delete watch of {calendar_db.uuid}: {e}")
+
+                gcalendar.create_watch()
+                break
+
+            except Exception as e:
+                logger.error(f"Error occured while updating calendar {calendar_db.uuid}: {e}")
+                time.sleep(1)
+            finally:
+                iteration += 1
