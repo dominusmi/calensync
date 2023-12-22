@@ -39,12 +39,12 @@ def post__paddle_verify_transaction(authorization: Annotated[Union[str, None], C
 
 @app.get('/oauth2')
 @format_response
-def get__oauth2(state: str = Query(), code: str = Query()):
+def get__oauth2(state: str = Query(), code: str = Query(None), error: str = Query(None)):
     """
     Process new OAuth request. Can be either login or add calendar. See `OAuthKind`
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        return get_oauth_token(state, code, db, boto3.Session())
+        return get_oauth_token(state, code, error, db, boto3.Session())
 
 
 @app.get("/google/sso/prepare")
