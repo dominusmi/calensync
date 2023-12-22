@@ -1,8 +1,8 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import Footer from './Footer';
 import NavBar from './Navbar';
-import Toast from './Toast';
-import { consumeMessages } from '../utils/common';
+import Toast, { createToast } from './Toast';
+import { MessageKind, consumeMessages } from '../utils/common';
 import axios from 'axios';
 import API from '../utils/const';
 
@@ -35,7 +35,14 @@ const Layout: React.FC<LayoutProps> = ({ children, verify_session = true }) => {
 
     useEffect(() => {
         // Your function to be triggered after the component is ready
-        consumeMessages();
+        if(toastReady){
+            const urlParams = new URLSearchParams(window.location.search);
+            let err = urlParams.get('error_msg');
+            if(err !== null){
+                createToast(atob(err), MessageKind.Error);
+            }
+            consumeMessages();
+        }
     }, [toastReady]);
 
     useEffect(() => {
