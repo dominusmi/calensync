@@ -72,11 +72,11 @@ export const TallyComponent = () => {
           text: '👋',
           animation: 'wave'
         }
-        // ,
-        // open: {
-        //   trigger: "time",
-        //   ms: 5000
-        // }
+        ,
+        open: {
+          trigger: "time",
+          ms: 15000
+        }
       });
     }
   }, [tallyReady])
