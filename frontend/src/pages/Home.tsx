@@ -5,6 +5,7 @@ import { PaddlePricing } from '../components/PaddlePricing';
 import { Paddle, initializePaddle } from '@paddle/paddle-js';
 import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
+import { Accordion } from 'react-bootstrap';
 
 const Home: React.FC = () => {
     const { t } = useTranslation();
@@ -32,9 +33,9 @@ const Home: React.FC = () => {
                 <meta charSet="utf-8" />
                 <title>{t('title_sync_calendars')}</title>
                 <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}`} />
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr"/>
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en`} hrefLang="en"/>
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it`} hrefLang="it"/>
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en`} hrefLang="en" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it`} hrefLang="it" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}`} hrefLang="x-default" />
                 <meta name="description" content={t("home.meta.description")} />
                 <meta name="og:title" content={t("home.meta.og_title")} />
@@ -107,6 +108,46 @@ const Home: React.FC = () => {
                             {t("blog_list.avoid_calendly_conflicts.headline")}
                         </p>
                     </a>
+                </div>
+            </div>
+            <div className='bg-cyan'>
+                <div className='container my-4 py-4'>
+                    <div className='col-xxl-8 mx-auto py-4'>
+                    <div className='row mb-4 centered'>
+                        <div className="feature col">
+                            <h1>F.A.Q.</h1>
+                        </div>
+                    </div>
+                        <Accordion>
+                            <Accordion.Item eventKey="0">
+                                <Accordion.Header>Will it affect existing events?</Accordion.Header>
+                                <Accordion.Body>
+                                    No, Calensync only creates new events (Blockers) and doesn't ever modify or delete
+                                    existing events. When these events are modified, their related blocker is also
+                                    automatically updated
+                                </Accordion.Body>
+                            </Accordion.Item>
+                            <Accordion.Item eventKey="1">
+                                <Accordion.Header>How many different calendars can I sync together?</Accordion.Header>
+                                <Accordion.Body>
+                                    You can sync as many calendars from as many different Google accounts together.
+                                </Accordion.Body>
+                            </Accordion.Item>
+                            <Accordion.Item eventKey="2">
+                                <Accordion.Header>Is the name of the event and description copied?</Accordion.Header>
+                                <Accordion.Body>
+                                    No, in order to preserve your privacy, the event created is named Blocker and the description
+                                    is not copied.
+                                </Accordion.Body>
+                            </Accordion.Item>
+                            <Accordion.Item eventKey="3">
+                                <Accordion.Header>How fast are events synchronized?</Accordion.Header>
+                                <Accordion.Body>
+                                    This slightly depends on Google, but count between 1 second to a maximum of 30 seconds.
+                                </Accordion.Body>
+                            </Accordion.Item>
+                        </Accordion>
+                    </div>
                 </div>
             </div>
         </Layout >

@@ -112,6 +112,11 @@ code {
 .hero-gif {
   border-radius: 12px;
 }
+
+.bg-cyan {
+  background-color: #D8E0FB;
+}
+
 .no-link {
   text-decoration: none;
 }

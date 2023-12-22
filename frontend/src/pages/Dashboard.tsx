@@ -27,6 +27,7 @@ const Dashboard: React.FC = () => {
     })
   }, [])
 
+
   useEffect(() => {
     if (user != null && user!.customer_id == null) {
       const currentDate = new Date();
