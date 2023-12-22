@@ -1,3 +1,4 @@
+import base64
 import datetime
 import json
 import os
@@ -60,10 +61,15 @@ def credentials_to_dict(credentials: google.oauth2.credentials.Credentials):
     return json.loads(credentials.to_json())
 
 
-def get_oauth_token(state: str, code: str, db: peewee.Database, session):
+def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Database, session):
     state_db: OAuthState = OAuthState.get_or_none(state=state)
     if state_db is None:
         raise ApiError("Invalid state")
+
+    if error is not None:
+        msg = base64.b64encode(f"Google error: {error}".encode())
+        state_db.delete_instance()
+        return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg.decode('utf-8')}")
 
     client_secret = get_client_secret(session)
 
@@ -81,7 +87,11 @@ def get_oauth_token(state: str, code: str, db: peewee.Database, session):
         scopes=scopes, state=state, redirect_uri=f'{get_host_env()}/oauth2'
     )
 
-    flow.fetch_token(code=code)
+    try:
+        flow.fetch_token(code=code)
+    except Warning:
+        msg = base64.b64encode("You must give all the requested permissions")
+        return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
 
     credentials = flow.credentials
     logger.info(credentials) if is_local() else None
@@ -281,7 +291,7 @@ def patch_calendar(user_id: int, calendar_uuid: str, kind: dataclass.CalendarSta
 
     if kind == dataclass.CalendarStateEnum.ACTIVE:
         logger.info(f"Activating {calendars[0].uuid}")
-        return activate_calendar(calendars[0], db)
+        return activate_calendar(calendars[0])
 
     elif kind == dataclass.CalendarStateEnum.INACTIVE:
         logger.info(f"De-activating {calendars[0].uuid}")
