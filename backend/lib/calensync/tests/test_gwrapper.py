@@ -3,6 +3,8 @@ import unittest.mock
 from unittest.mock import patch
 from typing import List
 
+import pytest
+
 from calensync.database.model import Event
 from calensync.dataclass import GoogleEvent, GoogleDatetime, EventStatus
 from calensync.gwrapper import GoogleCalendarWrapper
@@ -51,7 +53,8 @@ def test_solve_update_two_active_calendar_tentative(db, account1, calendar1, acc
     gcalendar1 = GoogleCalendarWrapper(calendar1)
 
     # test one active calendar, tentative event
-    calendar2.active = True; calendar2.save()
+    calendar2.active = True;
+    calendar2.save()
 
     now = datetime.datetime.utcnow()
     now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
@@ -104,8 +107,10 @@ def test_solve_update_two_active_calendar_confirmed(db, account1, calendar1, acc
 
     with unittest.mock.patch("calensync.gwrapper.insert_event") as insert_event:
         insert_event.side_effect = mock_google_insert_event
-        calendar1.active = True; calendar1.save()
-        calendar2.active = True; calendar2.save()
+        calendar1.active = True;
+        calendar1.save()
+        calendar2.active = True;
+        calendar2.save()
 
         gcalendar1 = GoogleCalendarWrapper(calendar1)
         gcalendar2 = GoogleCalendarWrapper(calendar2)
@@ -121,7 +126,8 @@ def test_solve_update_two_active_calendar_confirmed(db, account1, calendar1, acc
                         created=earlier_than_now.dateTime, updated=now, status=EventStatus.confirmed)
         ]
 
-        event_db = Event(calendar=calendar2, source=None, event_id=original_google_events[0].id, start=earlier_than_now.to_datetime(),
+        event_db = Event(calendar=calendar2, source=None, event_id=original_google_events[0].id,
+                         start=earlier_than_now.to_datetime(),
                          end=now).save()
 
         Event(calendar=calendar1, source=event_db,
@@ -271,3 +277,57 @@ class TestDeleteEvents:
             assert delete_event.call_args[0][2] == copy1to2.event_id
             assert Event.get_or_none(id=copy1to2.id) is None
             assert Event.get_or_none(id=source2.id) is None
+
+
+class TestDeleteWatch:
+    @staticmethod
+    def test_all_good(calendar1: Calendar):
+        calendar1.resource_id = "something"
+        calendar1.save()
+
+        with patch("calensync.gwrapper.delete_google_watch") as delete_google_watch:
+            current_google_calendar = GoogleCalendarWrapper(calendar1)
+            current_google_calendar._service = "whatveer"
+            current_google_calendar.delete_watch()
+            assert delete_google_watch.call_count == 1
+            updated = calendar1.refresh()
+            assert updated.resource_id is None
+            assert updated.expiration is None
+
+    @staticmethod
+    def test_read_only(calendar1: Calendar):
+        calendar1.platform_id = "whatever@group.v.calendar.google.com"
+        calendar1.resource_id = "something"
+        calendar1.save()
+        with patch("calensync.gwrapper.delete_google_watch") as delete_google_watch:
+            current_google_calendar = GoogleCalendarWrapper(calendar1)
+            current_google_calendar.delete_watch()
+            assert delete_google_watch.call_count == 0
+
+    @staticmethod
+    def test_resource_id_is_none(calendar1):
+        with patch("calensync.gwrapper.delete_google_watch") as delete_google_watch:
+            current_google_calendar = GoogleCalendarWrapper(calendar1)
+            current_google_calendar.delete_watch()
+            assert delete_google_watch.call_count == 0
+
+    @staticmethod
+    def test_google_error(calendar1: Calendar):
+        calendar1.resource_id = "something"
+        calendar1.expiration = datetime.datetime.now()
+        calendar1.save()
+        current_google_calendar = GoogleCalendarWrapper(calendar1)
+        current_google_calendar._service = "whatveer"
+
+        with patch("calensync.gwrapper.delete_google_watch") as delete_google_watch:
+            def side_effect(*args, **kwargs):
+                raise Exception("test")
+            delete_google_watch.side_effect = side_effect
+
+            with pytest.raises(Exception):
+                current_google_calendar.delete_watch()
+
+            assert delete_google_watch.call_count == 1
+            updated = calendar1.refresh()
+            assert updated.resource_id == "something"
+            assert updated.expiration is not None

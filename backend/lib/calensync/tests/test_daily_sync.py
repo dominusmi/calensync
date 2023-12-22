@@ -2,10 +2,11 @@ import dataclasses
 import datetime
 from unittest.mock import patch
 
-from calensync.awslambda.daily_sync import sync_user_calendars_by_date
+from calensync.awslambda.daily_sync import sync_user_calendars_by_date, update_watches
 from calensync.database.model import Event
 from calensync.dataclass import GoogleDatetime, AbstractGoogleDate, EventStatus
 from calensync.tests.fixtures import *
+from calensync.utils import utcnow
 
 
 @dataclasses.dataclass
@@ -104,7 +105,8 @@ def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2
         assert len(events) == 3
 
 
-def test_sync_user_calendars_by_date_multiple_users(db, user, account1, calendar1: Calendar, account2, calendar2: Calendar):
+def test_sync_user_calendars_by_date_multiple_users(db, user, account1, calendar1: Calendar, account2,
+                                                    calendar2: Calendar):
     user2 = User(email="tes@t.io", is_admin=True, tos=datetime.datetime.now()).save_new()
     account2_1 = CalendarAccount(user=user2, key="wat", credentials={}).save_new()
     Calendar(account=account2_1, platform_id="platform2_1", name="name2_1", active=True).save_new()
@@ -118,3 +120,72 @@ def test_sync_user_calendars_by_date_multiple_users(db, user, account1, calendar
         assert load_calendars.call_count == 2
         assert execute_update.call_count == 2
 
+
+class TestUpdateWatches:
+    @staticmethod
+    def test_normal_case(db, calendar1: Calendar, calendar2: Calendar):
+        calendar1.expiration = utcnow() + datetime.timedelta(hours=38)
+        calendar1.active = True
+        calendar1.save()
+
+        calendar2.expiration = utcnow() + datetime.timedelta(hours=35)
+        calendar2.active = True
+        calendar2.save()
+
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.create_watch") as create_watch,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.delete_watch") as delete_watch,
+        ):
+            update_watches(db)
+            assert create_watch.call_count == 1
+            assert delete_watch.call_count == 1
+
+    @staticmethod
+    def test_create_fail_twice(db, calendar1: Calendar, calendar2: Calendar):
+        calendar1.expiration = utcnow() + datetime.timedelta(hours=38)
+        calendar1.active = True
+        calendar1.save()
+
+        calendar2.expiration = utcnow() + datetime.timedelta(hours=35)
+        calendar2.active = True
+        calendar2.save()
+
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.create_watch") as create_watch,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.delete_watch") as delete_watch,
+            patch("time.sleep") as sleep
+        ):
+            v = [0]
+
+            def side_effect(v, *args, **kwargs):
+                if v[0] < 2:
+                    v[0] += 1
+                    raise Exception("Error")
+
+            create_watch.side_effect = lambda *args, **kwargs: side_effect(v, *args, **kwargs)
+            update_watches(db)
+            assert create_watch.call_count == 3
+            assert delete_watch.call_count == 1
+            assert sleep.call_count == 2
+
+    @staticmethod
+    def test_create_fail_delete(db, calendar1: Calendar, calendar2: Calendar):
+        calendar1.expiration = utcnow() + datetime.timedelta(hours=38)
+        calendar1.active = True
+        calendar1.save()
+
+        calendar2.expiration = utcnow() + datetime.timedelta(hours=35)
+        calendar2.active = True
+        calendar2.save()
+
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.create_watch") as create_watch,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.delete_watch") as delete_watch,
+        ):
+            def side_effect(*args, **kwargs):
+                raise Exception("error")
+
+            delete_watch.side_effect = lambda *args, **kwargs: side_effect(v, *args, **kwargs)
+            update_watches(db)
+            assert create_watch.call_count == 1
+            assert delete_watch.call_count == 1

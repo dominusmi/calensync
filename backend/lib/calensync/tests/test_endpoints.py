@@ -54,7 +54,6 @@ def test_deactivate_calendars(db, calendar1, account2, calendar2):
         assert Event.get_or_none(id=event2to1) is None
         assert Event.get_or_none(id=event2to3) is None
 
-
 class TestUnsubscribe:
     @staticmethod
     def test_valid(user: User):
