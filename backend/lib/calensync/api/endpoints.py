@@ -123,7 +123,7 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str, 
         logger.warn(f"The token {token} does not match the database token {channel_id} ignoring.")
         return
 
-    if calendar.resource_id is None and resource_id is not None:
+    if resource_id is not None and resource_id != calendar.resource_id:
         calendar.resource_id = resource_id
         calendar.save()
 
@@ -281,7 +281,7 @@ def patch_calendar(user_id: int, calendar_uuid: str, kind: dataclass.CalendarSta
 
     if kind == dataclass.CalendarStateEnum.ACTIVE:
         logger.info(f"Activating {calendars[0].uuid}")
-        return activate_calendar(calendars[0])
+        return activate_calendar(calendars[0], db)
 
     elif kind == dataclass.CalendarStateEnum.INACTIVE:
         logger.info(f"De-activating {calendars[0].uuid}")
