@@ -14,7 +14,7 @@ from calensync.calendar import EventsModificationHandler
 from calensync.database.model import Calendar, CalendarAccount, db, User, Event
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus
 from calensync.log import get_logger
-from calensync.utils import get_api_url, utcnow
+from calensync.utils import get_api_url, utcnow, get_env
 
 logger = get_logger(__file__)
 
@@ -80,7 +80,6 @@ def get_google_calendars(credentials) -> List[GoogleCalendar]:
         raise ApiError("Failed to process request due to Google credentials error")
 
 
-
 def datetime_to_google_time(dt: datetime.datetime) -> str:
     return dt.isoformat() + "Z"
 
@@ -116,6 +115,34 @@ def get_events(service, google_id: str, start_date: datetime.datetime, end_date:
         events.extend(GoogleEvent.parse_event_list_response(recurrent_response))
 
     return events
+
+
+def delete_google_watch(service, resource_id: str, channel_id: str):
+    logger.info(f"Deleting watch {resource_id}/{channel_id}")
+    body = {
+        "id": channel_id,
+        "resourceId": resource_id,
+    }
+    service.channels().stop(body=body).execute()
+
+
+def create_google_watch(service, calendar_db: Calendar):
+    body = {
+        "id": calendar_db.channel_id.__str__(),
+        "address": get_api_url() + "/webhook",
+        "expiration": int(calendar_db.expiration.timestamp() * 1000),
+        "type": "webhook",
+        "token": calendar_db.token.__str__()
+    }
+    env = get_env()
+    if env != "local" and env != "test":
+        response = service.events().watch(calendarId=str(calendar_db.platform_id), body=body).execute()
+        logger.info(f"Created watch for calendar {calendar_db.uuid}")
+        if (resource_id := response.get("resourceId")) is not None:
+            logger.info(f"New watch has resource_id: {resource_id}")
+            calendar_db.resource_id = resource_id
+            calendar_db.save()
+            return resource_id
 
 
 class GoogleCalendarWrapper:
@@ -187,7 +214,7 @@ class GoogleCalendarWrapper:
 
         return query
 
-    def create_watch(self, expiration_minutes=60 * 24 * 7):
+    def create_watch(self, expiration_minutes=60 * 24 * 14):
         env = os.environ["ENV"]
         if env == "local" or env == "test":
             expiration_minutes = 60
@@ -200,15 +227,8 @@ class GoogleCalendarWrapper:
             if self.calendar_db.is_read_only:
                 return
 
-            body = {
-                "id": self.calendar_db.channel_id.__str__(),
-                "address": get_api_url() + "/webhook",
-                "expiration": int(self.calendar_db.expiration.timestamp() * 1000),
-                "type": "webhook",
-                "token": self.calendar_db.token.__str__()
-            }
-            if env != "local" and env != "test":
-                self.service.events().watch(calendarId=str(self.google_id), body=body).execute()
+            create_google_watch(self.service, self.calendar_db)
+        return None
 
     def delete_watch(self):
         if self.calendar_db.is_read_only:
@@ -221,15 +241,11 @@ class GoogleCalendarWrapper:
         channel_id = self.calendar_db.channel_id.__str__()
         resource_id = self.calendar_db.resource_id
         with db.atomic() as tx:
-            self.calendar_db.expiration = datetime.datetime.utcnow()
+            self.calendar_db.expiration = None
             self.calendar_db.active = False
             self.calendar_db.resource_id = None
             self.calendar_db.save()
-            body = {
-                "id": channel_id,
-                "resourceId": resource_id,
-            }
-            self.service.channels().stop(body=body).execute()
+            delete_google_watch(self.service, resource_id, channel_id)
 
     def insert_events(self):
         if self.calendar_db.is_read_only:
@@ -390,7 +406,8 @@ class GoogleCalendarWrapper:
                     .select().join(SourceEvent, on=(Event.source == SourceEvent.id))
                     .where(SourceEvent.event_id == event.id)
                 )
-                fetched_events: List[Event] = peewee.prefetch(query, Calendar.select(), prefetch_type=peewee.PREFETCH_TYPE.WHERE)
+                fetched_events: List[Event] = peewee.prefetch(query, Calendar.select(),
+                                                              prefetch_type=peewee.PREFETCH_TYPE.WHERE)
 
                 if fetched_events:
                     # If updated, then we should find the events in the database
@@ -411,7 +428,7 @@ class GoogleCalendarWrapper:
                         (
                             Event.update({Event.start: event.start.to_datetime(), Event.end: event.end.to_datetime()})
                             .where(Event.event_id == event.id).execute()
-                         )
+                        )
                         fetched_event_cal.events_handler.update([(fetched_event, event)])
                         fetched_event_cal.update_events()
                         counter_event_changed += 1
