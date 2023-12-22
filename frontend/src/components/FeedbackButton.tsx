@@ -27,6 +27,7 @@ const ContactButton: React.FC<{onClick: () => void}> = ({onClick}) => {
 
 export const TallyComponent = () => {
   const [tallyReady, setTallyReady] = useState(false);
+  
   function showPopup(options: null | any = null) {
     if(options == null){
       options = {
@@ -70,10 +71,6 @@ export const TallyComponent = () => {
         emoji: {
           text: '👋',
           animation: 'wave'
-        },
-        open: {
-          trigger: "time",
-          ms: 5000
         }
       });
     }
