@@ -1,55 +1,79 @@
 {
-    "title_sync_calendars": "Sincronizza i tuoi calendari Google",
-    "sign_up": "Registrati",
-    "free_trial": "Prova gratuita di 7 giorni, perché non provare?",
-    "home": {
-      "meta": {
-        "description": "Calensync ti consente di sincronizzare facilmente più calendari Google, preservando la privacy della descrizione dell'evento. Copia gli eventi tra i calendari e li sostituisce con un 'Blocker'.",
-        "og_title": "Sincronizza i tuoi calendari Google"
-      },
-      "hero": {
-        "title": "Basta conflitti tra eventi",
-        "heading": "Sincronizza tutti i tuoi calendari Google insieme e risparmia il fastidio di dover riprogrammare gli appuntamenti. Assicurati che nessuno prenoti mai una riunione quando sei già occupato.",
-        "cta": "Inizia"
-      },
-      "value": {
-        "1_head": "Calendari illimitati",
-        "1_content": "Nessun limite sul numero di account e calendari che desideri sincronizzare insieme. Gotta catch'em all!",
-        "2_head": "Sincronizzati in pochi secondi",
-        "2_content": "Quando un evento viene creato o modificato, viene aggiornato su tutti i calendari in pochi secondi.",
-        "3_head": "Privacy al primo posto",
-        "3_content": "Le informazioni sugli eventi non vengono sincronizzate tra i calendari. Invece, viene creato un evento bloccante per proteggere la tua privacy.",
-        "4_head": "Pronto in 30 secondi",
-        "4_content": "Puoi avere tutti i tuoi calendari sincronizzati in meno di un minuto. Non ci credi? Vai avanti e inizia subito!"
-      }
+  "title_sync_calendars": "Sincronizza i tuoi calendari Google",
+  "sign_up": "Registrati",
+  "free_trial": "Prova gratuita di 7 giorni, perché non provare?",
+  "home": {
+    "meta": {
+      "description": "Calensync ti consente di sincronizzare facilmente più calendari Google, preservando la privacy della descrizione dell'evento. Copia gli eventi tra i calendari e li sostituisce con un 'Blocker'.",
+      "og_title": "Sincronizza i tuoi calendari Google"
     },
-    "blog_list": {
-      "sync_google_calendars": {
-        "title": "Come sincronizzare insieme i calendari Google",
-        "headline": "Se stai cercando come sincronizzare più calendari Google insieme, non cercare oltre. Questo breve articolo spiegherà tutto ciò che c'è da sapere."
-      },
-      "avoid_calendly_conflicts": {
-        "title": "Evita i conflitti di Calendly",
-        "headline": "I conflitti di Calendly possono essere terribili, quindi come evitarli? Discutiamo come Calensync ti aiuta a risolvere questo problema in due minuti!"
-      }
+    "hero": {
+      "title": "Basta conflitti tra eventi",
+      "heading": "Sincronizza tutti i tuoi calendari Google insieme e risparmia il fastidio di dover riprogrammare gli appuntamenti. Assicurati che nessuno prenoti mai una riunione quando sei già occupato.",
+      "cta": "Inizia"
     },
-    "paddle_pricing": {
-      "excluding_vat": "*IVA Esclusa",
-      "monthly": "Mensile",
-      "yearly": "Annuale",
-      "buy": "Acquista",
-      "free_trial": "Prova gratuita di 7 giorni. Poi..."
+    "value": {
+      "1_head": "Calendari illimitati",
+      "1_content": "Nessun limite sul numero di account e calendari che desideri sincronizzare insieme. Gotta catch'em all!",
+      "2_head": "Sincronizzati in pochi secondi",
+      "2_content": "Quando un evento viene creato o modificato, viene aggiornato su tutti i calendari in pochi secondi.",
+      "3_head": "Privacy al primo posto",
+      "3_content": "Le informazioni sugli eventi non vengono sincronizzate tra i calendari. Invece, viene creato un evento bloccante per proteggere la tua privacy.",
+      "4_head": "Pronto in 30 secondi",
+      "4_content": "Puoi avere tutti i tuoi calendari sincronizzati in meno di un minuto. Non ci credi? Vai avanti e inizia subito!"
+    }
+  },
+  "blog_list": {
+    "sync_google_calendars": {
+      "title": "Come sincronizzare insieme i calendari Google",
+      "headline": "Se stai cercando come sincronizzare più calendari Google insieme, non cercare oltre. Questo breve articolo spiegherà tutto ciò che c'è da sapere."
     },
-    "navbar": {
-      "home": "Home",
-      "dashboard": "Dashboard",
-      "plan": "Abbonamento",
-      "logout": "Esci"
+    "avoid_calendly_conflicts": {
+      "title": "Evita i conflitti di Calendly",
+      "headline": "I conflitti di Calendly possono essere terribili, quindi come evitarli? Discutiamo come Calensync ti aiuta a risolvere questo problema in due minuti!"
+    }
+  },
+  "paddle_pricing": {
+    "excluding_vat": "*IVA Esclusa",
+    "monthly": "Mensile",
+    "yearly": "Annuale",
+    "buy": "Acquista",
+    "free_trial": "Prova gratuita di 7 giorni. Poi..."
+  },
+  "navbar": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "plan": "Abbonamento",
+    "logout": "Esci"
+  },
+  "footer": {
+    "tos": "Termini di Utilizzo",
+    "privacy": "Informativa sulla Privacy",
+    "google_disclosure": "Divulgazione dell'Utilizzo di Google",
+    "home": "Home",
+    "login": "Accedi",
+    "dashboard": "Dashboard",
+    "for_freelancers": "Per Indipendenti"
+  },
+  "for_freelancers": {
+    "meta": {
+      "description": "Da Indipendente è sempre difficile bilanciare diverse missioni ed eventi personali. Calensync semplifica la tua vita evitando conflitti di eventi.",
+      "og_title": "Come Calensync aiuta i Freelancer"
     },
-    "footer": {
-      "tos": "Termini di utilizzo",
-      "privacy": "Informativa sulla privacy",
-      "google_disclosure": "Divulgazione dell'uso di Google"
+    "hero": {
+      "title": "Non rimandare mai più",
+      "heading": "Da Indipendente ti trovi spesso a gestire più progetti oltre alla tua vita. Semplifica il tutto ed evita di dover rimandare gli eventi.",
+      "cta": "Inizia ora"
+    },
+    "value": {
+      "1_head": "Calendari illimitati",
+      "1_content": "Account aziendali multipli? Calendari personali? Nessun problema con account illimitati.",
+      "2_head": "Sincronizzato in pochi secondi",
+      "2_content": "Quando un evento viene creato o modificato, viene aggiornato su tutti i calendari in pochi secondi. I tuoi clienti sapranno immediatamente se possono prenotarti o meno.",
+      "3_head": "Privacy al primo posto",
+      "3_content": "Le informazioni sugli eventi non sono sincronizzate tra i calendari: i clienti vedranno solo un Blocco.",
+      "4_head": "Pronto in 30 secondi",
+      "4_content": "Quindi, perché aspettare? Inizia subito e risparmia tempo evitando problemi futuri!"
     }
   }
-  
+}

@@ -50,6 +50,32 @@
     "footer": {
         "tos": "Terms of Use",
         "privacy": "Privacy Policy",
-        "google_disclosure": "Google Usage Disclosure"
+        "google_disclosure": "Google Usage Disclosure",
+        "home": "Home",
+        "login": "Login",
+        "dashboard": "Dashboard",
+        "for_freelancers": "For Freelancers"
+    },
+    "for_freelancers": {
+        "meta": {
+            "description": "As a freelancer it's always hard to balance multiple missions and personal events. Calensync simplifies your life by avoiding event conflicts.",
+            "og_title": "How Calensync helps Freelancers"
+
+        },
+        "hero": {
+            "title": "Never reschedule again",
+            "heading": "As a freelancer, you're often juggling multiple projects on top of your own life. Make it simpler and avoid having to reschedule events.",
+            "cta": "Get Started"
+        },
+        "value": {
+            "1_head": "Unlimited Calendars",
+            "1_content": "Multiple business accounts? Personal calendars? No problem with unlimited accounts.",
+            "2_head": "Synchronized in seconds",
+            "2_content": "When an event is created or modified, it is updated on all calendars in seconds. Your clients will know immediately if they can book you or not",
+            "3_head": "Privacy first",
+            "3_content": "Information about events is not synchronized between calendars - clients will just see a Blocker",
+            "4_head": "Ready to go in 30 Seconds",
+            "4_content": "So why wait? Get started right now, and save yourself time while avoiding future problems!"
+        }
     }
 }
