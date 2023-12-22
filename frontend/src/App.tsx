@@ -21,6 +21,7 @@ import { initReactI18next, I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import LanguageDetector from 'i18next-browser-languagedetector';
 import LocalesImportPlugin from "./components/LocalesLazyImport";
+import ForFreelancer from "./pages/ForFreelancer";
 
 i18next
   .use(initReactI18next)
@@ -67,6 +68,7 @@ function App() {
           <Route path="/:lang?/privacy" element={<Privacy />} />
           <Route path="/:lang?/plan" element={<Plan />} />
           <Route path="/:lang?/google-privacy" element={<GoogleDisclosure />}></Route>
+          <Route path="/:lang?/for-freelancers" element={<ForFreelancer />}></Route>
           <Route path="/:lang?/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route>
           <Route path="/:lang?/blog/avoid-calendly-conflicts" element={<HowToAvoidCalendlyConflicts />}></Route>
         </Routes>
