@@ -42,7 +42,10 @@ i18next
       escapeValue: false,
     },
     ns: ['common'],
-    detection: { order: ['sessionStorage', 'path', 'navigator'] },
+    detection: { 
+      order: ['path', 'sessionStorage', 'navigator'],
+      caches: ['sessionStorage']
+    },
     saveMissing: true, // for missing key handler to fire
     missingKeyHandler: function (lng, ns, key, fallbackValue) {
       console.log("Missing:", key);
@@ -53,7 +56,7 @@ i18next
 
 function App() {
   const { lang } = useParams();
-  if (i18next.resolvedLanguage && !i18next.resolvedLanguage?.includes("en") && sessionStorage.getItem("i18nextLng") === null) {
+  if (i18next.resolvedLanguage && sessionStorage.getItem("i18nextLng") === null) {
     sessionStorage.setItem("i18nextLng", i18next.resolvedLanguage!);
   }
 
