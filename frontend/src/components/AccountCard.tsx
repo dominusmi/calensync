@@ -47,7 +47,7 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
     }, [account.uuid]);
 
     return (
-        <div className="container-sm card my-xs-2 my-sm-4 py-4 shadow-sm rounded border-0 template account-row">
+        <div className="container-sm card my-2 my-sm-4 py-4 shadow-sm rounded border-0 template account-row">
             <div className="row mx-xs-0 mx-sm-2">
                 <div className="row my-2">
                     <div className="col-12">
