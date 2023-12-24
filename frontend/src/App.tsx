@@ -18,32 +18,49 @@ import HowToSynchronizeCalendars from "./pages/blog/HowToSynchronizeCalendars";
 import HowToAvoidCalendlyConflicts from "./pages/blog/HowToAvoidCalendlyConflicts";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { initReactI18next, I18nextProvider } from "react-i18next";
-import i18next from "i18next";
+import i18next, { BackendModule, LanguageDetectorModule } from "i18next";
 import LanguageDetector from 'i18next-browser-languagedetector';
 import LocalesImportPlugin from "./components/LocalesLazyImport";
 import ForFreelancer from "./pages/ForFreelancer";
+
+
+const customLanguageDetector: LanguageDetectorModule = {
+  type: 'languageDetector',
+  detect: () => {
+    const allowedLanguages: string[] = ['en', 'fr', 'it'];
+    const url = window.location.pathname;
+
+    // Check if the URL contains language codes
+    const detectedLanguage = allowedLanguages.find(lang => url.includes(`/${lang}`));
+
+    // If a valid language is detected, return it; otherwise, use the default language
+    if (detectedLanguage) {
+      return detectedLanguage;
+    } else {
+      return undefined;
+    }
+  },
+  init: () => {},
+  cacheUserLanguage: (lng: string) => {
+    if(lng !== "en"){
+      sessionStorage.setItem("i18nextLng", lng);
+    }
+  },
+};
+
 
 i18next
   .use(initReactI18next)
   .use(LanguageDetector)
   .use(LocalesImportPlugin)
   .init({
-    // resources: {
-    //   en: {
-    //     translation: require('./locales/en/common.json'),
-    //   },
-    //   fr: {
-    //     translation: require('./locales/fr/common.json'),
-    //   }
-    // },
-    // lng: 'en',
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
     },
     ns: ['common'],
     detection: { 
-      order: ['path', 'sessionStorage', 'navigator'],
+      order: ['customLanguageDetector', 'sessionStorage', 'navigator'],
       caches: ['sessionStorage']
     },
     saveMissing: true, // for missing key handler to fire
@@ -56,9 +73,9 @@ i18next
 
 function App() {
   const { lang } = useParams();
-  if (i18next.resolvedLanguage && sessionStorage.getItem("i18nextLng") === null) {
-    sessionStorage.setItem("i18nextLng", i18next.resolvedLanguage!);
-  }
+  // if (i18next.resolvedLanguage && sessionStorage.getItem("i18nextLng") === null) {
+    // sessionStorage.setItem("i18nextLng", i18next.resolvedLanguage!);
+  // }
 
   return (
     <ErrorBoundary>
