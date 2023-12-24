@@ -75,7 +75,7 @@ export const TallyComponent = () => {
         ,
         open: {
           trigger: "time",
-          ms: 15000
+          ms: 20000
         }
       });
     }
