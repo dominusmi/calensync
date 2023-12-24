@@ -51,14 +51,14 @@ const AccountCalendar: React.FC<{ calendar: Calendar }> = ({ calendar }) => {
     return (
 
         <div key={calendar.uuid} className="row row-cols-12 row-cols-xs-9 calendar-row my-1 overflow-auto text-break">
-            <div className="col px-0 d-flex">
+            <div className="col pl-1 d-flex">
                 <div className='form-check form-switch'>
                     <input className="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault"
                         checked={calendar.active}
                         onChange={updateChecked}
                     />
                 </div>
-                <label className="form-check-label xs-small">{calendar.name}</label>
+                <label className="form-check-label xs-small">{calendar.name.replace("@group.v.calendar.google.com", "")}</label>
                 {calendar.name.includes("group.v.calendar.google.com") &&
                     <div>
                         <p className='mx-2 my-0 google-calendar'>ℹ️</p>
