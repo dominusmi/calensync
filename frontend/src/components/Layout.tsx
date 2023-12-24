@@ -30,15 +30,15 @@ const Layout: React.FC<LayoutProps> = ({ children, verify_session = true }) => {
                     },
                 }
             );
-        } catch(e) {}
+        } catch (e) { }
     }
 
     useEffect(() => {
         // Your function to be triggered after the component is ready
-        if(toastReady){
+        if (toastReady) {
             const urlParams = new URLSearchParams(window.location.search);
             let err = urlParams.get('error_msg');
-            if(err !== null){
+            if (err !== null) {
                 createToast(atob(err), MessageKind.Error);
             }
             consumeMessages();
@@ -56,15 +56,17 @@ const Layout: React.FC<LayoutProps> = ({ children, verify_session = true }) => {
     }, [])
 
     return (
-        <div className='App bg-light'>
-            <div className='content justify-content-center'>
-            <NavBar verify_session={verify_session} />
-                <main className=''>
-                    {children}
-                </main>
+        <div className='bg-light'>
+            <div className='App'>
+                <div className='content justify-content-center'>
+                    <NavBar verify_session={verify_session} />
+                    <main className=''>
+                        {children}
+                    </main>
+                </div>
+                <Toast onReady={handleToastReady} />
             </div>
             <Footer />
-            <Toast onReady={handleToastReady} />
         </div>
     );
 };
