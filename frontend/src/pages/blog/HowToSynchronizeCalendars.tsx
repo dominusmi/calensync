@@ -9,7 +9,7 @@ const HowToSynchronizeCalendars: React.FC = () => {
   const { t } = useTranslation(['blog']);
   const ts = (s: string) => t(`sync_google_calendars.${s}`)
   return (
-    <Layout verify_session={false}>
+    <Layout verifySession={false}>
             <Helmet>
                 <meta charSet="utf-8" />
                 <title>{ts("title")}</title>

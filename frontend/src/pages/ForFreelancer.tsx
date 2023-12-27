@@ -27,7 +27,7 @@ const ForFreelancer: React.FC = () => {
     }, [])
 
     return (
-        <Layout verify_session={false}>
+        <Layout verifySession={false}>
             <Helmet>
                 <meta charSet="utf-8" />
                 <title>{t('title_sync_calendars')}</title>

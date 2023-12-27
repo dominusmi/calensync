@@ -8,10 +8,11 @@ import API from '../utils/const';
 
 interface LayoutProps {
     children: ReactNode;
-    verify_session?: boolean;
+    verifySession?: boolean;
+    onlyRequired?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, verify_session = true }) => {
+const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyRequired = false}) => {
     const [toastReady, setToastReady] = useState(false);
 
     const handleToastReady = () => {
@@ -59,14 +60,14 @@ const Layout: React.FC<LayoutProps> = ({ children, verify_session = true }) => {
         <div className='bg-light'>
             <div className='App'>
                 <div className='content justify-content-center'>
-                    <NavBar verify_session={verify_session} />
+                    <NavBar verify_session={onlyRequired} />
                     <main className=''>
                         {children}
                     </main>
                 </div>
                 <Toast onReady={handleToastReady} />
             </div>
-            <Footer />
+            <Footer onlyRequired={onlyRequired} />
         </div>
     );
 };

@@ -113,7 +113,7 @@ const Dashboard: React.FC = () => {
 
   return (
 
-    <Layout>
+    <Layout onlyRequired={true}>
       <div className='container col-xxl-8'>
         {loading && <LoadingOverlay />}
         {user != null && user.customer_id == null &&

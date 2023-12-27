@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 
 const Login: React.FC = () => {
   return (
-    <Layout verify_session={false}>
+    <Layout verifySession={false} onlyRequired={true}>
       <div className="container">
           <div className='centered'>
             <LoginCard />

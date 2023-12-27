@@ -164,7 +164,7 @@ const Plan: React.FC = () => {
   }, [pricingLoaded])
 
   return (
-    <Layout>
+    <Layout onlyRequired={true}>
       {isLoading &&
         <LoadingOverlay />
       }

@@ -10,7 +10,7 @@ const HowToAvoidCalendlyConflicts: React.FC = () => {
   const ts = (s: string) => t(`avoid_calendly_conflicts.${s}`)
   
   return (
-    <Layout verify_session={false}>
+    <Layout verifySession={false}>
             <Helmet>
                 <meta charSet="utf-8" />
                 <title>{ts("title")}</title>
