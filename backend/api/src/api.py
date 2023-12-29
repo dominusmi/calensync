@@ -10,6 +10,7 @@ from calensync.database.utils import DatabaseSession
 from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PatchCalendarBody, PostSyncRuleBody, \
     PostSyncRuleEvent
 from calensync.log import get_logger
+from calensync.utils import get_env
 
 app = FastAPI(title="Calensync")  # Here is the magic
 logger = get_logger("api")
@@ -25,7 +26,10 @@ def post__webhook(event: Request):
     with DatabaseSession(os.environ["ENV"]) as db:
         webhook_event = GoogleWebhookEvent(channel_id=channel_id, token=token, state=state, resource_id=resource_id)
         sqs_event = SQSEvent(kind=QueueEvent.GOOGLE_WEBHOOK, data=webhook_event)
-        sqs.send_event(boto3.session.Session(), sqs_event.json())
+        if get_env() in ["prod", "dev"]:
+            sqs.send_event(boto3.session.Session(), sqs_event.json())
+        else:
+            sqs.handle_sqs_event(sqs_event, db)
 
 
 @app.get("/paddle/verify_transaction")

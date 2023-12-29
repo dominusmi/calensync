@@ -12,7 +12,7 @@ import { MessageKind } from '../utils/common';
 import ContactButton, { TallyComponent } from '../components/FeedbackButton';
 import { Button, Modal } from 'react-bootstrap';
 
-const OnboardingModal: React.FC<{onClose: () => void}> = React.memo(({onClose}) => {
+const OnboardingModal: React.FC<{ onClose: () => void }> = React.memo(({ onClose }) => {
   return (
     <Modal
       show={true}
@@ -28,7 +28,7 @@ const OnboardingModal: React.FC<{onClose: () => void}> = React.memo(({onClose}) 
       <Modal.Body className=''>
         <div className='embed-container'>
           <iframe width="560" height="315" src="https://www.youtube.com/embed/q672j6cNCNc?si=tncAOhutUdFo9QR_" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
-          </div>
+        </div>
       </Modal.Body>
       <Modal.Footer>
         <Button onClick={onClose} className='btn btn-ternary'>Skip</Button>
@@ -128,6 +128,72 @@ const Dashboard: React.FC = () => {
             <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
           </div>
         }
+        <p className='display-5 my-4'>Synchronize Calendars</p>
+        <div className='d-block'>
+          <div className='row my-3 d-block'>
+            <div className="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+              <div className="btn-group me-md-2 mt-2" role="group" aria-label="First group">
+                <select className="form-select" id="floatingSelect" aria-label="Floating label select example">
+                  <option selected>Open this select menu</option>
+                  <option value="1">One</option>
+                  <option value="2">Two</option>
+                  <option value="3">Three</option>
+                </select>
+              </div>
+              <div className="btn-group me-md-2 mt-2" role="group" aria-label="Second group">
+                <select className="form-select" id="floatingSelect" aria-label="Floating label select example">
+                  <option selected>Open this select menu</option>
+                  <option value="1">One</option>
+                  <option value="2">Two</option>
+                  <option value="3">Three</option>
+                </select>            </div>
+              <div className="btn-group me-md-2 mt-2" role="group" aria-label="Third group">
+                <div className="mx-4 form-check px-4">
+                  <input className="form-check-input" type="checkbox" value="" id='tos-checkbox' />
+                  <label className="form-check-label text-start">
+                    Private?
+                  </label>
+                </div>
+              </div>
+              <div className="btn-group me-md-2 mt-2" role="group" aria-label="Fourth group">
+                <button type="button" className="btn btn-outline-primary">Primary</button>
+              </div>
+              <div className="btn-group me-md-2 mt-2" role="group" aria-label="Fifth group">
+                <button type="button" className="btn btn-outline-danger me-2">Danger</button>
+              </div>
+            </div>
+          </div>
+          <div className='row my-3 d-block'>
+            <div className="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+              <div className="btn-group me-2" role="group" aria-label="First group">
+                <select className="form-select" id="floatingSelect" aria-label="Floating label select example">
+                  <option selected>Open this select menu</option>
+                  <option value="1">One</option>
+                  <option value="2">Two</option>
+                  <option value="3">Three</option>
+                </select>
+              </div>
+              <div className="btn-group me-2" role="group" aria-label="Second group">
+                <select className="form-select" id="floatingSelect" aria-label="Floating label select example">
+                  <option selected>Open this select menu</option>
+                  <option value="1">One</option>
+                  <option value="2">Two</option>
+                  <option value="3">Three</option>
+                </select>            </div>
+              <div className="btn-group me-2" role="group" aria-label="Third group">
+                <div className="mx-4 form-check px-4">
+                  <input className="form-check-input" type="checkbox" value="" id='tos-checkbox' />
+                  <label className="form-check-label text-start">
+                    Private?
+                  </label>
+                </div>
+              </div>
+              <button type="button" className="btn btn-outline-primary me-2">Primary</button>
+              <button type="button" className="btn btn-outline-danger me-2">Danger</button>
+            </div>
+          </div>
+        </div>
+        <div className='display-5 my-4'>Connected accounts</div>
         <AddCalendarAccount />
         {accounts && accounts.map((account) => (
           <AccountCard key={account.uuid} account={account} />
