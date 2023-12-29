@@ -42,7 +42,7 @@ def get_users_query_with_active_calendar():
     sub_query = Calendar.select(User.id).join(CalendarAccount).join(User).where(Calendar.active)
 
     query: Iterable[User] = peewee.prefetch(
-        User.select().join(CalendarAccount).join(Calendar).where(User.id << sub_query),
+        User.select().join(CalendarAccount).join(Calendar).where(User.id << sub_query).distinct(),
         CalendarAccount.select(),
         Calendar.select().where(Calendar.active)
     )
@@ -62,8 +62,8 @@ def sync_user_calendars_by_date(db):
 
     for user in users_query:
         logger.info(f"Syncing {user.uuid}")
-        calendars = load_calendars(user.accounts, start_date, end_date)
-        execute_update(calendars, db)
+        # calendars = load_calendars(user.accounts, start_date, end_date)
+        # execute_update(calendars, db)
 
 
 def update_watches(db: peewee.Database):
