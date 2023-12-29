@@ -114,6 +114,7 @@ Resources:
       Environment:
         Variables:
           ENV: !Ref Env
+          API_ENDPOINT: !Ref ApiEndpoint
       Events:
         DailySyncEvent:
           Type: Schedule
