@@ -55,9 +55,13 @@ def sync_user_calendars_by_date(db):
     logger.info(f"Start/end date: {start_date.isoformat()} -> {end_date.isoformat()}")
 
     for user in query:
-        logger.info(f"Syncing {user.uuid}")
-        calendars = load_calendars(user.accounts, start_date, end_date)
-        execute_update(calendars, db)
+        try:
+            logger.info(f"Syncing {user.uuid}")
+            calendars = load_calendars(user.accounts, start_date, end_date)
+            execute_update(calendars, db)
+        except Exception as e:
+            logger.error(f"Error occured while updating calendar {user.uuid}: {e}")
+            time.sleep(1)
 
 
 def update_watches(db: peewee.Database):
