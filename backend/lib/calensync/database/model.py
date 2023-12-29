@@ -138,7 +138,7 @@ class Calendar(UUIDBaseModel):
         return "@group.v.calendar.google.com" in self.platform_id
 
 
-class SyncRule(BaseModel):
+class SyncRule(UUIDBaseModel):
     source = ForeignKeyField(Calendar)
     destination = ForeignKeyField(Calendar)
     private = peewee.BooleanField()
@@ -149,7 +149,7 @@ class Event(BaseModel):
                                help_text="Calendar of this particular copy of the event (not the original calendar)",
                                backref="events")
     source = ForeignKeyField('self', null=True, default=None)
-    source_rule = ForeignKeyField(SyncRule)
+    source_rule = ForeignKeyField(SyncRule, null=True)
     event_id = CharField(null=False, unique=True)
     start = DateTimeField(null=False)
     end = DateTimeField(null=False)
@@ -182,4 +182,4 @@ class Session(UUIDBaseModel):
     session_id = UUIDField(null=True, unique=True)
 
 
-MODELS = [Session, OAuthState, Event, Calendar, CalendarAccount, User]
+MODELS = [Session, OAuthState, Event, SyncRule, Calendar, CalendarAccount, User]

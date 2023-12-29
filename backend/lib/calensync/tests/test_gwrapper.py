@@ -107,9 +107,9 @@ def test_solve_update_two_active_calendar_confirmed(db, account1, calendar1, acc
 
     with unittest.mock.patch("calensync.gwrapper.insert_event") as insert_event:
         insert_event.side_effect = mock_google_insert_event
-        calendar1.active = True;
+        calendar1.active = True
         calendar1.save()
-        calendar2.active = True;
+        calendar2.active = True
         calendar2.save()
 
         gcalendar1 = GoogleCalendarWrapper(calendar1)

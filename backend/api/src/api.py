@@ -2,13 +2,13 @@ from typing import Annotated, Union
 
 from fastapi import FastAPI, Request, Query, Body, Cookie
 from mangum import Mangum
-from pydantic import BaseModel
 
 from calensync import sqs
 from calensync.api.common import format_response
 from calensync.api.endpoints import *
 from calensync.database.utils import DatabaseSession
-from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent
+from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PatchCalendarBody, PostSyncRuleBody, \
+    PostSyncRuleEvent
 from calensync.log import get_logger
 
 app = FastAPI(title="Calensync")  # Here is the magic
@@ -103,10 +103,6 @@ def post__tos(authorization: Annotated[Union[str, None], Cookie()] = None):
         return accept_tos(user, db)
 
 
-class PatchCalendarBody(BaseModel):
-    kind: str
-
-
 @app.patch('/calendars/{calendar_id}')
 @format_response
 def patch__calendar(calendar_id: str, body: PatchCalendarBody,
@@ -131,6 +127,35 @@ def patch__calendar(calendar_id: str, body: PatchCalendarBody,
         else:
             sqs.send_event(boto3.Session(), sqs_event.json())
 
+
+@app.post('/sync')
+@format_response
+def post__sync_rule(body: PostSyncRuleBody, authorization: Annotated[Union[str, None], Cookie()] = None):
+    """
+    Update a calendar. Used to set a calendar as active.
+    """
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = verify_session(authorization)
+
+        if (error_msg := verify_valid_sync_rule(user, body)) is not None:
+            raise ApiError(message=error_msg)
+        event = PostSyncRuleEvent(payload=body, user_id=user.id)
+        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
+        if is_local():
+            sqs.handle_sqs_event(sqs_event, db)
+        else:
+            sqs.send_event(boto3.Session(), sqs_event.json())
+
+
+@app.delete('/sync/{sync_id}')
+@format_response
+def delete__sync_rule(sync_id: str, authorization: Annotated[Union[str, None], Cookie()] = None):
+    """
+    Update a calendar. Used to set a calendar as active.
+    """
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = verify_session(authorization)
+        delete_sync_rule(user, sync_id)
 
 @app.delete('/calendars/{account_id}')
 @format_response
@@ -235,6 +260,7 @@ async def log_requests(request: Request, call_next):
     logger.info(f"{response.status_code}")
 
     return response
+
 
 handler = Mangum(app, lifespan='off')
 
