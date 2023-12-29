@@ -2,7 +2,8 @@ import dataclasses
 import datetime
 from unittest.mock import patch
 
-from calensync.awslambda.daily_sync import sync_user_calendars_by_date, update_watches
+from calensync.awslambda.daily_sync import sync_user_calendars_by_date, update_watches, \
+    get_users_query_with_active_calendar
 from calensync.database.model import Event
 from calensync.dataclass import GoogleDatetime, AbstractGoogleDate, EventStatus
 from calensync.tests.fixtures import *
@@ -18,12 +19,32 @@ class MockEvent:
     status = EventStatus.confirmed
 
 
+def test_get_users_query_with_active_calendar(user, account1, calendar1):
+    calendar1.active = False
+    calendar1.save()
+
+    user2 = User(email="tejkj").save_new()
+    user2_account = CalendarAccount(key="whauh", credentials="", user=user2).save_new()
+    user2_calendar = Calendar(account=user2_account, platform_id="platform2", name="name2", active=False).save_new()
+
+    query = get_users_query_with_active_calendar()
+    result = list(query)
+    assert len(result) == 0
+
+    calendar1.active = True
+    calendar1.save()
+    query = get_users_query_with_active_calendar()
+    assert len(result) == 0
+    assert result[0].id == user.id
+
+
 def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2: Calendar):
     with (
         patch("calensync.gwrapper.insert_event") as insert_event,
         patch("calensync.gwrapper.get_events") as get_events,
         patch("calensync.awslambda.daily_sync.service_from_account") as service_from_account
     ):
+
         calendar1.active = True
         calendar1.save()
         calendar2.active = True

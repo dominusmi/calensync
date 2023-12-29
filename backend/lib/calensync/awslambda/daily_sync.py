@@ -38,13 +38,19 @@ def execute_update(calendars: List[GoogleCalendarWrapper], db):
             cal.insert_events()
 
 
-def sync_user_calendars_by_date(db):
-    query: Iterable[User] = peewee.prefetch(
-        User.select(),
-        CalendarAccount.select(),
-        Calendar.select().where(Calendar.active == True)
-    )
+def get_users_query_with_active_calendar():
+    sub_query = Calendar.select(User.id).join(CalendarAccount).join(User).where(Calendar.active)
 
+    query: Iterable[User] = peewee.prefetch(
+        User.select().join(CalendarAccount).join(Calendar).where(User.id << sub_query),
+        CalendarAccount.select(),
+        Calendar.select().where(Calendar.active)
+    )
+    return query
+
+
+def sync_user_calendars_by_date(db):
+    users_query = get_users_query_with_active_calendar()
     start: datetime.datetime = (datetime.datetime.today() + datetime.timedelta(days=30))
     start_date = datetime.datetime.fromtimestamp(start.timestamp())
     start_date = start_date.replace(hour=0, minute=0, second=0)
@@ -54,7 +60,7 @@ def sync_user_calendars_by_date(db):
     start_date = start_date - datetime.timedelta(seconds=1)
     logger.info(f"Start/end date: {start_date.isoformat()} -> {end_date.isoformat()}")
 
-    for user in query:
+    for user in users_query:
         logger.info(f"Syncing {user.uuid}")
         calendars = load_calendars(user.accounts, start_date, end_date)
         execute_update(calendars, db)
