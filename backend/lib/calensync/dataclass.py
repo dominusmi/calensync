@@ -38,7 +38,8 @@ class GoogleDatetime(AbstractGoogleDate):
 
     def to_google_dict(self):
         return {
-            "dateTime": self.dateTime.astimezone().isoformat(timespec="seconds"),
+            "dateTime": self.dateTime.replace(tzinfo=datetime.timezone.utc).isoformat(timespec="seconds"),
+            "timeZone": "UCT"
         }
 
     def to_datetime(self) -> datetime.datetime:
@@ -62,6 +63,9 @@ class EventExtendedProperty(BaseModel):
     @staticmethod
     def list_to_dict(extended_properties: List[EventExtendedProperty]):
         return {e.key: e.value for e in extended_properties}
+
+    def to_google_dict(self):
+        return {self.key: self.value}
 
     @classmethod
     def for_source_id(cls, value):
@@ -88,6 +92,8 @@ class GoogleEvent(BaseModel):
     updated: Optional[datetime.datetime] = None
     status: EventStatus
     recurrence: Optional[List[str]] = None
+    description: Optional[str] = None
+    summary: str
 
     @staticmethod
     def parse_event_list_response(response: Dict) -> List[GoogleEvent]:
@@ -119,6 +125,7 @@ def event_list_to_source_id_map(events: List[GoogleEvent]) -> Dict[str, GoogleEv
 class QueueEvent(IntEnum):
     GOOGLE_WEBHOOK = 1
     UPDATE_CALENDAR_STATE = 2
+    POST_SYNC_RULE = 3
 
 
 class GoogleWebhookEvent(BaseModel):
@@ -139,6 +146,22 @@ class UpdateCalendarStateEvent(BaseModel):
     user_id: int
 
 
+class PostSyncRuleEvent(BaseModel):
+    payload: PostSyncRuleBody
+    calendar_id: str
+    user_id: int
+
+
 class SQSEvent(BaseModel):
     kind: QueueEvent
     data: Dict
+
+
+class PatchCalendarBody(BaseModel):
+    kind: str
+
+
+class PostSyncRuleBody(BaseModel):
+    source_calendar_id: str
+    destination_calendar_id: str
+    private: bool

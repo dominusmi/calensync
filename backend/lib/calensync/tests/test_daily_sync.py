@@ -19,9 +19,11 @@ class MockEvent:
     status = EventStatus.confirmed
 
 
-def test_get_users_query_with_active_calendar(user, account1, calendar1):
+def test_get_users_query_with_active_calendar(user, account1, calendar1, calendar2):
     calendar1.active = False
     calendar1.save()
+    calendar2.active = False
+    calendar2.save()
 
     user2 = User(email="tejkj").save_new()
     user2_account = CalendarAccount(key="whauh", credentials="", user=user2).save_new()
@@ -33,8 +35,12 @@ def test_get_users_query_with_active_calendar(user, account1, calendar1):
 
     calendar1.active = True
     calendar1.save()
+    calendar2.active = True
+    calendar2.save()
+
     query = get_users_query_with_active_calendar()
-    assert len(result) == 0
+    result = list(query)
+    assert len(result) == 1
     assert result[0].id == user.id
 
 

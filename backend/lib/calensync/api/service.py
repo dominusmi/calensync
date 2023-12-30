@@ -2,10 +2,11 @@ import datetime
 
 import peewee
 
+from calensync.api.common import number_of_days_to_sync_in_advance
 from calensync.database.model import Calendar, CalendarAccount
 from calensync.gwrapper import GoogleCalendarWrapper
 from calensync.log import get_logger
-from calensync.utils import get_env, is_local
+from calensync.utils import is_local
 
 logger = get_logger(__file__)
 
@@ -29,7 +30,7 @@ def activate_calendar(calendar_db: Calendar):
     start_date = datetime.datetime.now()
 
     # number of days to sync in the future
-    days = 5 if is_local() else 30
+    days = number_of_days_to_sync_in_advance()
     end_date = start_date + datetime.timedelta(days=days)
 
     current_google_calendar.get_events(start_date, end_date)
@@ -74,7 +75,7 @@ def deactivate_calendar(calendar: Calendar):
         logger.info(f"Found {len(copied_events)} to delete for {copied_events[0].calendar.uuid}")
         wrapper = GoogleCalendarWrapper(copied_events[0].calendar)
         wrapper.events_handler.delete(copied_events)
-        wrapper.delete_events(include_database=True)
+        wrapper.delete_events()
 
     for events in groups.values():
         _delete_events(events, is_source=False)

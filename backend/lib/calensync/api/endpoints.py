@@ -13,11 +13,11 @@ import starlette.responses
 from google.oauth2.credentials import Credentials
 
 from calensync import dataclass
-from calensync.api.common import ApiError, RedirectResponse
+from calensync.api.common import ApiError, RedirectResponse, number_of_days_to_sync_in_advance
 from calensync.api.service import activate_calendar, deactivate_calendar
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, Event
-from calensync.dataclass import PostSyncRuleBody
-from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
+from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty
+from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper, source_event_tuple
 from calensync.log import get_logger
 import calensync.paddle as paddle
 from calensync.session import create_session_and_user
@@ -53,7 +53,7 @@ def verify_session(session_id: Optional[str]) -> User:
     user: User = result[0].user
     if not user.tos:
         logger.info("User has not accepted tos")
-        raise RedirectResponse("tos")
+        raise RedirectResponse(f"{get_frontend_env()}/tos")
     logger.info(f"Verified {user.uuid}")
     return user
 
@@ -420,9 +420,34 @@ def verify_valid_sync_rule(user: User, body: PostSyncRuleBody) -> Optional[str]:
     return None
 
 
+def create_sync_rule(payload: PostSyncRuleBody, db: peewee.Database):
+    # should already have been verified as valid rule at this point
+    with db.atomic():
+        source: Calendar = Calendar.get(uuid=payload.source_calendar_id)
+        destination: Calendar = Calendar.get(uuid=payload.destination_calendar_id)
+
+        sync_rule = SyncRule(source=source, destination=destination, private=payload.private).save_new()
+
+        # first time calendar is being used as source, we need to get the events
+        source_wrapper = GoogleCalendarWrapper(calendar_db=source)
+        start_date = datetime.datetime.now()
+
+        # number of days to sync in the future
+
+        end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
+        source_wrapper.get_events(start_date, end_date)
+
+        destination_wrapper = GoogleCalendarWrapper(calendar_db=destination)
+        destination_wrapper.events_handler.add([source_event_tuple(e, str(source.uuid)) for e in source_wrapper.events])
+        destination_wrapper.insert_events(private=sync_rule.private)
+
+        if source.expiration is None:
+            source_wrapper.create_watch()
+
+
 def delete_sync_rule(user: User, sync_id: str):
     sync_rules = list(
-        SyncRule.select(SyncRule.id, SyncRule.source)
+        SyncRule.select(SyncRule.id, SyncRule.source, Calendar)
         .join(Calendar, on=(SyncRule.destination_id == Calendar.id))
         .join(CalendarAccount)
         .join(User)
@@ -431,26 +456,19 @@ def delete_sync_rule(user: User, sync_id: str):
 
     if len(sync_rules) == 0:
         raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
-    rule: SyncRule = sync_rules[0]
+    sync_rule: SyncRule = sync_rules[0]
 
-    # find all events attached to rule and delete them
-    events = list(peewee.prefetch(
-        Event.select(Event)
-        .join(SyncRule)
-        .where(SyncRule.uuid == sync_id),
-        Calendar.select()
-    ))
-
-    if not events:
-        return
-
-    wrapper = GoogleCalendarWrapper(calendar_db=events[0].calendar)
-    wrapper.events_handler.delete(events)
-    wrapper.delete_events()
+    destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
+    events = destination_wrapper.get_events(
+        private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
+        end_date=datetime.datetime.utcnow() + datetime.timedelta(days=35)
+    )
+    destination_wrapper.events_handler.delete([e.id for e in events])
+    destination_wrapper.delete_events()
 
     # check if calendar has other rule sync rules, otherwise delete watch
-    other_rules_same_source = list(SyncRule.select().where(SyncRule.source == rule.source, SyncRule.id != rule.id))
+    other_rules_same_source = list(SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
     if not other_rules_same_source:
-        wrapper.delete_watch()
+        GoogleCalendarWrapper(sync_rule.source).delete_watch()
 
-    rule.delete_instance()
+    sync_rule.delete_instance()

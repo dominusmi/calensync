@@ -5,7 +5,7 @@ from typing import List, Tuple
 import peewee
 
 from calensync.database.model import User, Event
-from calensync.dataclass import GoogleEvent, EventStatus, event_list_to_source_id_map
+from calensync.dataclass import GoogleEvent, EventStatus, event_list_to_source_id_map, EventExtendedProperty
 
 
 # def create_watch(calendar: Calendar, url: str, service, db: peewee.Database, expiration_minutes: int = 120):
@@ -83,10 +83,10 @@ def events_to_delete(events1: List[GoogleEvent], events2: List[GoogleEvent]) -> 
 
 
 class EventsModificationHandler:
-    events_to_add: List[GoogleEvent]
+    events_to_add: List[Tuple[GoogleEvent, List[EventExtendedProperty]]]
     """ We need both the db event (outdated copy), and the original google event, to be able to update it """
-    events_to_update: List[Tuple[Event, GoogleEvent]]
-    events_to_delete: List[Event]
+    events_to_update: List[Tuple[GoogleEvent, GoogleEvent]]
+    events_to_delete: List[str]
 
     def __init__(self):
         self.events_to_add = []
@@ -94,15 +94,15 @@ class EventsModificationHandler:
         self.events_to_update = []
         self.events_to_delete = []
 
-    def add(self, events: List[GoogleEvent]):
-        for e in events:
+    def add(self, events: List[Tuple[GoogleEvent, List[EventExtendedProperty]]]):
+        for e, ep in events:
             if e.id in self._added_ids:
                 continue
             self._added_ids.add(e.id)
-            self.events_to_add.append(e)
+            self.events_to_add.append((e, ep))
 
-    def update(self, events: List[Tuple[Event, GoogleEvent]]):
+    def update(self, events: List[Tuple[GoogleEvent, GoogleEvent]]):
         self.events_to_update.extend(events)
 
-    def delete(self, events: List[Event]):
+    def delete(self, events: List[str]):
         self.events_to_delete.extend(events)

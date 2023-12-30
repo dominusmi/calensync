@@ -9,9 +9,10 @@ import peewee
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from calensync.api.common import ApiError
+from calensync.api.common import ApiError, number_of_days_to_sync_in_advance
+from calensync.queries.common import get_sync_rules_from_source
 from calensync.calendar import EventsModificationHandler
-from calensync.database.model import Calendar, CalendarAccount, db, User, Event
+from calensync.database.model import Calendar, CalendarAccount, db, User, Event, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus
 from calensync.log import get_logger
 from calensync.utils import get_api_url, utcnow, get_env
@@ -38,11 +39,11 @@ def delete_event(service, calendar_id: str, event_id: str):
 
 def insert_event(service, calendar_id: str, start: GoogleDatetime, end: GoogleDatetime,
                  properties: List[EventExtendedProperty] = None, display_name="Calensync", summary="Blocker",
-                 **kwargs) -> Dict:
+                 description=None, **kwargs) -> Dict:
     event = {
         "creator": {"displayName": display_name},
         "summary": summary,
-        "description": "Blocker event created by Calensync.",
+        "description": description,
         "start": start.to_google_dict(),
         "end": end.to_google_dict(),
         "extendedProperties": {"private": EventExtendedProperty.list_to_dict(properties)},
@@ -56,7 +57,8 @@ def insert_event(service, calendar_id: str, start: GoogleDatetime, end: GoogleDa
 def update_event(service, calendar_id: str, event_id: str, start: GoogleDatetime, end: GoogleDatetime, **kwargs):
     body = {
         "start": start.to_google_dict(),
-        "end": end.to_google_dict()
+        "end": end.to_google_dict(),
+        **kwargs
     }
     logger.info(f"Updating event {event_id}: {body}")
     service.events().patch(calendarId=calendar_id, eventId=event_id, body=body).execute()
@@ -89,31 +91,21 @@ def find_calendar_from_event(calendars: List[GoogleCalendarWrapper], event: Even
     return next(filter(lambda x: x.google_id == event.calendar.platform_id, calendars), None)
 
 
-def get_events(service, google_id: str, start_date: datetime.datetime, end_date: datetime.datetime, query_kwargs: Dict):
-    start_date_str = datetime_to_google_time(start_date)
-    end_date_str = datetime_to_google_time(end_date)
-
+def get_events(service, google_id: str, start_date: datetime.datetime, end_date: datetime.datetime,
+               private_extended_properties: Optional[Dict] = None, **kwargs):
+    start_date_str = datetime_to_google_time(start_date) if start_date is not None else start_date
+    end_date_str = datetime_to_google_time(end_date) if end_date is not None else end_date
+    if private_extended_properties is None:
+        private_extended_properties = {}
+    privateExtendedProperty = [f"{k}={v}" for k, v in private_extended_properties.items()]
     # "UCT" is not a spelling mistake, it's the same as UTC
     response = service.events().list(
         calendarId=google_id, timeMin=start_date_str, timeMax=end_date_str, timeZone="UCT",
-        **query_kwargs
+        privateExtendedProperty=privateExtendedProperty,
+        **kwargs
     ).execute()
 
     events = GoogleEvent.parse_event_list_response(response)
-
-    # handle recurrent events
-    recurrent_events = []
-    indexes = [i for i in range(len(events)) if events[i].recurrence is not None]
-    for index in sorted(indexes, reverse=True):
-        recurrent_events.append(events.pop(index))
-
-    for event in recurrent_events:
-        recurrent_response = service.events().instances(
-            calendarId=google_id, eventId=event.id,
-            timeMin=start_date_str, timeMax=end_date_str, timeZone="UCT"
-        ).execute()
-        events.extend(GoogleEvent.parse_event_list_response(recurrent_response))
-
     return events
 
 
@@ -126,23 +118,31 @@ def delete_google_watch(service, resource_id: str, channel_id: str):
     service.channels().stop(body=body).execute()
 
 
+def source_event_tuple(source_event: GoogleEvent, source_calendar_id: str):
+    return (
+        source_event, [
+            EventExtendedProperty.for_source_id(source_event.id),
+            EventExtendedProperty.for_calendar_id(source_calendar_id)
+        ]
+    )
+
+
 def create_google_watch(service, calendar_db: Calendar):
     body = {
         "id": calendar_db.channel_id.__str__(),
-        "address": get_api_url() + "/webhook",
+        "address": (os.environ.get("WATCH_URL") or get_api_url()) + "/webhook",
         "expiration": int(calendar_db.expiration.timestamp() * 1000),
         "type": "webhook",
         "token": calendar_db.token.__str__()
     }
-    env = get_env()
-    if env != "local" and env != "test":
-        response = service.events().watch(calendarId=str(calendar_db.platform_id), body=body).execute()
-        logger.info(f"Created watch for calendar {calendar_db.uuid}")
-        if (resource_id := response.get("resourceId")) is not None:
-            logger.info(f"New watch has resource_id: {resource_id}")
-            calendar_db.resource_id = resource_id
-            calendar_db.save()
-            return resource_id
+    logger.info(body)
+    response = service.events().watch(calendarId=str(calendar_db.platform_id), body=body).execute()
+    logger.info(f"Created watch for calendar {calendar_db.uuid}")
+    if (resource_id := response.get("resourceId")) is not None:
+        logger.info(f"New watch has resource_id: {resource_id}")
+        calendar_db.resource_id = resource_id
+        calendar_db.save()
+        return resource_id
 
 
 class GoogleCalendarWrapper:
@@ -186,17 +186,20 @@ class GoogleCalendarWrapper:
         return self.calendar_db.platform_id
 
     def get_events(self, start_date: datetime.datetime = None, end_date: datetime.datetime = None,
-                   query_kwargs: Dict = None):
-        query_kwargs = {} if query_kwargs is None else query_kwargs
-        start_date = start_date if start_date is not None else datetime.datetime.utcnow()
-        end_date = end_date if end_date is not None else datetime.datetime.utcnow()
-        events = get_events(self.service, self.google_id, start_date, end_date, query_kwargs)
+                   private_extended_properties: Dict = None, **kwargs):
+
+        kwargs = {} if kwargs is None else kwargs
+        # start_date = start_date if start_date is not None else datetime.datetime.utcnow()
+        # end_date = end_date if end_date is not None else datetime.datetime.utcnow() + datetime.timedelta(
+        #     days=number_of_days_to_sync_in_advance())
+
+        events = get_events(self.service, self.google_id, start_date, end_date, private_extended_properties, **kwargs)
         self.events = events
         return self.events
 
-    def add_watch(self, id: str, token: str, expiration: datetime.datetime, url: str):
+    def add_watch(self, watch_id: str, token: str, expiration: datetime.datetime, url: str):
         body = {
-            "id": id,
+            "id": watch_id,
             "address": url,
             "expiration": int(expiration.timestamp() * 1000),
             "type": "webhook",
@@ -247,55 +250,44 @@ class GoogleCalendarWrapper:
             self.calendar_db.save()
             delete_google_watch(self.service, resource_id, channel_id)
 
-    def insert_events(self):
+    def insert_events(self, private=True):
         if self.calendar_db.is_read_only:
             return
 
         self.calendar_db.last_inserted = utcnow()
         self.calendar_db.save()
 
-        existing_event_ids = [
-            e.source.event_id for e in
-            Event.select(Event.source).where(Event.source.is_null(False), Event.calendar == self.calendar_db)
-        ]
-
         while self.events_handler.events_to_add:
-            event = self.events_handler.events_to_add.pop()
-            if event.id in existing_event_ids:
-                logger.info(f"Skipping event {event.id}")
-                continue
-
-            properties = [
-                EventExtendedProperty.for_source_id(event.id)
-            ]
+            (event, properties) = self.events_handler.events_to_add.pop()
 
             # todo: should be inside a transaction
-            response = insert_event(service=self.service, calendar_id=self.google_id,
-                                    start=event.start, end=event.end, properties=properties)
-
-            Event(calendar=self.calendar_db, event_id=response["id"],
-                  source=Event.select(Event.id).where(Event.event_id == event.id),
-                  start=event.start.to_datetime(), end=event.end.to_datetime()).save()
+            logger.info(event)
+            if private:
+                response = insert_event(service=self.service, calendar_id=self.google_id,
+                                        start=event.start, end=event.end, properties=properties, recurrence=event.recurrence)
+            else:
+                response = insert_event(service=self.service, calendar_id=self.google_id,
+                                        start=event.start, end=event.end, properties=properties,
+                                        summary=event.summary, description=event.description, recurrence=event.recurrence)
 
     def update_events(self):
         """ Only used to update start/end datetime"""
         if self.calendar_db.is_read_only:
             return
 
-        for (event, source_event) in self.events_handler.events_to_update:
-            event.start = source_event.start.dateTime
-            event.end = source_event.end.dateTime
-            start = GoogleDatetime(dateTime=event.start, timeZone="UCT")
-            end = GoogleDatetime(dateTime=event.end, timeZone="UCT")
+        for (source_event, to_update) in self.events_handler.events_to_update:
+            start = GoogleDatetime(dateTime=source_event.start.dateTime, timeZone="UCT")
+            end = GoogleDatetime(dateTime=source_event.end.dateTime, timeZone="UCT")
             try:
                 with db.atomic():
-                    event.save()
-                    update_event(service=self.service, calendar_id=self.google_id, event_id=event.event_id, start=start,
-                                 end=end)
+                    logger.info(source_event)
+                    update_event(service=self.service, calendar_id=self.google_id, event_id=to_update.id,
+                                 start=start, end=end, summary=source_event.summary,
+                                 description=source_event.description)
             except Exception as e:
-                logger.warn(f"Failed to process event {event.event_id}: {e}")
+                logger.warn(f"Failed to process event {to_update.id}: {e}")
 
-    def delete_events(self, include_database: bool = False):
+    def delete_events(self):
         """
         Calls google API to delete events stored in self.events_handler.
          :param include_database:
@@ -309,32 +301,23 @@ class GoogleCalendarWrapper:
             return
 
         while self.events_handler.events_to_delete:
-            event = self.events_handler.events_to_delete.pop()
-            if event.deleted:
-                continue
-            if event.source is not None:
-                # we only delete non-source events from actual calendar
-                logger.info(f"Deleting event {event.id} in {self.google_id} from source {event.source.id}")
-                delete_event(self.service, self.google_id, event.event_id)
-
-            if include_database:
-                event.delete_instance()
-            else:
-                # We keep a log of the deleted events to avoid doing extra api calls each time
-                event.deleted = True
-                event.save()
+            event_id = self.events_handler.events_to_delete.pop()
+            logger.info(f"Deleting event {event_id} in {self.google_id}")
+            delete_event(self.service, self.google_id, event_id)
 
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
-        updated_min = (self.calendar_db.last_processed - datetime.timedelta(minutes=1)).isoformat() + "Z"
-
-        response = (
-            self.service.events()
-            .list(calendarId=self.google_id, orderBy="updated",
-                  maxResults=200, showDeleted=True, updatedMin=updated_min)
-            .execute()
-        )
-        events = GoogleEvent.parse_event_list_response(response)
+        updated_min = (datetime.datetime.utcnow() - datetime.timedelta(minutes=7)).isoformat() + "Z"
+        end_date = datetime.datetime.utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
+        events = self.get_events(end_date=end_date, updatedMin=updated_min, orderBy="updated",
+                                 showDeleted=True, maxResults=200)
+        # response = (
+        #     self.service.events()
+        #     .list(calendarId=self.google_id, orderBy="updated",
+        #           maxResults=200, showDeleted=True, updatedMin=updated_min)
+        #     .execute()
+        # )
+        # events = GoogleEvent.parse_event_list_response(response)
         logger.info(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
         return [event for event in events if event.source_id is None]
 
@@ -358,11 +341,12 @@ class GoogleCalendarWrapper:
         ).execute()
 
     @staticmethod
-    def __solve_event_update(event: GoogleEvent, other_calendars: List[GoogleCalendarWrapper]) -> int:
+    def __solve_event_update(event: GoogleEvent, sync_rules: List[SyncRule]) -> int:
         """
         Solves a single event update (by updating all other calendars where this event exists)
         """
         counter_event_changed = 0
+        logger.info(event)
         if event.status == EventStatus.tentative:
             # this means an invitation was received, but not yet accepted, so nothing to do
             return 0
@@ -375,94 +359,71 @@ class GoogleCalendarWrapper:
                 and (event.updated - event.created).seconds < 1
         ):
             # new event, we don't need to check anything more
-            logger.info(f"Add new event: {event}")
+            logger.info(f"Potential new event")
 
-            for c in other_calendars:
-                c.events_handler.add([event])
-                c.insert_events()
+            for rule in sync_rules:
+                c = GoogleCalendarWrapper(rule.destination)
+                c.get_events(
+                    private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                )
+                if len(c.events) > 0:
+                    continue
+
+                c.events_handler.add([source_event_tuple(event, str(sync_rules[0].source.uuid))])
+                c.insert_events(private=rule.private)
                 counter_event_changed += 1
         else:
             # check status
             if event.status == EventStatus.cancelled:
                 # need to delete
-                query, Source = Event.get_self_reference_query()
-                fetched_events = list(query.where(Source.event_id == event.id))
-                for fetched_event in fetched_events:
-                    cal = find_calendar_from_event(other_calendars, fetched_event)
-                    if cal is None:
-                        continue
-                    cal.events_handler.delete([fetched_event])
-                    cal.delete_events()
-                    return 1
+                logger.info(f"Found event to delete")
+                for rule in sync_rules:
+                    c = GoogleCalendarWrapper(rule.destination)
+                    c.get_events(
+                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                    )
+                    c.events_handler.delete([e.id for e in c.events])
+                    c.delete_events()
+                    counter_event_changed += 1
 
             elif event.status == EventStatus.confirmed:
                 # This means it's an updated events. Therefore, all the user-associated calendars
                 # must have a version of this event in the database, which we can find through the source_id
                 # We then update each of this events with the new time
-                logger.info(f"Event status: confirmed. Event id: {event.id}")
-                SourceEvent = Event.alias()
-                query = (
-                    Event
-                    .select().join(SourceEvent, on=(Event.source == SourceEvent.id))
-                    .where(SourceEvent.event_id == event.id)
-                )
-                fetched_events: List[Event] = peewee.prefetch(query, Calendar.select(),
-                                                              prefetch_type=peewee.PREFETCH_TYPE.WHERE)
-
-                if fetched_events:
-                    # If updated, then we should find the events in the database
-                    for fetched_event in fetched_events:
-                        logger.info(f"Updating {fetched_event.id} for {fetched_event.event_id}")
-                        same_start = fetched_event.start == event.start.dateTime
-                        same_end = fetched_event.end == event.end.dateTime
-                        if same_start and same_end:
-                            # time was not modified, ignore
-                            logger.info("Same start, ignored")
-                            continue
-
-                        fetched_event_cal = find_calendar_from_event(other_calendars, fetched_event)
-                        if fetched_event_cal is None:
-                            continue
-
-                        # Update event
-                        (
-                            Event.update({Event.start: event.start.to_datetime(), Event.end: event.end.to_datetime()})
-                            .where(Event.event_id == event.id).execute()
-                        )
-                        fetched_event_cal.events_handler.update([(fetched_event, event)])
-                        fetched_event_cal.update_events()
+                logger.info(f"Found confirmed event, updating")
+                for rule in sync_rules:
+                    c = GoogleCalendarWrapper(rule.destination)
+                    c.get_events(
+                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                    )
+                    if len(c.events) == 0:
+                        logger.info(f"In update but need to create event")
+                        c.events_handler.add([source_event_tuple(event, str(sync_rules[0].source.uuid))])
+                        c.insert_events(private=rule.private)
                         counter_event_changed += 1
-
-                else:
-                    # new event, simply insert
-                    for c in other_calendars:
-                        c.events_handler.add([event])
-                        c.insert_events()
+                    else:
+                        c.events_handler.update([(event, to_update) for to_update in c.events])
+                        c.update_events()
                         counter_event_changed += 1
-
             else:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
         return counter_event_changed
 
     def solve_update_in_calendar(self) -> int:
         """ Called when we receive a webhook event saying the calendar requires an update """
-        other_calendars = [GoogleCalendarWrapper(c) for c in self.get_user_calendars(active=True)]
+        sync_rules = list(get_sync_rules_from_source(self.calendar_db))
         counter_event_changed = 0
 
-        logger.info(f"Found {len(other_calendars)} other active calendars for user")
+        logger.info(f"Found {len(sync_rules)} active SyncRules for {self.calendar_db.uuid}")
 
         events = self.get_updated_events()
-        logger.info(f"Updated events: {[e.dict() for e in events]}")
+        logger.info(f"Updated events: {[e.id for e in events]}")
         if not events:
             logger.warn(f"Something went wrong: no updates found for channel {self.calendar_db.channel_id}")
             return 0
 
-        # auto-update existing
-        self.events = events
-        self.save_events_in_database()
-
         for event in events:
-            counter_event_changed += self.__solve_event_update(event, other_calendars)
+            counter_event_changed += self.__solve_event_update(event, sync_rules)
 
         logger.info(f"Event changed: {counter_event_changed}")
         return counter_event_changed
