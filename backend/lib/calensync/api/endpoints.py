@@ -461,7 +461,9 @@ def delete_sync_rule(user: User, sync_id: str):
     destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
     events = destination_wrapper.get_events(
         private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
-        end_date=datetime.datetime.utcnow() + datetime.timedelta(days=35)
+        start_date=datetime.datetime.now(),
+        end_date=datetime.datetime.now() + datetime.timedelta(days=35),
+        showDeleted=False
     )
     destination_wrapper.events_handler.delete([e.id for e in events])
     destination_wrapper.delete_events()

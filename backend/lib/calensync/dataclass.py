@@ -8,6 +8,7 @@ import pydantic
 from pydantic import BaseModel
 
 from calensync.log import get_logger
+from calensync.utils import datetime_to_google_time
 
 logger = get_logger("dataclass")
 
@@ -34,11 +35,11 @@ class GoogleDate(AbstractGoogleDate):
 
 class GoogleDatetime(AbstractGoogleDate):
     dateTime: datetime.datetime
-    timeZone: Optional[str] = None  # deprecated
+    timeZone: Optional[str] = None
 
     def to_google_dict(self):
         return {
-            "dateTime": self.dateTime.replace(tzinfo=datetime.timezone.utc).isoformat(timespec="seconds"),
+            "dateTime":  datetime_to_google_time(self.dateTime),
             "timeZone": "UCT"
         }
 

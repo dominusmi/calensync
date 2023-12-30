@@ -15,7 +15,7 @@ from calensync.calendar import EventsModificationHandler
 from calensync.database.model import Calendar, CalendarAccount, db, User, Event, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus
 from calensync.log import get_logger
-from calensync.utils import get_api_url, utcnow, get_env
+from calensync.utils import get_api_url, utcnow, datetime_to_google_time
 
 logger = get_logger(__file__)
 
@@ -82,10 +82,6 @@ def get_google_calendars(credentials) -> List[GoogleCalendar]:
         raise ApiError("Failed to process request due to Google credentials error")
 
 
-def datetime_to_google_time(dt: datetime.datetime) -> str:
-    return dt.isoformat() + "Z"
-
-
 def find_calendar_from_event(calendars: List[GoogleCalendarWrapper], event: Event) -> GoogleCalendarWrapper:
     """ Given a list of calendars and a database event, return the calendar to which this event belongs """
     return next(filter(lambda x: x.google_id == event.calendar.platform_id, calendars), None)
@@ -93,8 +89,12 @@ def find_calendar_from_event(calendars: List[GoogleCalendarWrapper], event: Even
 
 def get_events(service, google_id: str, start_date: datetime.datetime, end_date: datetime.datetime,
                private_extended_properties: Optional[Dict] = None, **kwargs):
+
     start_date_str = datetime_to_google_time(start_date) if start_date is not None else start_date
     end_date_str = datetime_to_google_time(end_date) if end_date is not None else end_date
+    if "updatedMin" in kwargs:
+        kwargs["updatedMin"] = datetime_to_google_time(kwargs["updatedMin"])
+
     if private_extended_properties is None:
         private_extended_properties = {}
     privateExtendedProperty = [f"{k}={v}" for k, v in private_extended_properties.items()]
@@ -307,9 +307,10 @@ class GoogleCalendarWrapper:
 
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
-        updated_min = (datetime.datetime.utcnow() - datetime.timedelta(minutes=7)).isoformat() + "Z"
-        end_date = datetime.datetime.utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
-        events = self.get_events(end_date=end_date, updatedMin=updated_min, orderBy="updated",
+        updated_min = datetime.datetime.now() - datetime.timedelta(minutes=1)
+        start_date = utcnow()
+        end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
+        events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
                                  showDeleted=True, maxResults=200)
         # response = (
         #     self.service.events()
