@@ -1,9 +1,10 @@
-from typing import Annotated, Union
+from typing import Annotated, Union, Dict
 
 from fastapi import FastAPI, Request, Query, Body, Cookie
 from mangum import Mangum
 
 from calensync import sqs
+from calensync.api import endpoints
 from calensync.api.common import format_response
 from calensync.api.endpoints import *
 from calensync.database.utils import DatabaseSession
@@ -132,23 +133,23 @@ def patch__calendar(calendar_id: str, body: PatchCalendarBody,
             sqs.send_event(boto3.Session(), sqs_event.json())
 
 
+@app.get('/sync')
+@format_response
+def get__sync_rules(authorization: Annotated[Union[str, None], Cookie()] = None):
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = verify_session(authorization)
+        return endpoints.get_sync_rules(user)
+
+
 @app.post('/sync')
 @format_response
 def post__sync_rule(body: PostSyncRuleBody, authorization: Annotated[Union[str, None], Cookie()] = None):
     """
-    Update a calendar. Used to set a calendar as active.
+    Create a sync rule
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-
-        if (error_msg := verify_valid_sync_rule(user, body)) is not None:
-            raise ApiError(message=error_msg)
-        event = PostSyncRuleEvent(payload=body, user_id=user.id)
-        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
-        if is_local():
-            sqs.handle_sqs_event(sqs_event, db)
-        else:
-            sqs.send_event(boto3.Session(), sqs_event.json())
+        create_sync_rule(body, user, db)
 
 
 @app.delete('/sync/{sync_id}')
@@ -160,6 +161,7 @@ def delete__sync_rule(sync_id: str, authorization: Annotated[Union[str, None], C
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         delete_sync_rule(user, sync_id)
+
 
 @app.delete('/calendars/{account_id}')
 @format_response
