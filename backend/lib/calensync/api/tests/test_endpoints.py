@@ -4,6 +4,7 @@ import uuid
 
 import pytest
 
+from calensync.api import endpoints
 from calensync.api.common import ApiError
 from calensync.api.endpoints import patch_calendar, received_webhook, process_calendars, delete_sync_rule
 from calensync.database.model import Event, SyncRule
@@ -162,3 +163,25 @@ class TestDeleteSyncRule:
             new_user = User(email="test2@test.com").save_new()
             with pytest.raises(ApiError):
                 delete_sync_rule(new_user, str(rule.uuid))
+
+
+class TestGetSyncRules:
+    @staticmethod
+    def test_get_rules(user, calendar1, calendar2):
+        SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
+        SyncRule(source=calendar2, destination=calendar1, private=True).save_new()
+
+        # add rules of other user
+        user2 = User(email="test@test.com").save_new()
+        account21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
+        calendar21 = Calendar(account=account21, platform_id="platform_id21", name="name21", active=True,
+                              last_processed=utcnow(), last_inserted=utcnow()).save_new()
+        calendar22 = Calendar(account=account21, platform_id="platform_id21", name="name21", active=True,
+                              last_processed=utcnow(), last_inserted=utcnow()).save_new()
+        SyncRule(source=calendar21, destination=calendar22, private=True).save_new()
+
+        # should not be able to fetch them
+        rules = endpoints.get_sync_rules(user)
+        assert len(rules) == 2
+        assert rules[0]["source"] == "platform1"
+        assert rules[0]["destination"] == "platform2"

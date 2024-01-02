@@ -3,7 +3,7 @@ import datetime
 import json
 import os
 import uuid
-from typing import Optional, Dict, List
+from typing import Optional, List
 
 import boto3
 import google.oauth2.credentials
@@ -12,11 +12,11 @@ import peewee
 import starlette.responses
 from google.oauth2.credentials import Credentials
 
-from calensync import dataclass
+from calensync import dataclass, sqs
 from calensync.api.common import ApiError, RedirectResponse, number_of_days_to_sync_in_advance
-from calensync.api.service import activate_calendar, deactivate_calendar
-from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, Event
-from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty
+from calensync.api.service import activate_calendar, deactivate_calendar, verify_valid_sync_rule
+from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule
+from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty, PostSyncRuleEvent
 from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper, source_event_tuple
 from calensync.log import get_logger
 import calensync.paddle as paddle
@@ -394,55 +394,44 @@ def process_calendars():
         calendar.save()
 
 
-def verify_valid_sync_rule(user: User, body: PostSyncRuleBody) -> Optional[str]:
-    query = (
+def run_initial_sync(sync_rule_id: int):
+    sync_rule = list(peewee.prefetch(
+        SyncRule.select().where(SyncRule.id == sync_rule_id).limit(1),
         Calendar.select()
-        .join(CalendarAccount)
-        .join(User)
-        .where(
-            Calendar.uuid << [body.source_calendar_id, body.destination_calendar_id],
-            User.id == user.id
-        )
-    )
+    ))[0]
+    source = sync_rule.source
+    destination = sync_rule.destination
 
-    n_calendars = query.count()
-    if n_calendars != 2:
-        return "Calendar doesn't exist or you do not own it"
+    source_wrapper = GoogleCalendarWrapper(calendar_db=source)
+    start_date = datetime.datetime.now()
 
-    n_rules = SyncRule.select().join(Calendar).where(
-        SyncRule.source.uuid == body.source_calendar_id,
-        SyncRule.destination.uuid == body.destination_calendar_id
-    ).count()
+    # number of days to sync in the futureÏ
+    end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
+    source_wrapper.get_events(start_date, end_date)
 
-    if n_rules > 0:
-        return "Sync rule for the same source and destination already exists"
+    destination_wrapper = GoogleCalendarWrapper(calendar_db=destination)
+    destination_wrapper.events_handler.add([source_event_tuple(e, str(source.uuid)) for e in source_wrapper.events])
+    destination_wrapper.insert_events(private=sync_rule.private)
 
-    return None
+    if source.expiration is None:
+        source_wrapper.create_watch()
 
 
-def create_sync_rule(payload: PostSyncRuleBody, db: peewee.Database):
-    # should already have been verified as valid rule at this point
+def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database):
+    """
+    Verifies the input and create the SyncRule database entry. Pushes and SQS
+    event which will then call run_initial_sync
+    """
     with db.atomic():
-        source: Calendar = Calendar.get(uuid=payload.source_calendar_id)
-        destination: Calendar = Calendar.get(uuid=payload.destination_calendar_id)
-
+        source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
         sync_rule = SyncRule(source=source, destination=destination, private=payload.private).save_new()
 
-        # first time calendar is being used as source, we need to get the events
-        source_wrapper = GoogleCalendarWrapper(calendar_db=source)
-        start_date = datetime.datetime.now()
-
-        # number of days to sync in the future
-
-        end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
-        source_wrapper.get_events(start_date, end_date)
-
-        destination_wrapper = GoogleCalendarWrapper(calendar_db=destination)
-        destination_wrapper.events_handler.add([source_event_tuple(e, str(source.uuid)) for e in source_wrapper.events])
-        destination_wrapper.insert_events(private=sync_rule.private)
-
-        if source.expiration is None:
-            source_wrapper.create_watch()
+        event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
+        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
+        if is_local():
+            sqs.handle_sqs_event(sqs_event, db)
+        else:
+            sqs.send_event(boto3.Session(), sqs_event.json())
 
 
 def delete_sync_rule(user: User, sync_id: str):
@@ -469,8 +458,30 @@ def delete_sync_rule(user: User, sync_id: str):
     destination_wrapper.delete_events()
 
     # check if calendar has other rule sync rules, otherwise delete watch
-    other_rules_same_source = list(SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
+    other_rules_same_source = list(
+        SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
     if not other_rules_same_source:
         GoogleCalendarWrapper(sync_rule.source).delete_watch()
 
     sync_rule.delete_instance()
+
+
+def get_sync_rules(user: User):
+    Source = Calendar.alias()
+    Destination = Calendar.alias()
+
+    return list(
+        SyncRule.select(
+            SyncRule.uuid,
+            Source.platform_id.alias("source"),
+            Destination.platform_id.alias("destination"),
+            SyncRule.private
+        )
+        .join(Source, on=(Source.id == SyncRule.source_id))
+        .switch(SyncRule)
+        .join(Destination, on=(Destination.id == SyncRule.destination_id))
+        .switch(Source)
+        .join(CalendarAccount)
+        .where(CalendarAccount.user_id == user.id)
+        .dicts()
+    )

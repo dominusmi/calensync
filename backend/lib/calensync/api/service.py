@@ -1,9 +1,11 @@
 import datetime
+from typing import Optional
 
 import peewee
 
-from calensync.api.common import number_of_days_to_sync_in_advance
-from calensync.database.model import Calendar, CalendarAccount
+from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
+from calensync.database.model import Calendar, CalendarAccount, User, SyncRule
+from calensync.dataclass import PostSyncRuleBody
 from calensync.gwrapper import GoogleCalendarWrapper
 from calensync.log import get_logger
 from calensync.utils import is_local
@@ -84,3 +86,34 @@ def deactivate_calendar(calendar: Calendar):
         _delete_events(events, is_source=True)
 
     current_google_calendar.delete_watch()
+
+
+def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_calendar_uuid: str) -> Optional[str]:
+    if source_calendar_uuid == destination_calendar_uuid:
+        raise ApiError("Source and destination cannot be the same", code=400)
+
+    source: Calendar = Calendar.get_or_none(uuid=source_calendar_uuid)
+    destination: Calendar = Calendar.get_or_none(uuid=destination_calendar_uuid)
+
+    if source is None or destination is None:
+        raise ApiError("Calendar doesn't exist or you do not own it", code=404)
+
+    if destination.is_read_only:
+        raise ApiError(f"Calendar {destination.platform_id} is read only")
+
+    SourceAlias = Calendar.alias()
+    DestinationAlias = Calendar.alias()
+    n_rules = (
+        SyncRule.select()
+        .join(SourceAlias, on=(SourceAlias.id == SyncRule.source_id))
+        .switch(SyncRule)
+        .join(DestinationAlias, on=(DestinationAlias.id == SyncRule.destination_id))
+        .where(
+            SourceAlias.uuid == source_calendar_uuid,
+            DestinationAlias.uuid == destination_calendar_uuid
+        ).count())
+
+    if n_rules > 0:
+        raise ApiError("Sync rule for the same source and destination already exists", code=400)
+
+    return source, destination
