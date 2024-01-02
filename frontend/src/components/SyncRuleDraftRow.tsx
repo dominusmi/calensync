@@ -1,21 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Account } from './AccountCard';
 import { createToast } from './Toast';
-import { MessageKind, refactorCalendarName, refreshPage } from '../utils/common';
+import { MessageKind, refactorCalendarName, refreshPage, sleep } from '../utils/common';
 import API from '../utils/const';
+import LoadingOverlay from './LoadingOverlay';
 
-const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState: (x: boolean) => void, setLoading: (x: boolean) => void }> = ({ accounts, state, setState, setLoading}) => {
+const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState: (x: boolean) => void}> = ({ accounts, state, setState }) => {
     const sourceRef = useRef<HTMLSelectElement | null>(null);
     const destinationRef = useRef<HTMLSelectElement | null>(null);
     const busyRef = useRef<HTMLInputElement | null>(null);
+    const [loading, setLoading] = useState(false);
 
     async function createSyncRule(){
         setLoading(true);
-        try { 
-            const source = sourceRef.current?.value;
-            const destination = destinationRef.current?.value;
-            const markAsPrivate = busyRef.current?.checked || false;
+        const source = sourceRef.current?.value;
+        const destination = destinationRef.current?.value;
+        const markAsPrivate = busyRef.current?.checked || false;
 
+        try {
             if(source == null || destination == null){
                 createToast("Invalid source or destination", MessageKind.Error);
                 return
@@ -44,11 +46,12 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                     msg = body.detail
                 }
                 createToast(msg, MessageKind.Error);
+                setLoading(false);
                 return
             }
-            refreshPage()
-
-        }finally{
+            refreshPage();
+            await sleep(1000);
+        } finally {
             setLoading(false);
         }
     }
@@ -60,6 +63,7 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
     return (
         <div className='' key='test'>
             <div className='my-3 card px-sm-2 px-1'>
+                { loading && <LoadingOverlay/> }
                 <div className="d-flex-lg align-items-center my-2 my-lg-2">
                     <div className='row my-md-2'><span className="badge bg-secondary text-light ms-3 col-3 col-lg-1" style={{ maxWidth: "94px" }}>Draft</span></div>
                     <div className="btn-group pe-lg-2 col-12 col-lg-3 form-floating my-lg-0 my-2">

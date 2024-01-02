@@ -195,7 +195,7 @@ const Dashboard: React.FC = () => {
             }
             {rules.length > 0 && rules.map((rule) => <SyncRuleRow key={rule.uuid} rule={rule} />)
             }
-            <SyncRuleDraftRow accounts={accounts} state={openDraft} setState={setOpenDraft} setLoading={setLoading} />
+            <SyncRuleDraftRow accounts={accounts} state={openDraft} setState={setOpenDraft} />
           </>
         }
         <div className='display-5 my-4'>Connected accounts</div>
