@@ -148,9 +148,7 @@ class UpdateCalendarStateEvent(BaseModel):
 
 
 class PostSyncRuleEvent(BaseModel):
-    payload: PostSyncRuleBody
-    calendar_id: str
-    user_id: int
+    sync_rule_id: int
 
 
 class SQSEvent(BaseModel):
