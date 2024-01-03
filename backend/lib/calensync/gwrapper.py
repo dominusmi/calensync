@@ -12,7 +12,7 @@ from googleapiclient.errors import HttpError
 from calensync.api.common import ApiError, number_of_days_to_sync_in_advance
 from calensync.queries.common import get_sync_rules_from_source
 from calensync.calendar import EventsModificationHandler
-from calensync.database.model import Calendar, CalendarAccount, db, User, Event, SyncRule
+from calensync.database.model import Calendar, CalendarAccount, db, User, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus
 from calensync.log import get_logger
 from calensync.utils import get_api_url, utcnow, datetime_to_google_time
@@ -38,7 +38,7 @@ def delete_event(service, calendar_id: str, event_id: str):
 
 
 def insert_event(service, calendar_id: str, start: GoogleDatetime, end: GoogleDatetime,
-                 properties: List[EventExtendedProperty] = None, display_name="Calensync", summary="Blocker",
+                 properties: List[EventExtendedProperty] = None, display_name="Calensync", summary="Busy",
                  description=None, **kwargs) -> Dict:
     event = {
         "creator": {"displayName": display_name},
@@ -80,11 +80,6 @@ def get_google_calendars(credentials) -> List[GoogleCalendar]:
     except HttpError as e:
         logger.error(e)
         raise ApiError("Failed to process request due to Google credentials error")
-
-
-def find_calendar_from_event(calendars: List[GoogleCalendarWrapper], event: Event) -> GoogleCalendarWrapper:
-    """ Given a list of calendars and a database event, return the calendar to which this event belongs """
-    return next(filter(lambda x: x.google_id == event.calendar.platform_id, calendars), None)
 
 
 def get_events(service, google_id: str, start_date: datetime.datetime, end_date: datetime.datetime,
@@ -259,9 +254,10 @@ class GoogleCalendarWrapper:
 
         while self.events_handler.events_to_add:
             (event, properties) = self.events_handler.events_to_add.pop()
+            if event.extendedProperties.private.get("source-id") is not None:
+                # never copy an event created by us
+                continue
 
-            # todo: should be inside a transaction
-            logger.info(event)
             if private:
                 response = insert_event(service=self.service, calendar_id=self.google_id,
                                         start=event.start, end=event.end, properties=properties, recurrence=event.recurrence)
@@ -312,34 +308,9 @@ class GoogleCalendarWrapper:
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
         events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
                                  showDeleted=True, maxResults=200)
-        # response = (
-        #     self.service.events()
-        #     .list(calendarId=self.google_id, orderBy="updated",
-        #           maxResults=200, showDeleted=True, updatedMin=updated_min)
-        #     .execute()
-        # )
-        # events = GoogleEvent.parse_event_list_response(response)
+
         logger.info(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
         return [event for event in events if event.source_id is None]
-
-    def save_events_in_database(self):
-        """
-        Used to save events that are currently in self.events in the database
-        """
-        rows = []
-        for event in self.events:
-            if event.status not in [EventStatus.tentative]:
-                rows.append(
-                    Event(calendar=self.calendar_db, event_id=event.id, start=event.start.to_datetime(),
-                          deleted=(event.status == EventStatus.cancelled),
-                          end=event.end.to_datetime()).get_update_fields()
-                )
-
-        Event.insert_many(rows).on_conflict(
-            conflict_target=[Event.event_id],
-            preserve=(Event.date_created,)
-
-        ).execute()
 
     @staticmethod
     def __solve_event_update(event: GoogleEvent, sync_rules: List[SyncRule]) -> int:
@@ -347,7 +318,6 @@ class GoogleCalendarWrapper:
         Solves a single event update (by updating all other calendars where this event exists)
         """
         counter_event_changed = 0
-        logger.info(event)
         if event.status == EventStatus.tentative:
             # this means an invitation was received, but not yet accepted, so nothing to do
             return 0

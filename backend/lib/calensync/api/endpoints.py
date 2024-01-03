@@ -12,12 +12,14 @@ import peewee
 import starlette.responses
 from google.oauth2.credentials import Credentials
 
-from calensync import dataclass, sqs
-from calensync.api.common import ApiError, RedirectResponse, number_of_days_to_sync_in_advance
-from calensync.api.service import activate_calendar, deactivate_calendar, verify_valid_sync_rule
+from calensync import dataclass
+import calensync.sqs
+from calensync.api.common import ApiError, RedirectResponse
+from calensync.api.service import verify_valid_sync_rule, run_initial_sync
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule
+from calensync.database.utils import DatabaseSession
 from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty, PostSyncRuleEvent
-from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper, source_event_tuple
+from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
 from calensync.log import get_logger
 import calensync.paddle as paddle
 from calensync.session import create_session_and_user
@@ -126,44 +128,6 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
         state_db.delete_instance()
         refresh_calendars(state_db.user, account.uuid, db)
         return RedirectResponse(f"{get_frontend_env()}/dashboard")
-
-
-def received_webhook(channel_id: str, state: str, resource_id: str, token: str, db: peewee.Database):
-    calendar = Calendar.get_or_none(Calendar.channel_id == channel_id)
-
-    if calendar is None or str(calendar.token) != token:
-        logger.warn(f"The token {token} does not match the database token {channel_id} ignoring.")
-        return
-
-    if resource_id is not None and resource_id != calendar.resource_id:
-        calendar.resource_id = resource_id
-        calendar.save()
-
-    if state == "sync":
-        # This just means a channel was created
-        logger.info("Sync signal")
-        return
-
-    if calendar is None:
-        logger.warn(f"Received webhook for inexistent calendar with channel {channel_id}")
-        return
-
-    calendar.last_received = utcnow()
-    calendar.save()
-
-    if (utcnow() - calendar.last_inserted.replace(tzinfo=datetime.timezone.utc)).seconds > 1:
-        # process the event immediately
-        wrapper = GoogleCalendarWrapper(calendar)
-        wrapper.solve_update_in_calendar()
-
-        calendar.last_processed = utcnow()
-        calendar.save()
-    else:
-        logger.info("Time interval too short, not updating")
-        # Let google know to retry with exponential back-off
-        # you may ask why do we do this? I don't know. 
-        # I think there might have been some "race condition" but I can't remember
-        raise ApiError(message="Service unavailable", code=503)
 
 
 def prepare_calendar_oauth(user: User, db: peewee.Database, session):
@@ -282,25 +246,6 @@ def refresh_calendars(user: User, account_id: str, db: peewee.Database):
     return [{"uuid": c.uuid, "name": c.friendly_name, "active": c.active} for c in calendars_db]
 
 
-def patch_calendar(user_id: int, calendar_uuid: str, kind: dataclass.CalendarStateEnum, db: peewee.Database):
-    query = (
-        Calendar.select().join(CalendarAccount).join(User)
-        .where(User.id == user_id, Calendar.uuid == calendar_uuid)
-    )
-    calendars: List[Calendar] = peewee.prefetch(query, CalendarAccount)
-
-    if len(calendars) == 0:
-        raise ApiError("The calendar does not exist or you dot not have permissions to access it")
-
-    if kind == dataclass.CalendarStateEnum.ACTIVE:
-        logger.info(f"Activating {calendars[0].uuid}")
-        return activate_calendar(calendars[0])
-
-    elif kind == dataclass.CalendarStateEnum.INACTIVE:
-        logger.info(f"De-activating {calendars[0].uuid}")
-        return deactivate_calendar(calendars[0])
-
-
 def delete_account(user: User, account_id: str):
     calendars: List[Calendar] = list(Calendar.select()
                                      .join(CalendarAccount)
@@ -394,27 +339,11 @@ def process_calendars():
         calendar.save()
 
 
-def run_initial_sync(sync_rule_id: int):
-    sync_rule = list(peewee.prefetch(
-        SyncRule.select().where(SyncRule.id == sync_rule_id).limit(1),
-        Calendar.select()
-    ))[0]
-    source = sync_rule.source
-    destination = sync_rule.destination
-
-    source_wrapper = GoogleCalendarWrapper(calendar_db=source)
-    start_date = datetime.datetime.now()
-
-    # number of days to sync in the futureÏ
-    end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
-    source_wrapper.get_events(start_date, end_date)
-
-    destination_wrapper = GoogleCalendarWrapper(calendar_db=destination)
-    destination_wrapper.events_handler.add([source_event_tuple(e, str(source.uuid)) for e in source_wrapper.events])
-    destination_wrapper.insert_events(private=sync_rule.private)
-
-    if source.expiration is None:
-        source_wrapper.create_watch()
+if __name__ == "__main__":
+    os.environ["ENV"] = "local"
+    with DatabaseSession("local") as db:
+        rule = SyncRule.get(uuid='1bf21cd0-112a-4bec-b4e7-7d548dbb1cea')
+        run_initial_sync(rule.id)
 
 
 def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database):
@@ -429,9 +358,9 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
         if is_local():
-            sqs.handle_sqs_event(sqs_event, db)
+            calensync.sqs.handle_sqs_event(sqs_event, db)
         else:
-            sqs.send_event(boto3.Session(), sqs_event.json())
+            calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
 
 def delete_sync_rule(user: User, sync_id: str):

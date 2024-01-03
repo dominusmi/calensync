@@ -1,4 +1,4 @@
-from calensync.api.endpoints import received_webhook, patch_calendar
+from calensync.api.service import received_webhook
 from calensync.database.utils import DatabaseSession
 from calensync.dataclass import SQSEvent, QueueEvent, GoogleWebhookEvent, UpdateCalendarStateEvent
 from calensync.log import get_logger

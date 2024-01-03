@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 import peewee
 
-from calensync.database.model import User, Event
+from calensync.database.model import User
 from calensync.dataclass import GoogleEvent, EventStatus, event_list_to_source_id_map, EventExtendedProperty
 
 

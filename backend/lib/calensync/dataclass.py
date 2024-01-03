@@ -20,6 +20,13 @@ class AbstractGoogleDate(BaseModel):
     def to_datetime(self) -> datetime.datetime:
         raise NotImplementedError()
 
+    def from_google_dict(self, body):
+        if date := body.get("date"):
+            return GoogleDate(date=date)
+        else:
+            dt = body["dateTime"]
+            return datetime.datetime.fromisoformat(dt[:-1])
+
 
 class GoogleDate(AbstractGoogleDate):
     date: datetime.date
@@ -39,7 +46,7 @@ class GoogleDatetime(AbstractGoogleDate):
 
     def to_google_dict(self):
         return {
-            "dateTime":  datetime_to_google_time(self.dateTime),
+            "dateTime": datetime_to_google_time(self.dateTime),
             "timeZone": "UCT"
         }
 
@@ -83,8 +90,12 @@ class EventStatus(Enum):
     cancelled = 'cancelled'
 
 
+class ExtendedProperties(BaseModel):
+    private: Optional[Dict[str, str]] = dict()
+
+
 class GoogleEvent(BaseModel):
-    extendedProperties: Optional[Dict[str, Dict[str, str]]]
+    extendedProperties: ExtendedProperties = ExtendedProperties()
     htmlLink: str
     start: Union[GoogleDatetime, GoogleDate]
     end: Union[GoogleDatetime, GoogleDate]
@@ -109,7 +120,7 @@ class GoogleEvent(BaseModel):
     @property
     def source_id(self) -> Optional[str]:
         if self.extendedProperties:
-            return self.extendedProperties.get("private", {}).get("source-id")
+            return self.extendedProperties.private.get("source-id")
         return None
 
 
@@ -125,7 +136,6 @@ def event_list_to_source_id_map(events: List[GoogleEvent]) -> Dict[str, GoogleEv
 
 class QueueEvent(IntEnum):
     GOOGLE_WEBHOOK = 1
-    UPDATE_CALENDAR_STATE = 2
     POST_SYNC_RULE = 3
 
 

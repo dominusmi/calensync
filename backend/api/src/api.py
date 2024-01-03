@@ -89,7 +89,7 @@ def get__calendars(calendar_account_id: str, authorization: Annotated[Union[str,
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         calendars = get_calendars(user, calendar_account_id, db)
-        return [{"uuid": c.uuid, "name": c.friendly_name, "active": c.active} for c in calendars]
+        return [{"uuid": c.uuid, "name": c.friendly_name} for c in calendars]
 
 
 @app.post('/accounts/{calendar_account_id}/calendars/refresh')
@@ -106,31 +106,6 @@ def post__tos(authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         return accept_tos(user, db)
-
-
-@app.patch('/calendars/{calendar_id}')
-@format_response
-def patch__calendar(calendar_id: str, body: PatchCalendarBody,
-                    authorization: Annotated[Union[str, None], Cookie()] = None):
-    """
-    Update a calendar. Used to set a calendar as active.
-    """
-    with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        event = dataclass.UpdateCalendarStateEvent(kind=dataclass.CalendarStateEnum.ACTIVE, calendar_id=calendar_id,
-                                                   user_id=user.id)
-        if body.kind == "activate":
-            pass
-        elif body.kind == "deactivate":
-            event.kind = dataclass.CalendarStateEnum.INACTIVE
-        else:
-            raise ApiError()
-
-        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.UPDATE_CALENDAR_STATE, data=event)
-        if is_local():
-            sqs.handle_sqs_event(sqs_event, db)
-        else:
-            sqs.send_event(boto3.Session(), sqs_event.json())
 
 
 @app.get('/sync')

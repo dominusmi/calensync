@@ -6,33 +6,12 @@ import pytest
 
 from calensync.api import endpoints
 from calensync.api.common import ApiError
-from calensync.api.endpoints import patch_calendar, received_webhook, process_calendars, delete_sync_rule
+from calensync.api.endpoints import process_calendars, delete_sync_rule
+from calensync.api.service import received_webhook
 from calensync.database.model import Event, SyncRule
 from calensync.dataclass import CalendarStateEnum
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
-
-
-class TestPatchCalendar:
-    @staticmethod
-    def test_doesnt_exist(db, user):
-        with pytest.raises(ApiError):
-            patch_calendar(user.id, uuid4(), CalendarStateEnum.ACTIVE, db)
-
-    @staticmethod
-    def test_user_doesnt_own_calendar(db, user, calendar1):
-        other_user = User(email="random@test.com").save_new()
-        with pytest.raises(ApiError):
-            patch_calendar(other_user.id, str(calendar1.uuid), CalendarStateEnum.ACTIVE, db)
-
-    @staticmethod
-    def test_no_active_calendars(db, user, account1, calendar1, calendar2):
-        with patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as mock_get_events:
-            with patch("calensync.gwrapper.GoogleCalendarWrapper.create_watch") as mock_create_watch:
-                patch_calendar(user, str(calendar1.uuid), CalendarStateEnum.ACTIVE, db)
-                mock_get_events.assert_not_called()
-                mock_create_watch.assert_called_once()
-
 
 class TestWebhook:
     @staticmethod
