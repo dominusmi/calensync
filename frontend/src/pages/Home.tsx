@@ -5,7 +5,7 @@ import { PaddlePricing } from '../components/PaddlePricing';
 import { Paddle, initializePaddle } from '@paddle/paddle-js';
 import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
-import { Accordion } from 'react-bootstrap';
+import { Accordion, Alert } from 'react-bootstrap';
 
 const Home: React.FC = () => {
     const { t } = useTranslation();
@@ -44,8 +44,8 @@ const Home: React.FC = () => {
             </Helmet>
             <div className='hero'>
                 <div className="container col-xxl-8 py-5">
-                    <div className="row flex-lg-row-reverse align-items-center g-4 py-5 justify-content-center">
-                        <div className="col-10 col-sm-8 col-lg-6">
+                    <div className="row flex-lg-row-reverse align-items-center g-4 py-3 py-sm-5 justify-content-center">
+                        <div className="col-12 col-sm-10 col-lg-6">
                             <img src="hero.gif" className="d-block mx-lg-auto img-fluid hero-gif" alt="Bootstrap Themes" width="700" height="500" loading="lazy" />
                         </div>
                         <div className="col-lg-6">
@@ -113,11 +113,11 @@ const Home: React.FC = () => {
             <div className='bg-cyan'>
                 <div className='container my-4 py-4'>
                     <div className='col-xxl-8 mx-auto py-4'>
-                    <div className='row mb-4 centered'>
-                        <div className="feature col">
-                            <h1>F.A.Q.</h1>
+                        <div className='row mb-4 centered'>
+                            <div className="feature col">
+                                <h1>F.A.Q.</h1>
+                            </div>
                         </div>
-                    </div>
                         <Accordion>
                             <Accordion.Item eventKey="0">
                                 <Accordion.Header>{t("home.faq.q1")}</Accordion.Header>
@@ -135,7 +135,14 @@ const Home: React.FC = () => {
                                 <Accordion.Header>{t("home.faq.q4")}</Accordion.Header>
                                 <Accordion.Body>{t("home.faq.a4")}</Accordion.Body>
                             </Accordion.Item>
+                            <Accordion.Item eventKey="4">
+                                <Accordion.Header>{t("home.faq.q5")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a5")}</Accordion.Body>
+                            </Accordion.Item>
                         </Accordion>
+                    </div>
+                    <div className='centered'>
+                        <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>{t("home.hero.cta")}</button>
                     </div>
                 </div>
             </div>
