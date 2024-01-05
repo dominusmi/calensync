@@ -7,7 +7,8 @@ from typing import List
 import pytest
 
 from calensync.calendar import events_to_add, events_to_update, events_to_delete
-from calensync.dataclass import GoogleEvent, GoogleDatetime, EventExtendedProperty, event_list_to_map, EventStatus
+from calensync.dataclass import GoogleEvent, GoogleDatetime, EventExtendedProperty, event_list_to_map, EventStatus, \
+    ExtendedProperties
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def events():
 def make_virtual_events(events: List[GoogleEvent]):
     new_events = copy.deepcopy(events)
     for e in new_events:
-        e.extendedProperties = {"private": {"source-id": e.id}}
+        e.extendedProperties = ExtendedProperties(private={"source-id": e.id})
         e.id = uuid.uuid4().__str__()
 
     return new_events
@@ -34,7 +35,7 @@ def test_find_events_to_add(events):
 
     # make last one missing
     calendar_2 = make_virtual_events(calendar_1)
-    calendar_2[-1].extendedProperties["private"]["source-id"] = uuid.uuid4().__str__()
+    calendar_2[-1].extendedProperties.private["source-id"] = uuid.uuid4().__str__()
 
     result = events_to_add(calendar_1, calendar_2)
     assert len(result) == 1

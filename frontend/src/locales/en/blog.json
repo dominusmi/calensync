@@ -52,7 +52,7 @@
                 "free": "It's not free (but it's affordable)"
             }
         },
-        "cta": "Get started now and use the coupon HAPPY23 for a free month!"
+        "cta": "Get started now and use the coupon JAN24 for a free month!"
     },
     "avoid_calendly_conflicts": {
         "title": "How to avoid Calendly Conflicts",
@@ -88,5 +88,31 @@
             },
             "conclusion": "Synchronization is near instantaneous. You will see \"Blocker\" events appearing in the synced calendars, and will avoid all Calendly conflicts in the future!"
         }
+    },
+    "sync_google_calendars_into_one": {
+        "cta": "Get started",
+        "date": "January 2024",
+        "meta": {
+            "description": "This article explains how to synchronize all Google calendars from different accounts into one",
+            "og_title": "Synchronize all your calendars",
+            "title": "Synchronize all your calendars"
+        },
+        "title": "How to synchronize all your Google calendars into one",
+        "s1_1": "There are many reasons for someone to own multiple Google accounts and their associated calendars. You may have your personal, professional, maybe your freelance one. Myself for example have 3 Google calendars that absolutely need to be in sync at all time.",
+        "s1_2": "Syncing the calendars into one is a great way to have a global view of what is going on all around, and is not a feature that is part of the Calendars suite. This is part of the reason why I was pushed to create Calensync: to solve this very common issue.",
+        "s1_3": "In this post, I'll give you a step by step guide of how to sync multiple Google calendars. The great part is that you can follow along by signing up and using your 7 days trial to decide whether to stay with us, so why not give it a try!",
+        "h2": "Signing up",
+        "s2_1": "This step is the simplest, just tick the terms and conditions box, and then the button Sign up with Google, and you should end up on the dashboard page, as easy as that!",
+        "h3": "Add your Google accounts",
+        "s3_1": "Your calendar accounts may be on multiple Google accounts, like mine. In this example, I'm my personal calendar is going to be personal@gmail.com, my professiona one professional@company.com, and my freelance account at me@freelancer.com. That means I'm going to connect three accounts. So let's get started: click `Connect a Google Account`",
+        "s3_2": "Make sure to give the permissions when asked:",
+        "s3_3": "That's it, your first account is connected! As you can see, you can now create synchronizations. This could be useful for example if you have multiple calendars on the same account, but right now we want to add the other two accounts. Let's do the same steps again.",
+        "h4": "Creating synchronizations",
+        "s4_1": "So, our Goal is the following: we want our personal calendar to contain all the events, so we're going to create two synchronizations: one from professiona@company.com to personal@gmail.com, and one from me@freelancer.com to personal@gmail.com. Let's go ahead and click Add Synchronization.",
+        "s4_2": "That's it, the first is done! Let's do the second now",
+        "s4_3": "Perfect, our job is accomplished 🎉",
+        "h5": "Blocking personal appointments while maintaining privacy",
+        "s5_1": "One extra for the road, let's say we don't want our colleagues to book a meeting with us when we have a personal appointment. However, we don't want them to know the reason as it could be something private. So we're going to create a rule going from our personal to our professional calendar, and tick the checkbox `Mark as busy`",
+        "s5_2": "Save and voila, that's it! Thank you for reading and see you on Calensync!"
     }
 }

@@ -1,15 +1,17 @@
-from typing import Annotated, Union
+from typing import Annotated, Union, Dict
 
 from fastapi import FastAPI, Request, Query, Body, Cookie
 from mangum import Mangum
-from pydantic import BaseModel
 
 from calensync import sqs
+from calensync.api import endpoints
 from calensync.api.common import format_response
 from calensync.api.endpoints import *
 from calensync.database.utils import DatabaseSession
-from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent
+from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PatchCalendarBody, PostSyncRuleBody, \
+    PostSyncRuleEvent
 from calensync.log import get_logger
+from calensync.utils import get_env
 
 app = FastAPI(title="Calensync")  # Here is the magic
 logger = get_logger("api")
@@ -25,7 +27,10 @@ def post__webhook(event: Request):
     with DatabaseSession(os.environ["ENV"]) as db:
         webhook_event = GoogleWebhookEvent(channel_id=channel_id, token=token, state=state, resource_id=resource_id)
         sqs_event = SQSEvent(kind=QueueEvent.GOOGLE_WEBHOOK, data=webhook_event)
-        sqs.send_event(boto3.session.Session(), sqs_event.json())
+        if get_env() in ["prod", "dev"]:
+            sqs.send_event(boto3.session.Session(), sqs_event.json())
+        else:
+            sqs.handle_sqs_event(sqs_event, db)
 
 
 @app.get("/paddle/verify_transaction")
@@ -84,7 +89,7 @@ def get__calendars(calendar_account_id: str, authorization: Annotated[Union[str,
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         calendars = get_calendars(user, calendar_account_id, db)
-        return [{"uuid": c.uuid, "name": c.friendly_name, "active": c.active} for c in calendars]
+        return [{"uuid": c.uuid, "name": c.friendly_name} for c in calendars]
 
 
 @app.post('/accounts/{calendar_account_id}/calendars/refresh')
@@ -103,33 +108,34 @@ def post__tos(authorization: Annotated[Union[str, None], Cookie()] = None):
         return accept_tos(user, db)
 
 
-class PatchCalendarBody(BaseModel):
-    kind: str
-
-
-@app.patch('/calendars/{calendar_id}')
+@app.get('/sync')
 @format_response
-def patch__calendar(calendar_id: str, body: PatchCalendarBody,
-                    authorization: Annotated[Union[str, None], Cookie()] = None):
+def get__sync_rules(authorization: Annotated[Union[str, None], Cookie()] = None):
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = verify_session(authorization)
+        return endpoints.get_sync_rules(user)
+
+
+@app.post('/sync')
+@format_response
+def post__sync_rule(body: PostSyncRuleBody, authorization: Annotated[Union[str, None], Cookie()] = None):
+    """
+    Create a sync rule
+    """
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = verify_session(authorization)
+        create_sync_rule(body, user, db)
+
+
+@app.delete('/sync/{sync_id}')
+@format_response
+def delete__sync_rule(sync_id: str, authorization: Annotated[Union[str, None], Cookie()] = None):
     """
     Update a calendar. Used to set a calendar as active.
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        event = dataclass.UpdateCalendarStateEvent(kind=dataclass.CalendarStateEnum.ACTIVE, calendar_id=calendar_id,
-                                                   user_id=user.id)
-        if body.kind == "activate":
-            pass
-        elif body.kind == "deactivate":
-            event.kind = dataclass.CalendarStateEnum.INACTIVE
-        else:
-            raise ApiError()
-
-        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.UPDATE_CALENDAR_STATE, data=event)
-        if is_local():
-            sqs.handle_sqs_event(sqs_event, db)
-        else:
-            sqs.send_event(boto3.Session(), sqs_event.json())
+        delete_sync_rule(user, sync_id)
 
 
 @app.delete('/calendars/{account_id}')
@@ -235,6 +241,7 @@ async def log_requests(request: Request, call_next):
     logger.info(f"{response.status_code}")
 
     return response
+
 
 handler = Mangum(app, lifespan='off')
 

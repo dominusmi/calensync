@@ -41,3 +41,15 @@ export function consumeMessages(){
         sessionStorage.removeItem("success-msg")
     }
 }
+
+export function refreshPage(){
+    window.location.reload()
+}
+
+export function refactorCalendarName(name: string){
+    return name.replace("@group.v.calendar.google.com", "")
+}
+
+export function sleep(ms: number) {
+    return new Promise( resolve => setTimeout(resolve, ms) );
+}

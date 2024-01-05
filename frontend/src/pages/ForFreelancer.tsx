@@ -5,6 +5,7 @@ import { PaddlePricing } from '../components/PaddlePricing';
 import { Paddle, initializePaddle } from '@paddle/paddle-js';
 import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
+import { Accordion } from 'react-bootstrap';
 
 const ForFreelancer: React.FC = () => {
     const { t } = useTranslation();
@@ -32,15 +33,19 @@ const ForFreelancer: React.FC = () => {
                 <meta charSet="utf-8" />
                 <title>{t('title_sync_calendars')}</title>
                 <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}/for-freelancer`} />
+                <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}/for-freelancer`} />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr/for-freelancer`} hrefLang="fr" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en/for-freelancer`} hrefLang="en" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it/for-freelancer`} hrefLang="it" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/for-freelancer`} hrefLang="x-default" />
                 <meta name="description" content={t("for_freelancers.meta.description")} />
                 <meta name="og:title" content={t("for_freelancers.meta.og_title")} />
-                <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}`} />
                 <meta name="og:description" content={t("for_freelancers.meta.description")} />
             </Helmet>
             <div className='hero'>
                 <div className="container col-xxl-8 py-5">
                     <div className="row flex-lg-row-reverse align-items-center g-4 py-5 justify-content-center">
-                        <div className="col-10 col-sm-8 col-lg-6">
+                        <div className="col-12 col-sm-10 col-lg-6">
                             <img src="hero.gif" className="d-block mx-lg-auto img-fluid hero-gif" alt="Bootstrap Themes" width="700" height="500" loading="lazy" />
                         </div>
                         <div className="col-lg-6">
@@ -103,6 +108,42 @@ const ForFreelancer: React.FC = () => {
                             {t("blog_list.avoid_calendly_conflicts.headline")}
                         </p>
                     </a>
+                </div>
+            </div>
+            <div className='bg-cyan'>
+                <div className='container my-4 py-4'>
+                    <div className='col-xxl-8 mx-auto py-4'>
+                        <div className='row mb-4 centered'>
+                            <div className="feature col">
+                                <h1>F.A.Q.</h1>
+                            </div>
+                        </div>
+                        <Accordion>
+                            <Accordion.Item eventKey="0">
+                                <Accordion.Header>{t("home.faq.q1")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a1")}</Accordion.Body>
+                            </Accordion.Item>
+                            <Accordion.Item eventKey="1">
+                                <Accordion.Header>{t("home.faq.q2")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a2")}</Accordion.Body>
+                            </Accordion.Item>
+                            <Accordion.Item eventKey="2">
+                                <Accordion.Header>{t("home.faq.q3")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a3")}</Accordion.Body>
+                            </Accordion.Item>
+                            <Accordion.Item eventKey="3">
+                                <Accordion.Header>{t("home.faq.q4")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a4")}</Accordion.Body>
+                            </Accordion.Item>
+                            <Accordion.Item eventKey="4">
+                                <Accordion.Header>{t("home.faq.q5")}</Accordion.Header>
+                                <Accordion.Body>{t("home.faq.a5")}</Accordion.Body>
+                            </Accordion.Item>
+                        </Accordion>
+                    </div>
+                    <div className='centered'>
+                        <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>{t("home.hero.cta")}</button>
+                    </div>
                 </div>
             </div>
         </Layout >

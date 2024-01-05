@@ -3,7 +3,7 @@ import datetime
 import json
 import os
 import uuid
-from typing import Optional, Dict, List
+from typing import Optional, List
 
 import boto3
 import google.oauth2.credentials
@@ -13,9 +13,12 @@ import starlette.responses
 from google.oauth2.credentials import Credentials
 
 from calensync import dataclass
+import calensync.sqs
 from calensync.api.common import ApiError, RedirectResponse
-from calensync.api.service import activate_calendar, deactivate_calendar
-from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session
+from calensync.api.service import verify_valid_sync_rule, run_initial_sync
+from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule
+from calensync.database.utils import DatabaseSession
+from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty, PostSyncRuleEvent
 from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
 from calensync.log import get_logger
 import calensync.paddle as paddle
@@ -52,7 +55,7 @@ def verify_session(session_id: Optional[str]) -> User:
     user: User = result[0].user
     if not user.tos:
         logger.info("User has not accepted tos")
-        raise RedirectResponse("tos")
+        raise RedirectResponse(f"{get_frontend_env()}/tos")
     logger.info(f"Verified {user.uuid}")
     return user
 
@@ -104,7 +107,8 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
     if is_login:
         with db.atomic():
             create_session_and_user(email, state_db)
-        return RedirectResponse(location=f"{get_frontend_env()}/dashboard", cookie={"authorization": state_db.session_id})
+        return RedirectResponse(location=f"{get_frontend_env()}/dashboard",
+                                cookie={"authorization": state_db.session_id})
 
     else:
         account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
@@ -124,44 +128,6 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
         state_db.delete_instance()
         refresh_calendars(state_db.user, account.uuid, db)
         return RedirectResponse(f"{get_frontend_env()}/dashboard")
-
-
-def received_webhook(channel_id: str, state: str, resource_id: str, token: str, db: peewee.Database):
-    calendar = Calendar.get_or_none(Calendar.channel_id == channel_id)
-
-    if calendar is None or str(calendar.token) != token:
-        logger.warn(f"The token {token} does not match the database token {channel_id} ignoring.")
-        return
-
-    if resource_id is not None and resource_id != calendar.resource_id:
-        calendar.resource_id = resource_id
-        calendar.save()
-
-    if state == "sync":
-        # This just means a channel was created
-        logger.info("Sync signal")
-        return
-
-    if calendar is None:
-        logger.warn(f"Received webhook for inexistent calendar with channel {channel_id}")
-        return
-
-    calendar.last_received = utcnow()
-    calendar.save()
-
-    if (utcnow() - calendar.last_inserted.replace(tzinfo=datetime.timezone.utc)).seconds > 1:
-        # process the event immediately
-        wrapper = GoogleCalendarWrapper(calendar)
-        wrapper.solve_update_in_calendar()
-
-        calendar.last_processed = utcnow()
-        calendar.save()
-    else:
-        logger.info("Time interval too short, not updating")
-        # Let google know to retry with exponential back-off
-        # you may ask why do we do this? I don't know. 
-        # I think there might have been some "race condition" but I can't remember
-        raise ApiError(message="Service unavailable", code=503)
 
 
 def prepare_calendar_oauth(user: User, db: peewee.Database, session):
@@ -205,7 +171,8 @@ def prepare_google_sso_oauth(tos: int, db: peewee.Database, boto3_session):
         oauth_state.save()
 
     response = starlette.responses.JSONResponse(content={"url": authorization_url})
-    response.set_cookie("authorization", oauth_state.session_id, secure=True, httponly=True, max_age=3600, domain="127.0.0.1:8080")
+    response.set_cookie("authorization", oauth_state.session_id, secure=True, httponly=True, max_age=3600,
+                        domain="127.0.0.1:8080")
     return response
 
 
@@ -276,26 +243,7 @@ def refresh_calendars(user: User, account_id: str, db: peewee.Database):
             new_calendar.save()
 
     calendars_db.extend(new_calendars_db)
-    return [{"uuid": c.uuid, "name": c.friendly_name, "active": c.active} for c in calendars_db]
-
-
-def patch_calendar(user_id: int, calendar_uuid: str, kind: dataclass.CalendarStateEnum, db: peewee.Database):
-    query = (
-        Calendar.select().join(CalendarAccount).join(User)
-        .where(User.id == user_id, Calendar.uuid == calendar_uuid)
-    )
-    calendars: List[Calendar] = peewee.prefetch(query, CalendarAccount)
-
-    if len(calendars) == 0:
-        raise ApiError("The calendar does not exist or you dot not have permissions to access it")
-
-    if kind == dataclass.CalendarStateEnum.ACTIVE:
-        logger.info(f"Activating {calendars[0].uuid}")
-        return activate_calendar(calendars[0])
-
-    elif kind == dataclass.CalendarStateEnum.INACTIVE:
-        logger.info(f"De-activating {calendars[0].uuid}")
-        return deactivate_calendar(calendars[0])
+    return [{"uuid": c.uuid, "name": c.friendly_name} for c in calendars_db]
 
 
 def delete_account(user: User, account_id: str):
@@ -304,7 +252,6 @@ def delete_account(user: User, account_id: str):
                                      .join(User)
                                      .where(User.id == user.id, CalendarAccount.uuid == account_id))
     for calendar in calendars:
-        deactivate_calendar(calendar)
         calendar.delete_instance()
         CalendarAccount.get(uuid=account_id).delete_instance()
 
@@ -389,3 +336,80 @@ def process_calendars():
         gcalendar.solve_update_in_calendar()
         calendar.last_processed = datetime.datetime.utcnow()
         calendar.save()
+
+
+if __name__ == "__main__":
+    os.environ["ENV"] = "local"
+    with DatabaseSession("local") as db:
+        rule = SyncRule.get(uuid='1bf21cd0-112a-4bec-b4e7-7d548dbb1cea')
+        run_initial_sync(rule.id)
+
+
+def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database):
+    """
+    Verifies the input and create the SyncRule database entry. Pushes and SQS
+    event which will then call run_initial_sync
+    """
+    with db.atomic():
+        source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
+        sync_rule = SyncRule(source=source, destination=destination, private=payload.private).save_new()
+        return
+        event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
+        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
+        if is_local():
+            calensync.sqs.handle_sqs_event(sqs_event, db)
+        else:
+            calensync.sqs.send_event(boto3.Session(), sqs_event.json())
+
+
+def delete_sync_rule(user: User, sync_id: str):
+    sync_rules = list(
+        SyncRule.select(SyncRule.id, SyncRule.source, Calendar)
+        .join(Calendar, on=(SyncRule.destination_id == Calendar.id))
+        .join(CalendarAccount)
+        .join(User)
+        .where(SyncRule.uuid == sync_id, User.id == user.id)
+    )
+
+    if len(sync_rules) == 0:
+        raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
+    sync_rule: SyncRule = sync_rules[0]
+
+    destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
+    events = destination_wrapper.get_events(
+        private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
+        start_date=datetime.datetime.now(),
+        end_date=datetime.datetime.now() + datetime.timedelta(days=35),
+        showDeleted=False
+    )
+    destination_wrapper.events_handler.delete([e.id for e in events])
+    destination_wrapper.delete_events()
+
+    # check if calendar has other rule sync rules, otherwise delete watch
+    other_rules_same_source = list(
+        SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
+    if not other_rules_same_source:
+        GoogleCalendarWrapper(sync_rule.source).delete_watch()
+
+    sync_rule.delete_instance()
+
+
+def get_sync_rules(user: User):
+    Source = Calendar.alias()
+    Destination = Calendar.alias()
+
+    return list(
+        SyncRule.select(
+            SyncRule.uuid,
+            Source.platform_id.alias("source"),
+            Destination.platform_id.alias("destination"),
+            SyncRule.private
+        )
+        .join(Source, on=(Source.id == SyncRule.source_id))
+        .switch(SyncRule)
+        .join(Destination, on=(Destination.id == SyncRule.destination_id))
+        .switch(Source)
+        .join(CalendarAccount)
+        .where(CalendarAccount.user_id == user.id)
+        .dicts()
+    )

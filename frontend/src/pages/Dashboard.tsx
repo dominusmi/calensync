@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { getLoggedUser, User } from '../utils/session'; // Adjust the import path
 import API, { PUBLIC_URL } from '../utils/const';
-import AccountCard, { Account } from '../components/AccountCard';
+import AccountCard, { Account, Calendar } from '../components/AccountCard';
 import LoadingOverlay from '../components/LoadingOverlay';
 import AddCalendarAccount from '../components/AddCalendarAccount';
 import { createToast } from '../components/Toast';
@@ -11,8 +11,10 @@ import Layout from '../components/Layout';
 import { MessageKind } from '../utils/common';
 import ContactButton, { TallyComponent } from '../components/FeedbackButton';
 import { Button, Modal } from 'react-bootstrap';
+import SyncRuleRow, { SyncRule } from '../components/SyncRuleRow';
+import SyncRuleDraftRow from '../components/SyncRuleDraftRow';
 
-const OnboardingModal: React.FC<{onClose: () => void}> = React.memo(({onClose}) => {
+const OnboardingModal: React.FC<{ onClose: () => void }> = React.memo(({ onClose }) => {
   return (
     <Modal
       show={true}
@@ -28,7 +30,7 @@ const OnboardingModal: React.FC<{onClose: () => void}> = React.memo(({onClose}) 
       <Modal.Body className=''>
         <div className='embed-container'>
           <iframe width="560" height="315" src="https://www.youtube.com/embed/q672j6cNCNc?si=tncAOhutUdFo9QR_" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
-          </div>
+        </div>
       </Modal.Body>
       <Modal.Footer>
         <Button onClick={onClose} className='btn btn-ternary'>Skip</Button>
@@ -44,6 +46,9 @@ const Dashboard: React.FC = () => {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [daysLeft, setDaysLeft] = useState<number>(0);
+  const [rules, setRules] = useState<SyncRule[]>([])
+  const [openDraft, setOpenDraft] = useState<boolean>(false)
+
   // Render AccountCards for each account
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
 
@@ -67,6 +72,12 @@ const Dashboard: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
+    if (user != null) {
+      fetchSyncRule()
+    }
+  }, [user]);
+
+  useEffect(() => {
     let isMounted = true;
 
     const fetchData = async () => {
@@ -86,10 +97,25 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     if (accountsLoaded === true && accounts.length == 0 && showOnboarding === false) {
-      console.log(accounts)
       setShowOnboarding(true);
     }
   }, [accountsLoaded])
+
+  const fetchSyncRule = async () => {
+    const response = await fetch(
+      `${API}/sync`,
+      {
+        credentials: 'include',
+        method: 'GET'
+      }
+    )
+    if(!response.ok){
+      createToast("Couldn't load sync rules", MessageKind.Error)
+      return
+    }
+    const rules_ = await response.json();
+    setRules(rules_);
+  }
 
   const fetchAccountsData = async () => {
 
@@ -104,12 +130,31 @@ const Dashboard: React.FC = () => {
 
       throw new Error(`Error fetching accounts data: ${error.message}`);
     }
-    const data = await response.json();
+    let accounts = await response.json() as Account[];
+    for (let i = 0; i < accounts.length; i++) {
+      accounts[i].calendars = await fetchCalendars(accounts[i].uuid);
+    }
     setLoading(false);
-    return data; // Assuming the data is an array of Account objects
+    return accounts; // Assuming the data is an array of Account objects
   };
 
+  const [calendars, setCalendars] = useState<Array<Calendar>>([]);
 
+  async function fetchCalendars(uuid: string) {
+    try {
+      const response = await fetch(
+        `${API}/accounts/${uuid}/calendars`,
+        {
+          method: 'GET',
+          credentials: 'include'
+        }
+      );
+      return await response.json() as Calendar[];
+    } catch (error) {
+      console.error('Error fetching calendars:', error);
+      return null
+    }
+  }
 
   return (
 
@@ -118,7 +163,7 @@ const Dashboard: React.FC = () => {
         {loading && <LoadingOverlay />}
         {user != null && user.customer_id == null &&
           // show trial message
-          <div className='container-sm p-0 mt-2'>
+          <div className='container-sm p-0 my-2'>
             {daysLeft < 0 &&
               <p className='p-0 m-0 text-danger'>Your trial has ended. Upgrade now or risk losing all synchronised events. </p>
             }
@@ -128,40 +173,51 @@ const Dashboard: React.FC = () => {
             <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
           </div>
         }
+        {accounts.length > 0 &&
+          <>
+            <div className='d-md-flex align-items-center justify-content-center d-flex-row my-3 px-0'>
+              <span className='display-5 me-auto mb-2 mb-sm-0'>Synchronize Calendars</span>
+              <div className="break py-2"></div>
+              <button className='btn btn-primary' onClick={() => setOpenDraft(true)}>Add Synchronization</button>
+            </div>
+            {rules.length == 0 && accounts && accounts.length > 1 &&
+              <div className="alert alert-secondary" role="alert">
+                You have no synchronizations yet, create the first one!
+              </div>
+            }
+            {accounts && accounts.length === 1 && rules.length == 0 &&
+              <div>
+                <div className="alert alert-success" role="alert">
+                  <span className='fw-bold'> One account connected ✅ </span>
+                  You can now create your first synchronization, or add other Google accounts as needed
+                </div>
+              </div>
+            }
+            {rules.length > 0 && rules.map((rule) => <SyncRuleRow key={rule.uuid} rule={rule} />)
+            }
+            <SyncRuleDraftRow accounts={accounts} state={openDraft} setState={setOpenDraft} />
+          </>
+        }
+        <div className='display-5 my-4'>Connected accounts</div>
+        {accounts && accounts.length === 0 &&
+          <div>
+            <div className="alert alert-success" role="alert">
+              <span className='fw-bold'> Welcome to Calensync! 🎉 </span>
+              The first thing you need to do is connect one or more Google accounts by clicking the button below
+            </div>
+          </div>
+        }
         <AddCalendarAccount />
         {accounts && accounts.map((account) => (
           <AccountCard key={account.uuid} account={account} />
         ))}
-        {accounts && accounts.length === 0 &&
-          <div>
-            <div className="container-sm card my-2 py-4 shadow-sm rounded border-0 template account-row">
-              <div className="row">
-                <h2>Welcome! 🎉</h2>
-                <p>
-                  Let's get started. Give permission to your current account by clicking the button above.
-                </p>
-              </div>
-            </div>
-          </div>
-        }
-        {accounts && accounts.length === 1 &&
-          <div className="container-sm card my-2 py-4 shadow-sm rounded border-0 template account-row">
-            <div className="row mx-sm-0">
-              <h2>One down. ✅</h2>
-              <p>
-                Your first account is connected. You can now synchronize calendars inside of it,
-                or add another Google Account and do cross-account syncing!
-              </p>
-            </div>
-          </div>
-        }
 
         <ContactButton />
         <TallyComponent />
       </div>
-      {showOnboarding &&
+      {/* {showOnboarding &&
         <OnboardingModal onClose={() => setShowOnboarding(false)} />
-      }
+      } */}
     </Layout>
   );
 };

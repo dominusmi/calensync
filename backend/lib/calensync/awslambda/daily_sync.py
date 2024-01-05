@@ -4,9 +4,10 @@ from typing import Iterable, List
 
 import peewee
 
-from calensync.database.model import User, Calendar, CalendarAccount
+from calensync.database.model import User, Calendar, CalendarAccount, SyncRule
 from calensync.gwrapper import GoogleCalendarWrapper, service_from_account, delete_google_watch
 from calensync.log import get_logger
+from calensync.utils import utcnow
 
 logger = get_logger("daily_sync.main")
 
@@ -28,7 +29,6 @@ def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetim
 def execute_update(calendars: List[GoogleCalendarWrapper], db):
     # spooky double loop. Need to save each calendar events in the others
     for i, cal1 in enumerate(calendars):
-        cal1.save_events_in_database()
         for cal2 in calendars[i + 1:]:
             cal1.events_handler.add(cal2.events)
             cal2.events_handler.add(cal1.events)
@@ -38,13 +38,20 @@ def execute_update(calendars: List[GoogleCalendarWrapper], db):
             cal.insert_events()
 
 
-def sync_user_calendars_by_date(db):
-    query: Iterable[User] = peewee.prefetch(
-        User.select(),
-        CalendarAccount.select(),
-        Calendar.select().where(Calendar.active == True)
-    )
+def get_users_query_with_active_sync_rules():
+    sub_query = SyncRule.select(User.id).join(Calendar, on=(Calendar.id == SyncRule.source)).join(CalendarAccount).join(
+        User)
 
+    query: Iterable[User] = peewee.prefetch(
+        User.select().join(CalendarAccount).join(Calendar).where(User.id << sub_query).distinct(),
+        CalendarAccount.select(),
+        Calendar.select()
+    )
+    return query
+
+
+def sync_user_calendars_by_date(db):
+    users_query = get_users_query_with_active_sync_rules()
     start: datetime.datetime = (datetime.datetime.today() + datetime.timedelta(days=30))
     start_date = datetime.datetime.fromtimestamp(start.timestamp())
     start_date = start_date.replace(hour=0, minute=0, second=0)
@@ -54,7 +61,7 @@ def sync_user_calendars_by_date(db):
     start_date = start_date - datetime.timedelta(seconds=1)
     logger.info(f"Start/end date: {start_date.isoformat()} -> {end_date.isoformat()}")
 
-    for user in query:
+    for user in users_query:
         try:
             logger.info(f"Syncing {user.uuid}")
             calendars = load_calendars(user.accounts, start_date, end_date)
@@ -65,12 +72,13 @@ def sync_user_calendars_by_date(db):
 
 
 def update_watches(db: peewee.Database):
-    now = datetime.datetime.now()
+    now = utcnow()
     calendars_db: Iterable[Calendar] = peewee.prefetch(
-        Calendar.select().where(
+        Calendar.select()
+        .join(SyncRule, on=(Calendar.id == SyncRule.source))
+        .where(
             Calendar.expiration.is_null(False),
-            Calendar.expiration <= now + datetime.timedelta(hours=36),
-            Calendar.active),
+            Calendar.expiration <= now + datetime.timedelta(hours=36)),
         CalendarAccount.select(),
         User.select()
     )

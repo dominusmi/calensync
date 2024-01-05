@@ -23,8 +23,8 @@ const AddCalendarAccount: React.FC = () => {
     }
 
     return (
-        <div className="d-flex align-items-center justify-content-center mx-sm-4 mx-2 mt-4">
-            <div className="mx-auto mt-2 mb-4" id="google-sso">
+        <div className="d-sm-flex align-items-center justify-content-center mx-sm-4 mt-2 mb-2">
+            <div className="mx-auto" id="google-sso">
                 <button className="gsi-material-button" onClick={addAccount}>
                     <div className="gsi-material-button-state"></div>
                     <div className="gsi-material-button-content-wrapper">

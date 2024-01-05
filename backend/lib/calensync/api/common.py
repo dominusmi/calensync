@@ -14,6 +14,7 @@ from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEventV2
 
 from calensync.encode import AugmentedEncoder, ISerializable
 from calensync.log import get_logger
+from calensync.utils import is_local
 
 logger = get_logger(__file__)
 
@@ -118,3 +119,6 @@ class ApiError(Exception):
         self.code = code
         super().__init__(self.detail, self.code)
 
+
+def number_of_days_to_sync_in_advance() -> int:
+    return 5 if is_local() else 30

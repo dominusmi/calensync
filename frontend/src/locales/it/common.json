@@ -10,7 +10,7 @@
     "hero": {
       "title": "Basta conflitti tra eventi",
       "heading": "Sincronizza tutti i tuoi calendari Google insieme e risparmia il fastidio di dover riprogrammare gli appuntamenti. Assicurati che nessuno prenoti mai una riunione quando sei già occupato.",
-      "cta": "Inizia"
+      "cta": "Vai!"
     },
     "value": {
       "1_head": "Calendari illimitati",
@@ -18,7 +18,7 @@
       "2_head": "Sincronizzati in pochi secondi",
       "2_content": "Quando un evento viene creato o modificato, viene aggiornato su tutti i calendari in pochi secondi.",
       "3_head": "Privacy al primo posto",
-      "3_content": "Le informazioni sugli eventi non vengono sincronizzate tra i calendari. Invece, viene creato un evento bloccante per proteggere la tua privacy.",
+      "3_content": "Per ogni calendario, puoi decidere se copiare i dettagli dell'evento o sostituirli con 'Occupato', consentendoti di controllare la tua privacy.",
       "4_head": "Pronto in 30 secondi",
       "4_content": "Puoi avere tutti i tuoi calendari sincronizzati in meno di un minuto. Non ci credi? Vai avanti e inizia subito!"
     },
@@ -28,9 +28,11 @@
       "q2": "Quanti calendari diversi posso sincronizzare insieme?",
       "a2": "Puoi sincronizzare quanti calendari desideri da qualsiasi account Google differente.",
       "q3": "Il nome dell'evento e la descrizione vengono copiati?",
-      "a3": "No, per preservare la tua privacy, l'evento creato è chiamato Bloccante e la descrizione non viene copiata.",
+      "a3": "Nell'impostazione delle tue sincronizzazioni, puoi decidere se copiare il nome e la descrizione o sostituirli con `Busy`, garantendoti un controllo completo sulla tua privacy.",
       "q4": "A che velocità vengono sincronizzati gli eventi?",
-      "a4": "Questo dipende leggermente da Google, ma conta tra 1 secondo e un massimo di 30 secondi."
+      "a4": "Questo dipende leggermente da Google, ma conta tra 1 secondo e un massimo di 1 minuto.",
+      "q5": "Salvate dati sui miei eventi? E li rivendete o li condividete?",
+      "a5": "Non salviamo alcun dato sui tuoi eventi, né lo rivendiamo né lo condividiamo."
     }
   },
   "blog_list": {
@@ -39,9 +41,13 @@
       "headline": "Se stai cercando come sincronizzare più calendari Google insieme, non cercare oltre. Questo breve articolo spiegherà tutto ciò che c'è da sapere."
     },
     "avoid_calendly_conflicts": {
-      "title": "Evita i conflitti di Calendly",
+      "title": "Come evitare i conflitti di Calendly",
       "headline": "I conflitti di Calendly possono essere terribili, quindi come evitarli? Discutiamo come Calensync ti aiuta a risolvere questo problema in due minuti!"
-    }
+    },
+    "sync_all_google_calendars": {
+      "title": "Come unire tutti i calendari Google in uno con Calensync",
+      "headline": "Spiegazione passo dopo passo di un esempio tipico: sincronizzare un calendario professionale, personale e freelance in uno solo"
+    }    
   },
   "paddle_pricing": {
     "excluding_vat": "*IVA Esclusa",

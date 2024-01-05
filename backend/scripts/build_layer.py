@@ -29,5 +29,12 @@ if __name__ == "__main__":
     subprocess.run(f"docker run --rm -v {root_dir}/layer:/opt/tmp calensync_python_builder",
                    shell=True)
 
-    subprocess.run(f"rsync -av --exclude='tests/' {root_dir}/lib/calensync {root_dir}/awslambda/daily_sync", shell=True)
-    subprocess.run(f"rsync -av --exclude='tests/' {root_dir}/lib/calensync {root_dir}/api/src/", shell=True)
+    # update Calensync library code
+    sync_paths = [f"{root_dir}/awslambda/daily_sync", f"{root_dir}/api/src", f"{root_dir}/awslambda/sqs_receiver"]
+    for path in sync_paths:
+        subprocess.run(f"rsync -av --exclude='tests/' {root_dir}/lib/calensync {path}", shell=True)
+
+    subprocess.run("sam build", shell=True, cwd=root_dir)
+    for path in sync_paths:
+        shutil.rmtree(path+"/calensync")
+

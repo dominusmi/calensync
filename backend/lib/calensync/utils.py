@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import json
 import os
@@ -70,3 +72,7 @@ def get_paddle_token(session: boto3.Session = None):
 
 def get_product_id():
     return os.environ["PRODUCT_ID"]
+
+
+def datetime_to_google_time(dt: datetime.datetime) -> str:
+    return dt.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z"

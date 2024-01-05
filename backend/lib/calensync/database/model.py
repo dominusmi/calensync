@@ -107,7 +107,6 @@ class Calendar(UUIDBaseModel):
     resource_id = CharField(null=True)
     token = UUIDField(default=uuid.uuid4)
     expiration = DateTimeField(null=True)
-    active = peewee.BooleanField(default=False)
     last_sync = DateTimeField(null=True)
     last_inserted = DateTimeField(default=utcnow)
     last_received = DateTimeField(default=utcnow)
@@ -116,22 +115,6 @@ class Calendar(UUIDBaseModel):
     @property
     def friendly_name(self):
         return self.name if self.name is not None else self.platform_id
-
-    def get_synced_events(self) -> Iterable['Event']:
-        Source = Event.alias()
-        events = peewee.prefetch(
-            Event
-            .select()
-            .join(Source, on=(Event.source == Source.id), join_type=peewee.JOIN.LEFT_OUTER)
-            .where(
-                (Event.calendar_id == self.id) |
-                (Source.calendar_id == self.id),
-            )
-            .order_by(Event.source.desc(nulls='LAST')),
-            Calendar.select().join(Source),
-            Calendar.select().join(Event)
-        )
-        return events
 
     @property
     def is_read_only(self) -> bool:
@@ -162,6 +145,15 @@ class Event(BaseModel):
         ), SourceEvent
 
 
+class SyncRule(UUIDBaseModel):
+    source = ForeignKeyField(Calendar)
+    destination = ForeignKeyField(Calendar)
+    private = peewee.BooleanField()
+
+    class Meta:
+        constraints = [peewee.SQL('UNIQUE (source_id, destination_id)')]
+
+
 class OAuthState(BaseModel):
     user = ForeignKeyField(User, null=True)
     state = CharField()
@@ -175,4 +167,4 @@ class Session(UUIDBaseModel):
     session_id = UUIDField(null=True, unique=True)
 
 
-MODELS = [Session, OAuthState, Event, Calendar, CalendarAccount, User]
+MODELS = [Session, OAuthState, SyncRule, Calendar, CalendarAccount, User]

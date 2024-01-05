@@ -8,6 +8,7 @@ import pydantic
 from pydantic import BaseModel
 
 from calensync.log import get_logger
+from calensync.utils import datetime_to_google_time
 
 logger = get_logger("dataclass")
 
@@ -18,6 +19,13 @@ class AbstractGoogleDate(BaseModel):
 
     def to_datetime(self) -> datetime.datetime:
         raise NotImplementedError()
+
+    def from_google_dict(self, body):
+        if date := body.get("date"):
+            return GoogleDate(date=date)
+        else:
+            dt = body["dateTime"]
+            return datetime.datetime.fromisoformat(dt[:-1])
 
 
 class GoogleDate(AbstractGoogleDate):
@@ -34,11 +42,12 @@ class GoogleDate(AbstractGoogleDate):
 
 class GoogleDatetime(AbstractGoogleDate):
     dateTime: datetime.datetime
-    timeZone: Optional[str] = None  # deprecated
+    timeZone: Optional[str] = None
 
     def to_google_dict(self):
         return {
-            "dateTime": self.dateTime.astimezone().isoformat(timespec="seconds"),
+            "dateTime": datetime_to_google_time(self.dateTime),
+            "timeZone": "UCT"
         }
 
     def to_datetime(self) -> datetime.datetime:
@@ -63,6 +72,9 @@ class EventExtendedProperty(BaseModel):
     def list_to_dict(extended_properties: List[EventExtendedProperty]):
         return {e.key: e.value for e in extended_properties}
 
+    def to_google_dict(self):
+        return {self.key: self.value}
+
     @classmethod
     def for_source_id(cls, value):
         return cls(key="source-id", value=value)
@@ -78,8 +90,12 @@ class EventStatus(Enum):
     cancelled = 'cancelled'
 
 
+class ExtendedProperties(BaseModel):
+    private: Optional[Dict[str, str]] = dict()
+
+
 class GoogleEvent(BaseModel):
-    extendedProperties: Optional[Dict[str, Dict[str, str]]]
+    extendedProperties: ExtendedProperties = ExtendedProperties()
     htmlLink: str
     start: Union[GoogleDatetime, GoogleDate]
     end: Union[GoogleDatetime, GoogleDate]
@@ -88,6 +104,8 @@ class GoogleEvent(BaseModel):
     updated: Optional[datetime.datetime] = None
     status: EventStatus
     recurrence: Optional[List[str]] = None
+    description: Optional[str] = None
+    summary: str
 
     @staticmethod
     def parse_event_list_response(response: Dict) -> List[GoogleEvent]:
@@ -102,7 +120,7 @@ class GoogleEvent(BaseModel):
     @property
     def source_id(self) -> Optional[str]:
         if self.extendedProperties:
-            return self.extendedProperties.get("private", {}).get("source-id")
+            return self.extendedProperties.private.get("source-id")
         return None
 
 
@@ -118,7 +136,7 @@ def event_list_to_source_id_map(events: List[GoogleEvent]) -> Dict[str, GoogleEv
 
 class QueueEvent(IntEnum):
     GOOGLE_WEBHOOK = 1
-    UPDATE_CALENDAR_STATE = 2
+    POST_SYNC_RULE = 3
 
 
 class GoogleWebhookEvent(BaseModel):
@@ -139,6 +157,20 @@ class UpdateCalendarStateEvent(BaseModel):
     user_id: int
 
 
+class PostSyncRuleEvent(BaseModel):
+    sync_rule_id: int
+
+
 class SQSEvent(BaseModel):
     kind: QueueEvent
     data: Dict
+
+
+class PatchCalendarBody(BaseModel):
+    kind: str
+
+
+class PostSyncRuleBody(BaseModel):
+    source_calendar_id: str
+    destination_calendar_id: str
+    private: bool
