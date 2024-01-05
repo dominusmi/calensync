@@ -23,6 +23,7 @@ import i18next, { BackendModule, LanguageDetectorModule } from "i18next";
 import LanguageDetector from 'i18next-browser-languagedetector';
 import LocalesImportPlugin from "./components/LocalesLazyImport";
 import ForFreelancer from "./pages/ForFreelancer";
+import SynchronizeAllCalendarsIntoOne from "./pages/blog/SynchronizeAllCalendarsIntoOne";
 
 
 
@@ -69,6 +70,7 @@ function App() {
           <Route path="/:lang?/for-freelancers" element={<ForFreelancer />}></Route>
           <Route path="/:lang?/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route>
           <Route path="/:lang?/blog/avoid-calendly-conflicts" element={<HowToAvoidCalendlyConflicts />}></Route>
+          <Route path="/:lang?/blog/sync-all-google-calendars-into-one" element={<SynchronizeAllCalendarsIntoOne />}></Route>
         </Routes>
       </Router>
     </ErrorBoundary>

@@ -43,6 +43,10 @@
         "avoid_calendly_conflicts": {
             "title": "Comment éviter les conflits avec Calendly",
             "headline": "Les conflits Calendly peuvent être terribles, alors comment les éviter ? Nous expliquons comment Calensync vous aide à résoudre ce problème en deux minutes !"
+        },
+        "sync_all_google_calendars": {
+            "title": "Comment fusionner tous les calendriers Google en un avec Calensync",
+            "headline": "Explication étape par étape d'un exemple typique : synchroniser un calendrier professionnel, personnel et freelance en un seul"
         }
     },
     "paddle_pricing": {

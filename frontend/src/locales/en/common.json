@@ -38,12 +38,16 @@
     },
     "blog_list": {
         "sync_google_calendars": {
-            "title": "How to Synchronize Google Calendars together",
+            "title": "How to Synchronize two Google Calendars together",
             "headline": "If you're looking for how to sync multiple Google Calendars together, look no further. This brief article will explain all there is to know."
         },
         "avoid_calendly_conflicts": {
             "title": "How to avoid Calendly conflicts",
             "headline": "Calendly conflicts can be terrible, so how can you avoid them? We discuss how Calensync helps you solve this issue in two minutes!"
+        },
+        "sync_all_google_calendars": {
+            "title": "How to merge all Google Calendars into one with Calesync",
+            "headline": "A step by step explanation of a typical example: syncing a professional, private, and freelance calendar into one"
         }
     },
     "paddle_pricing": {

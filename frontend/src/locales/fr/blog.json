@@ -1,93 +1,118 @@
 {
-    "sync_google_calendars": {
-      "title": "Comment synchroniser ensemble les agendas Google",
-      "date": "Décembre 2023",
-      "headline": "Si vous cherchez comment synchroniser plusieurs agendas Google ensemble, ne cherchez pas plus loin. Cet article vous expliquera brievement tout ce qu'il faut savoir.",
-      "meta": {
-        "description": "Dans ce post, nous décrivons les deux façons de synchroniser les agendas Google ensemble.",
-        "og_title": "Comment synchroniser les agendas Google"
-      },
-      "manually": {
-        "title": "Synchronisation manuelle",
-        "headline": "La synchronisation manuelle de vos agendas implique plusieurs étapes.",
-        "steps": {
-          "1": "Depuis votre page Google Calendar (sur ordinateur), cliquez sur les trois icônes en bout de ligne du calendrier.",
-          "2": "Allez à l'onglet Importation/Exportation.",
-          "3": "Accédez à Exporter.",
-          "4": "Exportez les agendas que vous souhaitez synchroniser.",
-          "5": "Cela déclenchera un téléchargement de fichier.",
-          "6": "Accédez à votre deuxième calendrier.",
-          "7": "Utilisez le même menu, cette fois-ci allez à Importation.",
-          "8": "Téléchargez le fichier téléchargé."
-        },
-        "end": "Vous avez maintenant synchronisé avec succès vos deux agendas. Vous pouvez des a present répéter cette operation pour en ajouter autant que necessaire.",
-        "pros": {
-          "title": "Avantages de la synchronisation manuelle",
-          "free": "C'est gratuit."
-        },
-        "cons": {
-          "title": "Inconvénients de la synchronisation manuelle",
-          "privacy": "Aucun contrôle de la vie privée : vos événements apparaîtront tels quels.",
-          "slow": "La synchronisation est lente, généralement quotidienne.",
-          "long": "La configuration est longue, surtout pour plusieurs agendas."
-        }
-      },
-      "calensync": {
-        "title": "Utilisation de Calensync",
-        "headline": "C'est précisément pourquoi nous avons créé Calensync : pour fournir un meilleur service à un prix très raisonnable. Voici comment fonctionne la configuration :",
-        "steps": {
-          "1_span": "Connectez-vous",
-          "1_text": "en utilisant n'importe lequel de vos comptes Google.",
-          "2": "Connectez chaque compte en cliquant sur \"Connecter un calendrier Google\".",
-          "3": "Activez la synchronisation des agendas selon vos besoins."
-        },
-        "pros": {
-          "title": "Avantages de Calensync",
-          "fast": "Synchronisation instantanée.",
-          "privacy": "Protection de la vie privée.",
-          "onboarding": "Configuration en 2 minutes."
-        },
-        "cons": {
-          "title": "Inconvénients de Calensync",
-          "free": "Pas gratuit (mais abordable)."
-        }
-      },
-      "cta": "Commencez maintenant et obtenez un mois gratuit avec le code JAN24!"
+  "sync_google_calendars": {
+    "title": "Comment synchroniser ensemble les agendas Google",
+    "date": "Décembre 2023",
+    "headline": "Si vous cherchez comment synchroniser plusieurs agendas Google ensemble, ne cherchez pas plus loin. Cet article vous expliquera brievement tout ce qu'il faut savoir.",
+    "meta": {
+      "description": "Dans ce post, nous décrivons les deux façons de synchroniser les agendas Google ensemble.",
+      "og_title": "Comment synchroniser les agendas Google"
     },
-    "avoid_calendly_conflicts": {
-        "title": "Comment éviter les conflits Calendly",
-        "date": "Décembre 2023",
-        "headline": "Les conflits Calendly peuvent être terribles, alors comment les éviter ?",
-        "meta": {
-          "description": "Les conflits Calendly peuvent être terribles, alors comment les éviter ?",
-          "title": "Comment éviter les conflits Calendly"
-        },
-        "intro": "La création automatique d'événements a été l'une des inventions les plus simples mais les plus grandes pour l'amélioration de la productivité. Cependant, de nos jours, il est courant que les gens aient plusieurs agendas, mélangeant personnel et professionnel. Il n'est jamais agréable de devoir reprogrammer des événements en raison d'un conflit entre un rendez-vous médical et une démo pour un prospect. Alors, comment éviter ces conflits ?",
-        "s1": {
-          "title": "Utilisation du fichier .ics",
-          "content": "Votre calendrier peut être exporté sous forme de fichier .ics, puis ajouté à d'autres agendas. C'est une méthode fastidieuse mais totalement gratuite. Sans entrer dans les détails, certains des problèmes incluent une synchronisation assez retardée et aucune confidentialité, vos événements étant littéralement copiés-collés.",
-          "link": "Vous pouvez en savoir plus à ce sujet dans",
-          "link-span": "cet article",
-          "link-post": "que nous avons récemment écrit."
-        },
-        "s2": {
-          "title": "Définir la confirmation obligatoire",
-          "content": "Sur Calendly, vous pouvez activer l'option \"exiger une confirmation\". Chaque fois qu'un événement est réservé, il ne sera pas immédiatement confirmé et vous devrez le confirmer manuellement en plus. Bien sûr, cela présente deux problèmes majeurs : une expérience moins agréable pour la personne qui réserve et plus de travail pour vous."
-        },
-        "s3": {
-          "title": "Ajouter du temps tampon",
-          "content": "Le temps tampon est une fonctionnalité fondamentale de Calendly, que vous devriez utiliser autant que possible. Surtout pour les appels de vente, vous ne savez jamais si vous aurez besoin de ces cinq minutes supplémentaires, ce qui pourrait faire la différence entre un accord ou pas. Alors, ne soyez pas timide avec cela !"
-        },
-        "calensync": {
-          "title": "Utilisation de Calensync",
-          "content": "Cependant, Calendly ne peut pas gérer plusieurs agendas. Dans ce cas, vous devrez utiliser une solution externe. Calensync vous permet de créer des bloqueurs entre vos agendas, de sorte que les gens ne pourront pas réserver d'événements à ces moments-là. C'est une manière simple d'éviter de devoir reprogrammer, soyons honnêtes, tout le monde déteste ça.",
-          "steps": {
-            "1": "Connectez-vous au ",
-            "2": "Ajoutez autant de comptes Google que nécessaire",
-            "3": "Choisissez quels agendas synchroniser"
-          },
-          "conclusion": "La synchronisation est quasi instantanée. Vous verrez des événements \"Blocker\" apparaître dans les agendas synchronisés, et vous éviterez tous les conflits Calendly à l'avenir !"
-        }
+    "manually": {
+      "title": "Synchronisation manuelle",
+      "headline": "La synchronisation manuelle de vos agendas implique plusieurs étapes.",
+      "steps": {
+        "1": "Depuis votre page Google Calendar (sur ordinateur), cliquez sur les trois icônes en bout de ligne du calendrier.",
+        "2": "Allez à l'onglet Importation/Exportation.",
+        "3": "Accédez à Exporter.",
+        "4": "Exportez les agendas que vous souhaitez synchroniser.",
+        "5": "Cela déclenchera un téléchargement de fichier.",
+        "6": "Accédez à votre deuxième calendrier.",
+        "7": "Utilisez le même menu, cette fois-ci allez à Importation.",
+        "8": "Téléchargez le fichier téléchargé."
+      },
+      "end": "Vous avez maintenant synchronisé avec succès vos deux agendas. Vous pouvez des a present répéter cette operation pour en ajouter autant que necessaire.",
+      "pros": {
+        "title": "Avantages de la synchronisation manuelle",
+        "free": "C'est gratuit."
+      },
+      "cons": {
+        "title": "Inconvénients de la synchronisation manuelle",
+        "privacy": "Aucun contrôle de la vie privée : vos événements apparaîtront tels quels.",
+        "slow": "La synchronisation est lente, généralement quotidienne.",
+        "long": "La configuration est longue, surtout pour plusieurs agendas."
       }
+    },
+    "calensync": {
+      "title": "Utilisation de Calensync",
+      "headline": "C'est précisément pourquoi nous avons créé Calensync : pour fournir un meilleur service à un prix très raisonnable. Voici comment fonctionne la configuration :",
+      "steps": {
+        "1_span": "Connectez-vous",
+        "1_text": "en utilisant n'importe lequel de vos comptes Google.",
+        "2": "Connectez chaque compte en cliquant sur \"Connecter un calendrier Google\".",
+        "3": "Activez la synchronisation des agendas selon vos besoins."
+      },
+      "pros": {
+        "title": "Avantages de Calensync",
+        "fast": "Synchronisation instantanée.",
+        "privacy": "Protection de la vie privée.",
+        "onboarding": "Configuration en 2 minutes."
+      },
+      "cons": {
+        "title": "Inconvénients de Calensync",
+        "free": "Pas gratuit (mais abordable)."
+      }
+    },
+    "cta": "Commencez maintenant et obtenez un mois gratuit avec le code JAN24!"
+  },
+  "avoid_calendly_conflicts": {
+    "title": "Comment éviter les conflits Calendly",
+    "date": "Décembre 2023",
+    "headline": "Les conflits Calendly peuvent être terribles, alors comment les éviter ?",
+    "meta": {
+      "description": "Les conflits Calendly peuvent être terribles, alors comment les éviter ?",
+      "title": "Comment éviter les conflits Calendly"
+    },
+    "intro": "La création automatique d'événements a été l'une des inventions les plus simples mais les plus grandes pour l'amélioration de la productivité. Cependant, de nos jours, il est courant que les gens aient plusieurs agendas, mélangeant personnel et professionnel. Il n'est jamais agréable de devoir reprogrammer des événements en raison d'un conflit entre un rendez-vous médical et une démo pour un prospect. Alors, comment éviter ces conflits ?",
+    "s1": {
+      "title": "Utilisation du fichier .ics",
+      "content": "Votre calendrier peut être exporté sous forme de fichier .ics, puis ajouté à d'autres agendas. C'est une méthode fastidieuse mais totalement gratuite. Sans entrer dans les détails, certains des problèmes incluent une synchronisation assez retardée et aucune confidentialité, vos événements étant littéralement copiés-collés.",
+      "link": "Vous pouvez en savoir plus à ce sujet dans",
+      "link-span": "cet article",
+      "link-post": "que nous avons récemment écrit."
+    },
+    "s2": {
+      "title": "Définir la confirmation obligatoire",
+      "content": "Sur Calendly, vous pouvez activer l'option \"exiger une confirmation\". Chaque fois qu'un événement est réservé, il ne sera pas immédiatement confirmé et vous devrez le confirmer manuellement en plus. Bien sûr, cela présente deux problèmes majeurs : une expérience moins agréable pour la personne qui réserve et plus de travail pour vous."
+    },
+    "s3": {
+      "title": "Ajouter du temps tampon",
+      "content": "Le temps tampon est une fonctionnalité fondamentale de Calendly, que vous devriez utiliser autant que possible. Surtout pour les appels de vente, vous ne savez jamais si vous aurez besoin de ces cinq minutes supplémentaires, ce qui pourrait faire la différence entre un accord ou pas. Alors, ne soyez pas timide avec cela !"
+    },
+    "calensync": {
+      "title": "Utilisation de Calensync",
+      "content": "Cependant, Calendly ne peut pas gérer plusieurs agendas. Dans ce cas, vous devrez utiliser une solution externe. Calensync vous permet de créer des bloqueurs entre vos agendas, de sorte que les gens ne pourront pas réserver d'événements à ces moments-là. C'est une manière simple d'éviter de devoir reprogrammer, soyons honnêtes, tout le monde déteste ça.",
+      "steps": {
+        "1": "Connectez-vous au ",
+        "2": "Ajoutez autant de comptes Google que nécessaire",
+        "3": "Choisissez quels agendas synchroniser"
+      },
+      "conclusion": "La synchronisation est quasi instantanée. Vous verrez des événements \"Blocker\" apparaître dans les agendas synchronisés, et vous éviterez tous les conflits Calendly à l'avenir !"
+    }
+  },
+  "sync_google_calendars_into_one": {
+    "cta": "Commencer",
+    "date": "janvier 2024",
+    "meta": {
+      "description": "Cet article explique comment synchroniser tous les calendriers Google de différents comptes en un seul.",
+      "og_title": "Synchronisez tous vos agendas",
+      "title": "Synchronisez tous vos agendas"
+    },
+    "title": "Comment synchroniser tous vos calendriers Google en un seul",
+    "s1_1": "Il existe de nombreuses raisons pour lesquelles quelqu'un peut posséder plusieurs comptes Google et leurs calendriers associés. Vous pouvez avoir votre personnel, professionnel, peut-être votre compte freelance. Moi-même, par exemple, j'ai 3 calendriers Google qui doivent absolument être synchronisés en permanence.",
+    "s1_2": "Synchroniser les calendriers en un seul est un excellent moyen d'avoir une vue globale de ce qui se passe partout, et ce n'est pas une fonctionnalité qui fait partie de la suite Calendriers. C'est en partie pour cela que j'ai été poussé à créer Calensync : pour résoudre ce problème très courant.",
+    "s1_3": "Dans cet article, je vous donnerai un guide étape par étape sur la synchronisation de plusieurs calendriers Google. La meilleure partie est que vous pouvez suivre en vous inscrivant et en utilisant votre essai gratuit de 7 jours pour décider si vous souhaitez rester avec nous, alors pourquoi ne pas essayer !",
+    "h2": "Inscription",
+    "s2_1": "Cette étape est la plus simple, cochez simplement la case des conditions générales, puis cliquez sur le bouton S'inscrire avec Google, et vous devriez arriver sur la page du tableau de bord, aussi simple que cela !",
+    "h3": "Ajouter vos comptes Google",
+    "s3_1": "Vos comptes de calendrier peuvent être sur plusieurs comptes Google, comme les miens. Dans cet exemple, mon calendrier personnel est personal@gmail.com, mon professionnel professional@company.com, et mon compte freelance me@freelancer.com. Cela signifie que je vais connecter trois comptes. Alors, commençons : cliquez sur `Connecter un compte Google`",
+    "s3_2": "Assurez-vous de donner les autorisations lorsque cela est demandé :",
+    "s3_3": "Voilà, votre premier compte est connecté ! Comme vous pouvez le voir, vous pouvez désormais créer des synchronisations. Cela pourrait être utile, par exemple, si vous avez plusieurs calendriers sur le même compte, mais pour l'instant, nous voulons ajouter les deux autres comptes. Faisons les mêmes étapes à nouveau.",
+    "h4": "Création de synchronisations",
+    "s4_1": "Donc, notre objectif est le suivant : nous voulons que notre calendrier personnel contienne tous les événements, nous allons donc créer deux synchronisations : une de professional@company.com à personal@gmail.com, et une de me@freelancer.com à personal@gmail.com. Allons-y et cliquons sur Ajouter une synchronisation.",
+    "s4_2": "C'est fait, la première est terminée ! Faisons la deuxième maintenant.",
+    "s4_3": "Parfait, notre mission est accomplie 🎉",
+    "h5": "Bloquer les rendez-vous personnels tout en préservant la vie privée",
+    "s5_1": "Un petit plus pour la route, disons que nous ne voulons pas que nos collègues réservent une réunion avec nous lorsque nous avons un rendez-vous personnel. Cependant, nous ne voulons pas qu'ils connaissent la raison, car cela pourrait être quelque chose de privé. Nous allons donc créer une règle de notre personnel vers notre calendrier professionnel, et cocher la case `Marquer comme occupé`",
+    "s5_2": "Enregistrez et voilà, c'est fait ! Merci de nous lire et à bientôt sur Calensync !"
   }
-  
+}
