@@ -99,7 +99,7 @@ def get_events(service, google_id: str, start_date: datetime.datetime, end_date:
         privateExtendedProperty=privateExtendedProperty,
         **kwargs
     ).execute()
-
+    logger.info(f"{google_id}: {response.get('items',[])}")
     events = GoogleEvent.parse_event_list_response(response)
     return events
 
@@ -390,7 +390,7 @@ class GoogleCalendarWrapper:
         events = self.get_updated_events()
         logger.info(f"Updated events: {[e.id for e in events]}")
         if not events:
-            logger.warn(f"Something went wrong: no updates found for channel {self.calendar_db.channel_id}")
+            logger.info(f"No updates found for channel {self.calendar_db.channel_id}")
             return 0
 
         for event in events:
