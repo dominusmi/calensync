@@ -121,6 +121,30 @@ class Calendar(UUIDBaseModel):
         return "@group.v.calendar.google.com" in self.platform_id
 
 
+class Event(BaseModel):
+    calendar = ForeignKeyField(Calendar,
+                               help_text="Calendar of this particular copy of the event (not the original calendar)",
+                               backref="events")
+    source = ForeignKeyField('self', null=True, default=None)
+    event_id = CharField(null=False, unique=True)
+    start = DateTimeField(null=False)
+    end = DateTimeField(null=False)
+    deleted = peewee.BooleanField(default=False)
+
+    @staticmethod
+    def get_self_reference_query():
+        """
+        WARNING: do not use this in conjuction with prefetch, it doesn't work. If you
+        need to use prefetch, then you can't use this function but instead but do the
+        aliasing in the same scope
+        """
+        SourceEvent = Event.alias()
+        return (
+            Event
+            .select().join(SourceEvent, on=(Event.source == SourceEvent.id))
+        ), SourceEvent
+
+
 class SyncRule(UUIDBaseModel):
     source = ForeignKeyField(Calendar)
     destination = ForeignKeyField(Calendar)
