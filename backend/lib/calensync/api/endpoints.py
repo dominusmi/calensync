@@ -243,7 +243,7 @@ def refresh_calendars(user: User, account_id: str, db: peewee.Database):
             new_calendar.save()
 
     calendars_db.extend(new_calendars_db)
-    return [{"uuid": c.uuid, "name": c.friendly_name, "active": c.active} for c in calendars_db]
+    return [{"uuid": c.uuid, "name": c.friendly_name} for c in calendars_db]
 
 
 def delete_account(user: User, account_id: str):
@@ -252,7 +252,6 @@ def delete_account(user: User, account_id: str):
                                      .join(User)
                                      .where(User.id == user.id, CalendarAccount.uuid == account_id))
     for calendar in calendars:
-        deactivate_calendar(calendar)
         calendar.delete_instance()
         CalendarAccount.get(uuid=account_id).delete_instance()
 
@@ -354,7 +353,7 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
     with db.atomic():
         source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
         sync_rule = SyncRule(source=source, destination=destination, private=payload.private).save_new()
-
+        return
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
         if is_local():
