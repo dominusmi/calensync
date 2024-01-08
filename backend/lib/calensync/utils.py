@@ -23,7 +23,7 @@ def get_client_secret(session=None):
         return json.loads(response['SecretString'])
 
 
-def get_scopes():
+def get_profile_and_calendar_scopes():
     return [
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",
@@ -32,7 +32,7 @@ def get_scopes():
     ]
 
 
-def get_google_sso_scopes():
+def get_profile_scopes():
     return [
         "https://www.googleapis.com/auth/userinfo.email",
         # "https://www.googleapis.com/auth/userinfo.profile",

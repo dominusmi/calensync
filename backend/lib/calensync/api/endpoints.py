@@ -80,10 +80,9 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
     logger.info(f"OAuth of kind {state_db.kind}, is_login: {is_login}")
 
     if is_login:
-        # add calendar event
-        scopes = get_google_sso_scopes()
+        scopes = get_profile_scopes()
     else:
-        scopes = get_scopes()
+        scopes = get_profile_and_calendar_scopes()
 
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         client_secret,
