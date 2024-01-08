@@ -77,7 +77,6 @@ class UUIDBaseModel(BaseModel):
 
 
 class User(UUIDBaseModel):
-    email = CharField(unique=True)
     is_admin = peewee.BooleanField(default=False)
     tos = peewee.DateTimeField(default=None, null=True)
     customer_id = CharField(null=True, default=None)
@@ -88,6 +87,11 @@ class User(UUIDBaseModel):
     @staticmethod
     def from_email(email: str) -> User:
         return User.get(email=email)
+
+
+class EmailDB(BaseModel):
+    email = peewee.CharField()
+    user = peewee.ForeignKeyField(User, backref='emails')
 
 
 class CalendarAccount(UUIDBaseModel):
