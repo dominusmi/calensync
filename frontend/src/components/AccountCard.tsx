@@ -23,28 +23,29 @@ interface AccountCardProps {
 
 
 const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
+    console.log(account)
     const [calendars, setCalendars] = useState<Array<Calendar>>([]);
     const [isLoading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchCalendars = async () => {
-            try {
-                const response = await axios.get(
-                    `${API}/accounts/${account.uuid}/calendars`,
-                    {
-                        method: 'GET',
-                        withCredentials: true
-                    }
-                );
-                setCalendars(response.data);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching calendars:', error);
-            }
-        };
+    // useEffect(() => {
+    //     const fetchCalendars = async () => {
+    //         try {
+    //             const response = await axios.get(
+    //                 `${API}/accounts/${account.uuid}/calendars`,
+    //                 {
+    //                     method: 'GET',
+    //                     withCredentials: true
+    //                 }
+    //             );
+    //             setCalendars(response.data);
+    //             setLoading(false);
+    //         } catch (error) {
+    //             console.error('Error fetching calendars:', error);
+    //         }
+    //     };
 
-        fetchCalendars();
-    }, [account.uuid]);
+    //     fetchCalendars();
+    // }, [account.uuid]);
 
     return (
         <div className="container-sm card my-2 my-sm-4 py-4 shadow-sm rounded border-0 template account-row">
@@ -59,7 +60,7 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
                             </div>
                         </Accordion.Header>
                         <Accordion.Body>
-                            {calendars && calendars.map((calendar) => (
+                            {account && account.calendars && account.calendars.map((calendar) => (
                                 <div className='d-flex' key={`${calendar.uuid}-div`}>
                                     <label className="form-check-label xs-small">{calendar.name.replace("@group.v.calendar.google.com", "")}</label>
                                     {calendar.name.includes("group.v.calendar.google.com") &&
