@@ -5,6 +5,7 @@ import json
 import os
 
 import boto3
+import peewee
 
 
 def get_env():
@@ -76,3 +77,11 @@ def get_product_id():
 
 def datetime_to_google_time(dt: datetime.datetime) -> str:
     return dt.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z"
+
+
+def prefetch_get_or_none(query, *sub_queries):
+    result = peewee.prefetch(query.limit(1), *sub_queries)
+    if result:
+        return result[0]
+    else:
+        return None
