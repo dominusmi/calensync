@@ -228,13 +228,18 @@ def refresh_calendars(user: User, account_id: str, db: peewee.Database):
     )
 
     new_calendars_db = []
-    platform_ids = {cdb.platform_id for cdb in calendars_db}
+    platform_ids = {cdb.platform_id: cdb for cdb in calendars_db}
     for calendar in calendars:
+        name = (calendar.summary or calendar.id)
         if calendar.id in platform_ids:
+            calendar_db: Calendar = platform_ids[calendar.id]
+            if calendar_db.name != name:
+                calendar_db.name = name
+                calendar_db.update()
             continue
 
         new_calendars_db.append(
-            Calendar(account=account, platform_id=calendar.id)
+            Calendar(account=account, platform_id=calendar.id, name=name)
         )
 
     with db.atomic():
