@@ -40,10 +40,10 @@ def verify_session(session_id: Optional[str]) -> User:
     """ Returns the claimed email """
 
     if session_id is None:
-        raise ApiError("Credentials missing", 403)
+        raise ApiError("Credentials missing", 404)
 
     elif session_id == 'null':
-        raise ApiError("Credentials missing", 403)
+        raise ApiError("Credentials missing", 404)
 
     query = peewee.prefetch(Session.select().where(Session.session_id == session_id).limit(1), User.select())
     result: List[Session] = list(query)
