@@ -86,7 +86,13 @@ class User(UUIDBaseModel):
 
     @staticmethod
     def from_email(email: str) -> User:
-        return User.get(email=email)
+        emails = list(
+            EmailDB.select(User).join(User)
+            .where(EmailDB.email == email)
+            .limit(1)
+        )
+        if emails:
+            return emails[0].user
 
 
 class EmailDB(BaseModel):
