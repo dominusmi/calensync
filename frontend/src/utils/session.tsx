@@ -74,7 +74,7 @@ export const getLoggedUser: () => Promise<User | null> = async () => {
   } else if (result == VerifySession.MISSING) {
     return null;
   }else if (result == VerifySession.EXPIRED){
-    window.location.replace(`${PUBLIC_URL}/login`);
+    window.location.replace(`${PUBLIC_URL}/login?login=true&msg=${btoa("Session expired")}`);
     return null;
   }
   return result as User;
