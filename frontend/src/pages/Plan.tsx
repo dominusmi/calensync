@@ -134,7 +134,7 @@ const Plan: React.FC = () => {
         createToast("Transaction confirmed, verifying your subscription", MessageKind.Info);
         while(iteration < 3){
           await verifyTransactionId(user!.transaction_id);
-          let updatedUser = await getLoggedUser();
+          let updatedUser = await getLoggedUser() as User;
           if(updatedUser.subscription_id !== null){
             setUser(updatedUser);
             return
