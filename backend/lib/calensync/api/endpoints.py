@@ -14,7 +14,7 @@ import starlette.responses
 
 from calensync import dataclass
 import calensync.sqs
-from calensync.api.common import ApiError, RedirectResponse
+from calensync.api.common import ApiError, RedirectResponse, encode_query_message
 from calensync.api.service import verify_valid_sync_rule, run_initial_sync
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
 from calensync.database.utils import DatabaseSession
@@ -139,6 +139,7 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
     email_db = EmailDB.get_or_none(email=email)
     if state_db.user is not None:
         if email_db is None:
+            logger.info(f"Added email {email} for user {state_db.user}")
             EmailDB(email=email, user=state_db.user).save_new()
         elif email_db is not None:
             # what would this mean? The email is already registered, but with another user?
@@ -156,7 +157,7 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
         with db.atomic():
             create_session_and_user(state_db, email)
         return RedirectResponse(location=f"{get_frontend_env()}/dashboard",
-                                cookie={"authorization": state_db.session_id})
+                                cookie={"authorization": str(state_db.session_id)})
 
     else:
         if state_db.user is None:

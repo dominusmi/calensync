@@ -1,17 +1,30 @@
-import datetime
-from unittest.mock import patch, MagicMock
-import uuid
+import os
+from unittest.mock import patch
 
 import pytest
 
 from calensync.api import endpoints
 from calensync.api.common import ApiError
-from calensync.api.endpoints import process_calendars, delete_sync_rule
+from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env
 from calensync.api.service import received_webhook
-from calensync.database.model import Event, SyncRule
-from calensync.dataclass import CalendarStateEnum
+from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
+import os
+from unittest.mock import patch
+
+import pytest
+
+from calensync.api import endpoints
+from calensync.api.common import ApiError
+from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env
+from calensync.api.service import received_webhook
+from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB
+from calensync.tests.fixtures import *
+from calensync.utils import utcnow
+
+os.environ["FRONTEND"] = "http://test.com"
+os.environ["ENV"] = "test"
 
 class TestWebhook:
     @staticmethod
@@ -164,3 +177,71 @@ class TestGetSyncRules:
         assert len(rules) == 2
         assert rules[0]["source"] == "platform1"
         assert rules[0]["destination"] == "platform2"
+
+
+class TestGetOauthToken:
+    @staticmethod
+    def test_new_user_through_add_account(db):
+        with (
+            patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
+            patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
+            patch("calensync.api.endpoints.get_google_email") as get_google_email,
+            patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            user_db = User(tos=utcnow()).save_new()
+            state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.ADD_GOOGLE_ACCOUNT, user=user_db).save_new()
+            email = "test@test.com"
+            get_google_email.return_value = email
+            credentials_to_dict.return_value = {"email": email}
+            get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+
+            assert (email_db := EmailDB.get_or_none(email=email)) is not None
+            assert email_db.user == user_db
+            assert OAuthState.get_or_none(id=state_db.id) is None
+
+    @staticmethod
+    def test_normal_login(db):
+        with (
+            patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
+            patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
+            patch("calensync.api.endpoints.get_google_email") as get_google_email,
+            patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            email = "test@test.com"
+            user_db = User(tos=utcnow()).save_new()
+            EmailDB(email=email, user=user_db).save_new()
+            state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.GOOGLE_SSO).save_new()
+            get_google_email.return_value = email
+            credentials_to_dict.return_value = {"email": email}
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+
+            assert OAuthState.get_or_none(id=state_db.id) is None
+            assert result.location == f"{get_frontend_env()}/dashboard"
+            assert result.cookie is not None
+            assert (authorization := result.cookie.get("authorization")) is not None
+            assert isinstance(authorization, str)
+
+    @staticmethod
+    def test_login_user_doesnt_exist(db):
+        with (
+            patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
+            patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
+            patch("calensync.api.endpoints.get_google_email") as get_google_email,
+            patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            email = "test@test.com"
+            state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.GOOGLE_SSO).save_new()
+            get_google_email.return_value = email
+            credentials_to_dict.return_value = {"email": email}
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+
+            assert EmailDB.get_or_none(email=email)
+            assert OAuthState.get_or_none(id=state_db.id) is None
+
+            assert result.location == f"{get_frontend_env()}/dashboard"
+            assert result.cookie is not None
+            assert (authorization := result.cookie.get("authorization")) is not None
+            assert isinstance(authorization, str)
