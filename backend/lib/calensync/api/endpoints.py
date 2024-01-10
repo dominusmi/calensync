@@ -145,8 +145,8 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
             if email_db.user_id != state_db.user_id:
                 logger.error(
                     f"EmailDB {email_db.id} already exists but is associated with user {email_db.user_id}. New request for user {state_db.user_id}")
-                msg = base64.b64encode(f"The email {email} is already associated with another user. ".encode() +
-                                       f"Please contact support@calensync.live if you believe there is an error".encode())
+                msg = encode_query_message(f"The email {email} is already associated with another user. "
+                                           f"Please contact support@calensync.live if you believe there is an error")
                 return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
             else:
                 # email exists and is already associated with same user so do nothing
@@ -159,6 +159,11 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
                                 cookie={"authorization": state_db.session_id})
 
     else:
+        if state_db.user is None:
+            logger.error(f"State {state_db} had no user and wasn't login, shouldn't happen")
+            msg = encode_query_message("The flow did not terminate properly, please go to the login page and try again")
+            return RedirectResponse(location=f"{get_frontend_env()}/login?error_msg={msg}")
+
         account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
         if account is None:
             account = CalendarAccount(credentials=credentials_dict, user=state_db.user, key=email)

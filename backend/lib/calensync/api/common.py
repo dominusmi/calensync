@@ -122,3 +122,7 @@ class ApiError(Exception):
 
 def number_of_days_to_sync_in_advance() -> int:
     return 5 if is_local() else 30
+
+
+def encode_query_message(msg: str) -> str:
+    return base64.b64encode(msg.encode()).decode()
