@@ -44,7 +44,7 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
     }
 
     return (
-        <div className="container-sm card my-2 my-sm-4 py-4 shadow-sm rounded border-0 template account-row">
+        <div className="container-sm card my-1 my-sm-2 py-3 shadow-sm rounded border-0 template account-row">
             { isLoading && 
                 <LoadingOverlay/>
             }
