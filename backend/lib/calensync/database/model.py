@@ -179,9 +179,9 @@ class OAuthState(BaseModel):
     tos = peewee.BooleanField(null=True)
 
 
-class Session(UUIDBaseModel):
+class Session(BaseModel):
     user = ForeignKeyField(User, null=True)
-    session_id = UUIDField(null=True, unique=True)
+    session_id = UUIDField(null=True, unique=True, default=uuid.uuid4)
 
 
 MODELS = [Session, OAuthState, SyncRule, Calendar, CalendarAccount, User]
