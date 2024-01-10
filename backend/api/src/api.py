@@ -71,8 +71,11 @@ def get__prepare_google_calendar_oauth(authorization: Annotated[Union[str, None]
     todo: only signin/signup or also for calendar?
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        return prepare_calendar_oauth(user, db, boto3.Session())
+        if authorization:
+            user = verify_session(authorization)
+            return prepare_calendar_oauth(user, db, boto3.Session())
+        else:
+            return prepare_calendar_oauth_without_user(db, boto3.Session())
 
 
 @app.get('/accounts')
