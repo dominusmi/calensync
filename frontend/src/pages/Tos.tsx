@@ -271,21 +271,11 @@ const Tos: React.FC = () => {
                 </div>
                 <div className="p-4">
 
-                    <p>The Privacy Policy can be found at <a
-                        href="https://calensync.live/privacy">calensync.live/privacy</a>. By accepting these terms and conditions,
-                        you also accept the privacy policy. </p>
+                    <p>
+                        The Privacy Policy can be found at <a href="https://calensync.live/privacy">calensync.live/privacy</a>.  
+                        By accepting these terms and conditions, you also accept the privacy policy. 
+                    </p>
                 </div>
-                { isConnected && 
-                <div id="section-form">
-                    <hr className="border-2 my-4" />
-                    <div className="form-check my-2">
-                        <input type="checkbox" className="form-check-input" checked={isChecked} onChange={handleCheckboxChange} />
-                        <label className="form-check-label">I have read and I accept the Terms and
-                            Conditions described on this page</label>
-                    </div>
-                    <button className="btn btn-primary" onClick={acceptTos}>Submit</button>
-                </div>
-                }
             </div>
         </Layout>
     );
