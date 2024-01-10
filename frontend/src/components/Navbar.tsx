@@ -5,10 +5,12 @@ import { optimisticIsConnected, logout, getLocalSession } from '../utils/session
 import { PUBLIC_URL } from '../utils/const';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import LoadingOverlay from './LoadingOverlay';
 
 const NavBar: React.FC<{ verify_session?: boolean }> = ({ verify_session = true }) => {
   const { t } = useTranslation();
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (verify_session) {
@@ -19,12 +21,16 @@ const NavBar: React.FC<{ verify_session?: boolean }> = ({ verify_session = true 
   }, [])
 
   function handleLogout() {
-    logout().then(() => window.location.href = `/login`)
+    setIsLoading(true);
+    logout().then(() => {
+      window.location.href = `/login`
+    }).finally(() => setIsLoading(false))
     localStorage.removeItem('session-id');
   }
 
   return (
     <Navbar expand="md" className="hero py-2 hero-navbar d-flex justify-content-center">
+      { isLoading && <LoadingOverlay/>}
       <Container className='container px-xxl-0 col-xxl-8'>
         <Navbar.Brand href={`${PUBLIC_URL}/`}> <img
           src={`${PUBLIC_URL}/logo.png`}
