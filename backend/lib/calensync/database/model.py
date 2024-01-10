@@ -99,6 +99,9 @@ class EmailDB(BaseModel):
     email = peewee.CharField()
     user = peewee.ForeignKeyField(User, backref='emails')
 
+    class Meta:
+        table_name = "email"
+
 
 class CalendarAccount(UUIDBaseModel):
     user = ForeignKeyField(User, backref='accounts')
