@@ -83,6 +83,7 @@ class User(UUIDBaseModel):
     transaction_id = CharField(null=True, default=None)
     subscription_id = CharField(null=True, default=None)
     marketing = peewee.BooleanField(default=True)
+    email = CharField(null=True)
 
     @staticmethod
     def from_email(email: str) -> User:
