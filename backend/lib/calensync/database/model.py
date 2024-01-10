@@ -175,7 +175,7 @@ class OAuthState(BaseModel):
     user = ForeignKeyField(User, null=True)
     state = CharField()
     kind = EnumField(enum=OAuthKind)
-    session_id = UUIDField(null=True)
+    session_id = UUIDField(null=True, default=uuid.uuid4)
     tos = peewee.BooleanField(null=True)
 
 
