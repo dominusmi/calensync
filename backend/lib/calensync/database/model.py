@@ -133,6 +133,10 @@ class Calendar(UUIDBaseModel):
     def is_read_only(self) -> bool:
         return "@group.v.calendar.google.com" in self.platform_id
 
+    class Meta:
+        constraints = [peewee.SQL('UNIQUE (platform_id, account_id)')]
+
+
 
 class Event(BaseModel):
     calendar = ForeignKeyField(Calendar,
