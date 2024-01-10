@@ -184,4 +184,4 @@ class Session(BaseModel):
     session_id = UUIDField(null=True, unique=True, default=uuid.uuid4)
 
 
-MODELS = [Session, OAuthState, SyncRule, Calendar, CalendarAccount, User]
+MODELS = [Session, OAuthState, EmailDB, SyncRule, Calendar, CalendarAccount, User]
