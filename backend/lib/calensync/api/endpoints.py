@@ -139,7 +139,7 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
     email_db = EmailDB.get_or_none(email=email)
     if state_db.user is not None:
         if email_db is None:
-            logger.info(f"Added email {email} for user {state_db.user}")
+            logger.info(f"Added email {email_db} for user {state_db.user}")
             EmailDB(email=email, user=state_db.user).save_new()
         elif email_db is not None:
             # what would this mean? The email is already registered, but with another user?
