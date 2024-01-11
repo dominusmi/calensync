@@ -291,3 +291,49 @@ class TestGetOauthToken:
             assert result.cookie is not None
             assert (authorization := result.cookie.get("authorization")) is not None
             assert isinstance(authorization, str)
+
+    @staticmethod
+    def test_email_already_associated(db, user, user2):
+        """
+        Basically a temporary state used with a know email
+        """
+        with (
+            patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
+            patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
+            patch("calensync.api.endpoints.get_google_email") as get_google_email,
+            patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            email = "test@testing.com"
+            EmailDB(email=email, user=user).save_new()
+            EmailDB(email="random", user=user2)
+            state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.ADD_GOOGLE_ACCOUNT, user=user2).save_new()
+            get_google_email.return_value = email
+            credentials_to_dict.return_value = {"email": email}
+
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            assert "error_msg" not in result.location
+            assert User.get_or_none(id=state_db.user_id) is None
+
+    @staticmethod
+    def test_email_already_associated_but_not_state(db, user, user2):
+        """
+        Can happen if a user has created two accounts (mistakenly) and is now trying
+        to add the account of one email, due the other
+        """
+        with (
+            patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
+            patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
+            patch("calensync.api.endpoints.get_google_email") as get_google_email,
+            patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            email = "test@testing.com"
+            EmailDB(email=email, user=user).save_new()
+            EmailDB(email="random", user=user2).save_new()
+            state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.ADD_GOOGLE_ACCOUNT, user=user2).save_new()
+            get_google_email.return_value = email
+            credentials_to_dict.return_value = {"email": email}
+
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            assert "error_msg" in result.location

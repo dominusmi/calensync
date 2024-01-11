@@ -142,9 +142,11 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
     )
 
     delete_state_user = False
-
+    user_id = state_db.user_id
     if email_db is None:
         if state_db.user is None:
+            # this should not be possible
+            logger.error("CODEREF #12497")
             msg = encode_query_message(f"You do not appear to have an account, please signup")
             return RedirectResponse(location=f"{get_frontend_env()}/login?error_msg={msg}")
         else:
@@ -152,12 +154,26 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
 
     else:
         if state_db.user is not None and email_db.user != state_db.user:
-            delete_state_user = True
+            state_user_db = prefetch_get_or_none(
+                User.select().where(User.id == state_db.user_id),
+                EmailDB.select()
+            )
+            if len(state_user_db.emails) > 0:
+                # this means multiple users with at least one email
+                logger.error(f"Users with multiple emails: {email_db.user} and {state_db.user}")
+                msg = encode_query_message(f"This email is already associated. If you believe an error occured, let us know "
+                                           f"by email (support@calensync.live) or with the feedback form.")
+                return RedirectResponse(location=f"{get_frontend_env()}/login?error_msg={msg}")
+            else:
+                # This means the state_db user can be thought as temporary (since it has no emails attached)
+                # therefore we use the email user for the rest of the process
+                user_id = email_db.user_id
+                delete_state_user = True
 
     account_added = False
     account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
     if account is None:
-        account = CalendarAccount(credentials=credentials_dict, user=state_db.user, key=email)
+        account = CalendarAccount(credentials=credentials_dict, user=user_id, key=email)
         account.save()
         account_added = True
 
@@ -169,12 +185,7 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
     if delete_state_user:
         state_db.user.delete_instance()
 
-    if email_db is not None:
-        refresh_calendars(email_db.user, account.uuid, db)
-        user_id = email_db.user_id
-    else:
-        refresh_calendars(state_db.user, account.uuid, db)
-        user_id = state_db.user_id
+    refresh_calendars(user_id, account.uuid, db)
 
     Session(session_id=state_db.session_id, user=user_id).save_new()
 
