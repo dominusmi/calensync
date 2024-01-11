@@ -1,7 +1,6 @@
 import json
 import os
-import unittest.mock
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from typing import List
 
 import pytest
@@ -20,22 +19,11 @@ class Mock:
 os.environ["ENV"] = "test"
 
 
-def _list_function(calendarId, timeMin, timeMax, timeZone, privateExtendedProperty=None):
-    with open("list_events.json") as f:
-        data = json.load(f)
-    execute_object = Mock()
-    execute_object.execute = lambda: data
-    return execute_object
-
-
-def test_google_wrapper_class(db, calendar1):
+def test_google_wrapper_class(db, calendar1, events_fixture):
     event_instances = Mock()
     event_instances.execute = lambda: {"items": []}
-    events = Mock()
-    events.list = _list_function
-    events.instances = lambda *args, **kwargs: event_instances
-    service = Mock()
-    service.events = lambda: events
+    service = MagicMock()
+    service.events.return_value.list.return_value.execute.return_value = events_fixture
 
     wrapper = GoogleCalendarWrapper(calendar_db=calendar1, service=service)
     events = wrapper.get_events()

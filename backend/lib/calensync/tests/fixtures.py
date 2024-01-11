@@ -1,12 +1,16 @@
 import datetime
 import functools
+import json
 import random
 import uuid
+from pathlib import Path
 
+import pytest
 from _pytest.fixtures import fixture
 
 from calensync.database.model import User, CalendarAccount, Calendar
 from calensync.database.utils import reset_db, DatabaseSession
+from calensync.dataclass import GoogleEvent
 
 
 def wrap_reset_db(func):
@@ -84,3 +88,11 @@ def random_dates():
     start = datetime.datetime.now() + datetime.timedelta(days=random.randint(0, 15), hours=random.randint(0, 24))
     end = start + datetime.timedelta(hours=random.randint(0, 2), minutes=random.randint(30, 59))
     return start, end
+
+
+@pytest.fixture
+def events_fixture():
+    with open(Path(__file__).parent.joinpath("list_events.json")) as f:
+        data = json.load(f)
+
+    return data
