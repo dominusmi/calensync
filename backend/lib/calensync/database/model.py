@@ -98,7 +98,7 @@ class User(UUIDBaseModel):
 
 
 class EmailDB(BaseModel):
-    email = peewee.CharField()
+    email = peewee.CharField(unique=True)
     user = peewee.ForeignKeyField(User, backref='emails')
 
     class Meta:
