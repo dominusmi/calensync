@@ -174,7 +174,8 @@ def get__whoami(authorization: Annotated[Union[str, None], Cookie()] = None):
         if user.tos is None:
             raise ApiError('', code=309)
         return {"customer_id": user.customer_id, "date_created": user.date_created,
-                "subscription_id": user.subscription_id, "transaction_id": user.transaction_id}
+                "subscription_id": user.subscription_id, "transaction_id": user.transaction_id,
+                "uuid": str(user.uuid)}
 
 
 @app.get('/logout')
