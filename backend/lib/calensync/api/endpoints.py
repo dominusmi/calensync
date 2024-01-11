@@ -142,7 +142,7 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
     )
 
     delete_state_user = False
-    user_id = state_db.user_id
+    user = state_db.user
     if email_db is None:
         if state_db.user is None:
             # this should not be possible
@@ -167,13 +167,13 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
             else:
                 # This means the state_db user can be thought as temporary (since it has no emails attached)
                 # therefore we use the email user for the rest of the process
-                user_id = email_db.user_id
+                user = email_db.user
                 delete_state_user = True
 
     account_added = False
     account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
     if account is None:
-        account = CalendarAccount(credentials=credentials_dict, user=user_id, key=email)
+        account = CalendarAccount(credentials=credentials_dict, user=user, key=email)
         account.save()
         account_added = True
 
@@ -185,9 +185,9 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
     if delete_state_user:
         state_db.user.delete_instance()
 
-    refresh_calendars(user_id, account.uuid, db)
+    refresh_calendars(user, account.uuid, db)
 
-    Session(session_id=state_db.session_id, user=user_id).save_new()
+    Session(session_id=state_db.session_id, user=user).save_new()
 
     redirect = f"{get_frontend_env()}/dashboard"
     if account_added:

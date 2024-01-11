@@ -10,7 +10,7 @@ from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oau
 from calensync.api.service import received_webhook
 from calensync.calendar import EventsModificationHandler
 from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB, Session
-from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty
+from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty, GoogleCalendar
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
 import os
@@ -204,8 +204,11 @@ class TestGetOauthToken:
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
             patch("calensync.api.endpoints.get_google_email") as get_google_email,
             patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
-            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+            patch("calensync.api.endpoints.get_google_calendars") as get_google_calendars,
+            patch("calensync.api.endpoints.google") as google,
         ):
+            get_google_calendars.return_value = [GoogleCalendar(kind="123", id="321")]
+
             # check for bad select getting first email instead of where clause
             useless = User(tos=utcnow()).save_new()
             EmailDB(email="123", user=useless).save_new()
@@ -230,8 +233,11 @@ class TestGetOauthToken:
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
             patch("calensync.api.endpoints.get_google_email") as get_google_email,
             patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
-            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+            patch("calensync.api.endpoints.google") as google,
+            patch("calensync.api.endpoints.get_google_calendars") as get_google_calendars
         ):
+            get_google_calendars.return_value = [GoogleCalendar(kind="123", id="321")]
+
             email = "test@test.com"
             user_db = User(tos=utcnow()).save_new()
             EmailDB(email=email, user=user_db).save_new()
@@ -253,8 +259,11 @@ class TestGetOauthToken:
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
             patch("calensync.api.endpoints.get_google_email") as get_google_email,
             patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
-            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+            patch("calensync.api.endpoints.google") as google,
+            patch("calensync.api.endpoints.get_google_calendars") as get_google_calendars
         ):
+            get_google_calendars.return_value = [GoogleCalendar(kind="123", id="321")]
+
             email = "test@test.com"
             state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.GOOGLE_SSO).save_new()
             get_google_email.return_value = email
@@ -274,8 +283,11 @@ class TestGetOauthToken:
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
             patch("calensync.api.endpoints.get_google_email") as get_google_email,
             patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
-            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+            patch("calensync.api.endpoints.google") as google,
+            patch("calensync.api.endpoints.get_google_calendars") as get_google_calendars
         ):
+            get_google_calendars.return_value = [GoogleCalendar(kind="123", id="321")]
+
             email = "test@testing.com"
             EmailDB(email=email, user=user).save_new()
             state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.GOOGLE_SSO).save_new()
@@ -302,8 +314,11 @@ class TestGetOauthToken:
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
             patch("calensync.api.endpoints.get_google_email") as get_google_email,
             patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
-            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+            patch("calensync.api.endpoints.google") as google,
+            patch("calensync.api.endpoints.get_google_calendars") as get_google_calendars
         ):
+            get_google_calendars.return_value = [GoogleCalendar(kind="123", id="321")]
+
             email = "test@testing.com"
             EmailDB(email=email, user=user).save_new()
             EmailDB(email="random", user=user2)
@@ -326,6 +341,7 @@ class TestGetOauthToken:
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
             patch("calensync.api.endpoints.get_google_email") as get_google_email,
             patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
+            patch("calensync.api.endpoints.google") as google,
             patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
         ):
             email = "test@testing.com"
