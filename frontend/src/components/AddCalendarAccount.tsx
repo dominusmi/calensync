@@ -1,13 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import API from '../utils/const';
 import axios from 'axios';
 import { getLocalSession } from '../utils/session';
+import LoadingOverlay from './LoadingOverlay';
+import { createToast } from './Toast';
+import { MessageKind } from '../utils/common';
 
 const AddCalendarAccount: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
-
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const addAccount = async () => {
         try {
+            setIsLoading(true);
             const response = await axios.get(
                 `${API}/google/calendar/prepare`,
                 {
@@ -19,11 +23,15 @@ const AddCalendarAccount: React.FC<{ isConnected: boolean }> = ({ isConnected })
             window.location.href = data.url;
         } catch (error) {
             console.error('Error fetching calendars:', error);
+            createToast("An error occured while trying to add the account", MessageKind.Error);
+        } finally {
+            setIsLoading(false);
         }
     }
 
     return (
         <div className="align-items-center justify-content-center mx-sm-4 mt-2 mb-2 centered">
+            { isLoading && <LoadingOverlay/> }
             <div className='d-flex flex-column'>
                 <div className="mx-auto" id="google-sso">
                     <button className="gsi-material-button" onClick={addAccount}>
