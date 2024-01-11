@@ -353,7 +353,7 @@ class GoogleCalendarWrapper:
                     fetched_events = c.get_events(
                         private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
                     )
-                    c.events_handler.delete([e.id for e in fetched_events])
+                    c.events_handler.delete(fetched_events)
                     c.delete_events()
                     counter_event_changed += 1
 

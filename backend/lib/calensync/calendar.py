@@ -104,5 +104,12 @@ class EventsModificationHandler:
     def update(self, events: List[Tuple[GoogleEvent, GoogleEvent]]):
         self.events_to_update.extend(events)
 
-    def delete(self, events: List[str]):
-        self.events_to_delete.extend(events)
+    def delete(self, events: List[GoogleEvent]):
+        """
+        We want to be absolutely sure that the events we delete have a source id.
+        This should already have been checked, but 2 independent checks are better than 1
+        """
+        for e in events:
+            if e.extendedProperties.private.get(EventExtendedProperty.get_source_id_key()) is None:
+                continue
+            self.events_to_delete.append(e.id)

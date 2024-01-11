@@ -466,7 +466,7 @@ def delete_sync_rule(user: User, sync_id: str):
         end_date=datetime.datetime.now() + datetime.timedelta(days=35),
         showDeleted=False
     )
-    destination_wrapper.events_handler.delete([e.id for e in events])
+    destination_wrapper.events_handler.delete(events)
     destination_wrapper.delete_events()
 
     # check if calendar has other rule sync rules, otherwise delete watch
