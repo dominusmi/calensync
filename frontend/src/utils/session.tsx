@@ -26,6 +26,7 @@ export async function whoami() {
     }
     else if (!response.ok) {
       removeLocalSession()
+      await logout()
       if (response.status == 403) {
         return VerifySession.EXPIRED;
       }
