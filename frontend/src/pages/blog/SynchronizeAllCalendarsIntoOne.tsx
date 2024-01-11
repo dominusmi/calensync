@@ -40,7 +40,7 @@ const HowToSynchronizeCalendars: React.FC = () => {
             {ts("s1_3")}
             </p>
             <div className='centered'>
-              <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={() => window.location.href = "/login"}>{ts("cta")}</button>
+              <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={() => window.location.href = "/dashboard"}>{ts("cta")}</button>
             </div>
             <h2 className="mt-5 pt-3">
             {ts("h2")}
@@ -92,7 +92,7 @@ const HowToSynchronizeCalendars: React.FC = () => {
             </p>
             <img className='container my-2' src="/assets/blog/all-done.png" alt='Screenshot of dashboard with all accounts connected'></img>
             <div className='centered'>
-              <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={() => window.location.href = "/login"}>{ts("cta")}</button>
+              <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={() => window.location.href = "/dashboard"}>{ts("cta")}</button>
             </div>
           </section>
         </article>

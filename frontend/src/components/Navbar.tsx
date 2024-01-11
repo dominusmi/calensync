@@ -23,7 +23,7 @@ const NavBar: React.FC<{ verify_session?: boolean }> = ({ verify_session = true 
   function handleLogout() {
     setIsLoading(true);
     logout().then(() => {
-      window.location.href = `/login`
+      window.location.href = `/dashboard`
     }).finally(() => setIsLoading(false))
     localStorage.removeItem('session-id');
   }

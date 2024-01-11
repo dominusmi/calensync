@@ -66,7 +66,7 @@ const HowToSynchronizeCalendars: React.FC = () => {
               {ts("calensync.headline")}
             </p>
             <ol>
-              <li><a href="/login">{ts("calensync.steps.1_span")}</a> {ts("calensync.steps.1_text")}</li>
+              <li><a href="/dashboard">{ts("calensync.steps.1_span")}</a> {ts("calensync.steps.1_text")}</li>
               <li>{ts("calensync.steps.2")}</li>
               <li>{ts("calensync.steps.3")}</li>
             </ol>
