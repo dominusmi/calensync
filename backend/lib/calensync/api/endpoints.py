@@ -163,7 +163,7 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
                 logger.error(f"Users with multiple emails: {email_db.user} and {state_db.user}")
                 msg = encode_query_message(f"This email is already associated. If you believe an error occured, let us know "
                                            f"by email (support@calensync.live) or with the feedback form.")
-                return RedirectResponse(location=f"{get_frontend_env()}/login?error_msg={msg}")
+                return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
             else:
                 # This means the state_db user can be thought as temporary (since it has no emails attached)
                 # therefore we use the email user for the rest of the process
