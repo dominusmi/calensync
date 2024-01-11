@@ -203,7 +203,6 @@ def prepare_calendar_oauth_without_user(db: peewee.Database, session):
         oauth_state = OAuthState(state=state, kind=OAuthKind.ADD_GOOGLE_ACCOUNT, user=user)
         oauth_state.save()
 
-    logger.info(f"Returning new cookie {state}")
     response = starlette.responses.JSONResponse(
         content={"url": authorization_url},
     )
