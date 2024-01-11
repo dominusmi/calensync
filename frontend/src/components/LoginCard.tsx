@@ -48,7 +48,6 @@ const LoginCard: React.FC = () => {
             const tos_string = "1"
             setLoading(true);
             const sessionId = uuidv4();
-            localStorage.setItem('session-id', sessionId);
 
             const response = await fetch(`${API}/google/sso/prepare?tos=${tos_string}`, {
                 method: 'GET',
