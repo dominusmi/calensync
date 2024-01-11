@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { getLocalSession, getLocalUserId } from '../utils/session';
 
 
 interface Window {
@@ -8,7 +9,7 @@ interface Window {
 }
 
 
-const ContactButton: React.FC<{onClick: () => void}> = ({onClick}) => {
+const ContactButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
   return (
     <div
       style={{
@@ -18,18 +19,18 @@ const ContactButton: React.FC<{onClick: () => void}> = ({onClick}) => {
         zIndex: '1000',
       }}
     >
-      <button onClick={onClick} style={{padding: "4px", borderRadius: '15px', backgroundColor: 'rgba(87, 124, 255, 0.3)', borderWidth: '0px'}} className="d-flex btn btn-primary justify-content-center">
-        <img style={{padding: '5px'}} width={'40px'} height={'40px'} src="question.png"></img>
-    </button>
+      <button onClick={onClick} style={{ padding: "4px", borderRadius: '15px', backgroundColor: 'rgba(87, 124, 255, 0.3)', borderWidth: '0px' }} className="d-flex btn btn-primary justify-content-center">
+        <img style={{ padding: '5px' }} width={'40px'} height={'40px'} src="question.png"></img>
+      </button>
     </div>
   );
 };
 
 export const TallyComponent = () => {
   const [tallyReady, setTallyReady] = useState(false);
-  
+
   function showPopup(options: null | any = null) {
-    if(options == null){
+    if (options == null) {
       options = {
         hideTitle: true,
         emoji: {
@@ -38,11 +39,15 @@ export const TallyComponent = () => {
         }
       };
     }
-    if(tallyReady){
+    if (tallyReady) {
       // Initialize Tally popup
+      const userId = getLocalUserId() || "";
+      if (userId != null) {
+        options.hiddenFields = { "user": userId }
+      }
       let win = (window as unknown) as Window;
-      const tallyPopup = new win.Tally.openPopup("nroQgv", options);
       sessionStorage.setItem("feedback-shown", "true");
+      const tallyPopup = new win.Tally.openPopup("nroQgv", options);
     }
   }
 
@@ -61,10 +66,10 @@ export const TallyComponent = () => {
 
   useEffect(() => {
     const feedbackShown = sessionStorage.getItem("feedback-shown");
-    if(feedbackShown != null && feedbackShown === "true"){
+    if (feedbackShown != null && feedbackShown === "true") {
       return
     }
-    else{
+    else {
       // Set up Tally configuration after script has loaded
       showPopup({
         hideTitle: true,
@@ -83,7 +88,7 @@ export const TallyComponent = () => {
 
   return (
     <div id="tally-popup-container">
-      {<ContactButton onClick={() => showPopup()}/>}
+      {<ContactButton onClick={() => showPopup()} />}
     </div>
   );
 };
