@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional
+from typing import Optional, Tuple
 
 import peewee
 
@@ -13,7 +13,7 @@ from calensync.utils import is_local, utcnow
 logger = get_logger(__file__)
 
 
-def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_calendar_uuid: str) -> Optional[str]:
+def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_calendar_uuid: str) ->Tuple[Calendar, Calendar]:
     if source_calendar_uuid == destination_calendar_uuid:
         raise ApiError("Source and destination cannot be the same", code=400)
 

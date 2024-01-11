@@ -77,11 +77,19 @@ class EventExtendedProperty(BaseModel):
 
     @classmethod
     def for_source_id(cls, value):
-        return cls(key="source-id", value=value)
+        return cls(key=cls.get_source_id_key(), value=value)
 
     @classmethod
     def for_calendar_id(cls, value):
-        return cls(key="calendar-id", value=value)
+        return cls(key=cls.get_calendar_id_key(), value=value)
+
+    @staticmethod
+    def get_source_id_key():
+        return "source-id"
+
+    @staticmethod
+    def get_calendar_id_key():
+        return "calendar-id"
 
 
 class EventStatus(Enum):

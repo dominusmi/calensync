@@ -5,6 +5,7 @@ import json
 import os
 
 import boto3
+import peewee
 
 
 def get_env():
@@ -23,7 +24,7 @@ def get_client_secret(session=None):
         return json.loads(response['SecretString'])
 
 
-def get_scopes():
+def get_profile_and_calendar_scopes():
     return [
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",
@@ -32,7 +33,7 @@ def get_scopes():
     ]
 
 
-def get_google_sso_scopes():
+def get_profile_scopes():
     return [
         "https://www.googleapis.com/auth/userinfo.email",
         # "https://www.googleapis.com/auth/userinfo.profile",
@@ -76,3 +77,11 @@ def get_product_id():
 
 def datetime_to_google_time(dt: datetime.datetime) -> str:
     return dt.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z"
+
+
+def prefetch_get_or_none(query, *sub_queries):
+    result = peewee.prefetch(query.limit(1), *sub_queries)
+    if result:
+        return result[0]
+    else:
+        return None

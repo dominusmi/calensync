@@ -7,23 +7,55 @@ from typing import Optional, List
 
 import boto3
 import google.oauth2.credentials
-import google_auth_oauthlib.flow
+
+from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
 import peewee
 import starlette.responses
-from google.oauth2.credentials import Credentials
 
 from calensync import dataclass
 import calensync.sqs
-from calensync.api.common import ApiError, RedirectResponse
+from calensync.api.common import ApiError, RedirectResponse, encode_query_message
 from calensync.api.service import verify_valid_sync_rule, run_initial_sync
-from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule
+from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
 from calensync.database.utils import DatabaseSession
 from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty, PostSyncRuleEvent
-from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
 from calensync.log import get_logger
 import calensync.paddle as paddle
 from calensync.session import create_session_and_user
-from calensync.utils import get_client_secret, get_scopes, get_google_sso_scopes, is_local, utcnow, get_paddle_token
+from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
+    get_paddle_token
+
+if os.environ.get("MOCK_GOOGLE"):
+    from unittest.mock import MagicMock
+    from calensync.dataclass import GoogleCalendar
+
+    google_auth_oauthlib = MagicMock()
+
+    # todo: mock refresh_calendars
+    # todo: mock Credentials.from_authorized_user_info
+    # todo: mock get_google_calendars
+    get_google_email = lambda x: f"{uuid.uuid4()}@test.com"
+
+    google.oauth2.credentials.Credentials = MagicMock()
+    google.oauth2.credentials.Credentials.from_authorized_user_info.return_value = MagicMock()
+    get_google_calendars = lambda credentials: [GoogleCalendar(kind="", id=str(uuid.uuid4()))]
+
+
+    def new_flow(*args, **kwargs):
+        flow_manager = MagicMock()
+        state = str(uuid.uuid4())
+        flow_manager.authorization_url.return_value = (f"http://127.0.0.1:8000/oauth2?state={state}", state)
+        # make it return something that has a to_dict() function that returns a dictionary of credentials
+        flow_manager.credentials.to_json.return_value = json.dumps({"whatever": "dummy"})
+
+        return flow_manager
+
+
+    google_auth_oauthlib.flow.Flow.from_client_config = new_flow
+
+
+else:
+    import google_auth_oauthlib.flow
 
 logger = get_logger(__file__)
 
@@ -40,10 +72,10 @@ def verify_session(session_id: Optional[str]) -> User:
     """ Returns the claimed email """
 
     if session_id is None:
-        raise ApiError("Credentials missing", 403)
+        raise ApiError("Credentials missing", 404)
 
     elif session_id == 'null':
-        raise ApiError("Credentials missing", 403)
+        raise ApiError("Credentials missing", 404)
 
     query = peewee.prefetch(Session.select().where(Session.session_id == session_id).limit(1), User.select())
     result: List[Session] = list(query)
@@ -80,10 +112,9 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
     logger.info(f"OAuth of kind {state_db.kind}, is_login: {is_login}")
 
     if is_login:
-        # add calendar event
-        scopes = get_google_sso_scopes()
+        scopes = get_profile_scopes()
     else:
-        scopes = get_scopes()
+        scopes = get_profile_and_calendar_scopes()
 
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         client_secret,
@@ -104,13 +135,36 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
 
     credentials_dict = credentials_to_dict(credentials)
 
+    # if email does not exist yet, we create it and attach it to the user
+    email_db = EmailDB.get_or_none(email=email)
+    if state_db.user is not None:
+        if email_db is None:
+            logger.info(f"Added email {email_db} for user {state_db.user}")
+            EmailDB(email=email, user=state_db.user).save_new()
+        elif email_db is not None:
+            # what would this mean? The email is already registered, but with another user?
+            if email_db.user_id != state_db.user_id:
+                logger.error(
+                    f"EmailDB {email_db.id} already exists but is associated with user {email_db.user_id}. New request for user {state_db.user_id}")
+                msg = encode_query_message(f"The email {email} is already associated with another user. "
+                                           f"Please contact support@calensync.live if you believe there is an error")
+                return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
+            else:
+                # email exists and is already associated with same user so do nothing
+                pass
+
     if is_login:
         with db.atomic():
-            create_session_and_user(email, state_db)
+            create_session_and_user(state_db, email)
         return RedirectResponse(location=f"{get_frontend_env()}/dashboard",
-                                cookie={"authorization": state_db.session_id})
+                                cookie={"authorization": str(state_db.session_id)})
 
     else:
+        if state_db.user is None:
+            logger.error(f"State {state_db} had no user and wasn't login, shouldn't happen")
+            msg = encode_query_message("The flow did not terminate properly, please go to the login page and try again")
+            return RedirectResponse(location=f"{get_frontend_env()}/login?error_msg={msg}")
+
         account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
         if account is None:
             account = CalendarAccount(credentials=credentials_dict, user=state_db.user, key=email)
@@ -125,15 +179,41 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
                 raise ApiError("This calendar is associated with another account, please contact support if you need "
                                "help.")
 
+        if Session.select(Session.id).join(User).where(User.id == state_db.user_id).count() < 1:
+            Session(user=state_db.user, session_id=state_db.session_id).save_new()
         state_db.delete_instance()
         refresh_calendars(state_db.user, account.uuid, db)
         return RedirectResponse(f"{get_frontend_env()}/dashboard")
 
 
+def prepare_calendar_oauth_without_user(db: peewee.Database, session):
+    flow = google_auth_oauthlib.flow.Flow.from_client_config(
+        get_client_secret(session),
+        scopes=get_profile_and_calendar_scopes())
+
+    flow.redirect_uri = f'{get_host_env()}/oauth2'
+
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        approval_prompt='force'
+    )
+
+    with db.atomic():
+        user = User(tos=utcnow()).save_new()
+        oauth_state = OAuthState(state=state, kind=OAuthKind.ADD_GOOGLE_ACCOUNT, user=user)
+        oauth_state.save()
+
+    response = starlette.responses.JSONResponse(
+        content={"url": authorization_url},
+    )
+    response.set_cookie("authorization", oauth_state.session_id, secure=True, httponly=True)
+    return response
+
+
 def prepare_calendar_oauth(user: User, db: peewee.Database, session):
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         get_client_secret(session),
-        scopes=get_scopes())
+        scopes=get_profile_and_calendar_scopes())
 
     flow.redirect_uri = f'{get_host_env()}/oauth2'
 
@@ -153,7 +233,7 @@ def prepare_google_sso_oauth(tos: int, db: peewee.Database, boto3_session):
     Function used for login / signup purposes. Creates and anonymous OAuthState model
     object to keep track of the state reason.
     """
-    scopes = get_google_sso_scopes()
+    scopes = get_profile_scopes()
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         get_client_secret(boto3_session),
         scopes=scopes)
@@ -218,7 +298,7 @@ def refresh_calendars(user: User, account_id: str, db: peewee.Database):
     if account is None:
         raise ApiError("Account doesn't exist or user doesn't have access to it")
 
-    credentials = Credentials.from_authorized_user_info(account.credentials)
+    credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(account.credentials)
     calendars = get_google_calendars(credentials)
 
     calendars_db: List[Calendar] = list(
@@ -229,13 +309,18 @@ def refresh_calendars(user: User, account_id: str, db: peewee.Database):
     )
 
     new_calendars_db = []
-    platform_ids = {cdb.platform_id for cdb in calendars_db}
+    platform_ids = {cdb.platform_id: cdb for cdb in calendars_db}
     for calendar in calendars:
+        name = (calendar.summary or calendar.id)
         if calendar.id in platform_ids:
+            calendar_db: Calendar = platform_ids[calendar.id]
+            if calendar_db.name != name:
+                calendar_db.name = name
+                calendar_db.update()
             continue
 
         new_calendars_db.append(
-            Calendar(account=account, platform_id=calendar.id)
+            Calendar(account=account, platform_id=calendar.id, name=name)
         )
 
     with db.atomic():
@@ -353,7 +438,6 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
     with db.atomic():
         source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
         sync_rule = SyncRule(source=source, destination=destination, private=payload.private).save_new()
-        return
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
         if is_local():
@@ -382,7 +466,7 @@ def delete_sync_rule(user: User, sync_id: str):
         end_date=datetime.datetime.now() + datetime.timedelta(days=35),
         showDeleted=False
     )
-    destination_wrapper.events_handler.delete([e.id for e in events])
+    destination_wrapper.events_handler.delete(events)
     destination_wrapper.delete_events()
 
     # check if calendar has other rule sync rules, otherwise delete watch

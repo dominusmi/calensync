@@ -24,15 +24,14 @@ const LoginCard: React.FC = () => {
     const { t } = useTranslation();
     const [isLoading, setLoading] = useState(false);
     const [isLogin, setIsLogin] = useState(false);
-    const [acceptedTos, setAcceptedTos] = useState(false);
-
-
-    const checkedTos = (e: any) => {
-        setAcceptedTos(e.target.checked);
-    };
 
     useEffect(() => {
-    }, [acceptedTos])
+        checkSessionOrRedirect();
+        if (window.location.search.includes("login")) {
+            setIsLogin(true);
+        }
+    }, [])
+
 
     const checkSessionOrRedirect = async () => {
         if (await optimisticIsConnected()) {
@@ -40,29 +39,15 @@ const LoginCard: React.FC = () => {
         }
     }
 
-    useEffect(() => {
-        checkSessionOrRedirect()
-    }, [])
-
     const onGoogleLogin = async () => {
         await handleGoogleLogin()
     }
 
     const handleGoogleLogin = async () => {
         try {
-            let tos_string = "0";
-            if (!isLogin) {
-                if (!acceptedTos) {
-                    createToast("You must accept the Terms of Service", MessageKind.Error)
-                    return
-                }
-                else{
-                    tos_string = "1"
-                }
-            }
+            const tos_string = "1"
             setLoading(true);
             const sessionId = uuidv4();
-            localStorage.setItem('session-id', sessionId);
 
             const response = await fetch(`${API}/google/sso/prepare?tos=${tos_string}`, {
                 method: 'GET',
@@ -98,12 +83,6 @@ const LoginCard: React.FC = () => {
                             <p className="text-muted">Sign up and get started in 30 seconds!</p>
                         </div>
                         <div className="row text-center">
-                            <div className="mx-4 form-check px-4">
-                                <input className="form-check-input" type="checkbox" value="" id='tos-checkbox' onChange={checkedTos} />
-                                <label className="form-check-label text-start">
-                                    I have read and accept the <a href='/tos'>Terms of Service</a>
-                                </label>
-                            </div>
                             <div className="mx-auto mt-2 mb-4" id="google-sso-signup">
                                 <button className="gsi-material-button" onClick={onGoogleLogin}>
                                     <div className="gsi-material-button-state"></div>
@@ -129,6 +108,10 @@ const LoginCard: React.FC = () => {
                                         <span className="gsi-material-button-contents">Sign up with Google</span>
                                     </div>
                                 </button>
+                                <div className='mx-auto mt-1 small'>
+                                    <p className="mt-2 mb-0 small">By clicking this button, you acknowledge <br />you have read and accepted the <br />
+                                        <a className='text-break' href='/tos'>Terms of Service</a> and the <a href='/privacy'>privacy policy</a></p>
+                                </div>
                             </div>
                         </div>
                         <p>Already have an account? <a href="" onClick={(e) => { e.preventDefault(); e.stopPropagation(); clickLogin() }}>Login</a></p>

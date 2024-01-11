@@ -71,8 +71,11 @@ def get__prepare_google_calendar_oauth(authorization: Annotated[Union[str, None]
     todo: only signin/signup or also for calendar?
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        return prepare_calendar_oauth(user, db, boto3.Session())
+        if authorization:
+            user = verify_session(authorization)
+            return prepare_calendar_oauth(user, db, boto3.Session())
+        else:
+            return prepare_calendar_oauth_without_user(db, boto3.Session())
 
 
 @app.get('/accounts')
@@ -171,7 +174,8 @@ def get__whoami(authorization: Annotated[Union[str, None], Cookie()] = None):
         if user.tos is None:
             raise ApiError('', code=309)
         return {"customer_id": user.customer_id, "date_created": user.date_created,
-                "subscription_id": user.subscription_id, "transaction_id": user.transaction_id}
+                "subscription_id": user.subscription_id, "transaction_id": user.transaction_id,
+                "uuid": str(user.uuid)}
 
 
 @app.get('/logout')

@@ -77,17 +77,32 @@ class UUIDBaseModel(BaseModel):
 
 
 class User(UUIDBaseModel):
-    email = CharField(unique=True)
     is_admin = peewee.BooleanField(default=False)
     tos = peewee.DateTimeField(default=None, null=True)
     customer_id = CharField(null=True, default=None)
     transaction_id = CharField(null=True, default=None)
     subscription_id = CharField(null=True, default=None)
     marketing = peewee.BooleanField(default=True)
+    # deprecated
+    email = CharField(null=True)
 
     @staticmethod
     def from_email(email: str) -> User:
-        return User.get(email=email)
+        emails = list(
+            EmailDB.select(User).join(User)
+            .where(EmailDB.email == email)
+            .limit(1)
+        )
+        if emails:
+            return emails[0].user
+
+
+class EmailDB(BaseModel):
+    email = peewee.CharField(unique=True)
+    user = peewee.ForeignKeyField(User, backref='emails')
+
+    class Meta:
+        table_name = "email"
 
 
 class CalendarAccount(UUIDBaseModel):
@@ -119,6 +134,10 @@ class Calendar(UUIDBaseModel):
     @property
     def is_read_only(self) -> bool:
         return "@group.v.calendar.google.com" in self.platform_id
+
+    class Meta:
+        constraints = [peewee.SQL('UNIQUE (platform_id, account_id)')]
+
 
 
 class Event(BaseModel):
@@ -158,13 +177,13 @@ class OAuthState(BaseModel):
     user = ForeignKeyField(User, null=True)
     state = CharField()
     kind = EnumField(enum=OAuthKind)
-    session_id = UUIDField(null=True)
+    session_id = UUIDField(null=True, default=uuid.uuid4)
     tos = peewee.BooleanField(null=True)
 
 
-class Session(UUIDBaseModel):
+class Session(BaseModel):
     user = ForeignKeyField(User, null=True)
-    session_id = UUIDField(null=True, unique=True)
+    session_id = UUIDField(null=True, unique=True, default=uuid.uuid4)
 
 
-MODELS = [Session, OAuthState, SyncRule, Calendar, CalendarAccount, User]
+MODELS = [Session, OAuthState, EmailDB, SyncRule, Calendar, CalendarAccount, User]

@@ -67,7 +67,7 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                 <div className="d-flex-lg align-items-center my-2 my-lg-2">
                     <div className='row my-md-2'><span className="badge bg-secondary text-light ms-3 col-3 col-lg-1" style={{ maxWidth: "94px" }}>Draft</span></div>
                     <div className="btn-group pe-lg-2 col-12 col-lg-3 form-floating my-lg-0 my-2">
-                        <select className="form-select" id="floatingSelect" aria-label="Floating label select example" ref={sourceRef} >
+                        <select className="form-select" aria-label="Floating label select example" ref={sourceRef} >
                             {accounts.map((a) => {
                                 return (
                                     <React.Fragment key={`${a.uuid}-source-fragment`}>
@@ -84,7 +84,7 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                         <label className='' >Source calendar</label>
                     </div>
                     <div className="btn-group pe-lg-2 col-12 col-lg-3 form-floating my-lg-0 my-2">
-                        <select className="form-select" id="floatingSelect" aria-label="Floating label select example" ref={destinationRef} >
+                        <select className="form-select" aria-label="Floating label select example" ref={destinationRef} >
                             {accounts.map((a) => {
                                 return (
                                     <React.Fragment key={`${a.uuid}-destination-fragment`}>

@@ -55,8 +55,12 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     getLoggedUser().then((user) => {
-      setUser(user);
-      setSessionChecked(true)
+      if(user == null){
+        setSessionChecked(true);
+      }else {
+        setUser(user);
+        setSessionChecked(true)
+      }
     })
   }, [])
 
@@ -78,22 +82,20 @@ const Dashboard: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    let isMounted = true;
+    console.log(sessionChecked, user)
+    if(sessionChecked && user != null){
+      const fetchData = async () => {
+        const accountsData = await fetchAccountsData();
+        setAccounts(accountsData);
+        setAccountsLoaded(true);
+        setLoading(false);
+      };
 
-    const fetchData = async () => {
-      const accountsData = await fetchAccountsData();
-      setAccounts(accountsData);
-      setAccountsLoaded(true);
-    };
-
-    if (loading) {
       fetchData();
+    }else if(sessionChecked && user == null){
+      setLoading(false);
     }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [loading, sessionChecked]);
+  }, [sessionChecked, user]);
 
   useEffect(() => {
     if (accountsLoaded === true && accounts.length == 0 && showOnboarding === false) {
@@ -134,11 +136,8 @@ const Dashboard: React.FC = () => {
     for (let i = 0; i < accounts.length; i++) {
       accounts[i].calendars = await fetchCalendars(accounts[i].uuid);
     }
-    setLoading(false);
     return accounts; // Assuming the data is an array of Account objects
   };
-
-  const [calendars, setCalendars] = useState<Array<Calendar>>([]);
 
   async function fetchCalendars(uuid: string) {
     try {
@@ -161,6 +160,9 @@ const Dashboard: React.FC = () => {
     <Layout onlyRequired={true}>
       <div className='container col-xxl-8'>
         {loading && <LoadingOverlay />}
+        { user == null && 
+          <div className='alert alert-light py-2 mt-4 border-2'>Already have an account? <a href='login?login=true'>Login</a></div>        
+        }
         {user != null && user.customer_id == null &&
           // show trial message
           <div className='container-sm p-0 my-2'>
@@ -207,7 +209,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         }
-        <AddCalendarAccount />
+        <AddCalendarAccount isConnected={user != null} />
         {accounts && accounts.map((account) => (
           <AccountCard key={account.uuid} account={account} />
         ))}

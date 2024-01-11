@@ -1,12 +1,13 @@
 import API, { PUBLIC_URL } from "./const";
 
 export enum VerifySession {
-  INVALID = 1,
+  MISSING = 1,
   TOS = 2,
-  LOGIN = 3
+  EXPIRED = 3
 }
 
 export interface User {
+  uuid: string;
   customer_id: string | null;
   date_created: Date;
   subscription_id: string | null;
@@ -24,12 +25,11 @@ export async function whoami() {
       return VerifySession.TOS;
     }
     else if (!response.ok) {
-      if (response.status == 403) {
-        removeLocalSession()
-        return VerifySession.LOGIN;
-      }
       removeLocalSession()
-      return VerifySession.INVALID;
+      if (response.status == 403) {
+        return VerifySession.EXPIRED;
+      }
+      return VerifySession.MISSING;
     }
     let user = await response.json();
     
@@ -39,7 +39,7 @@ export async function whoami() {
 
   } catch (error) {
     removeLocalSession()
-    return VerifySession.INVALID;
+    return VerifySession.MISSING;
   }
 }
 
@@ -55,6 +55,7 @@ export async function optimisticIsConnected(): Promise<boolean> {
 }
 
 export function setLocalSession(user: User) {
+  sessionStorage.setItem("user-id", user.uuid)
   return sessionStorage.setItem("session-id", JSON.stringify(user))
 }
 
@@ -63,18 +64,25 @@ export function getLocalSession() {
   return sessionStorage.getItem("session-id")
 }
 
+export function getLocalUserId(){
+  return sessionStorage.getItem("user-id")
+}
+
 export function removeLocalSession() {
+  sessionStorage.removeItem("user-id")
   sessionStorage.removeItem("session-id")
 }
 
-export const getLoggedUser: () => Promise<User> = async () => {
+export const getLoggedUser: () => Promise<User | null> = async () => {
   let result = await whoami();
   if (result == VerifySession.TOS) {
     window.location.href = `${PUBLIC_URL}/tos?logged=true`;
     result = {date_created: new Date()}
-  } else if (result == VerifySession.LOGIN || result == VerifySession.INVALID) {
-    window.location.replace(`${PUBLIC_URL}/login`);
-    result = {date_created: new Date()} as User;
+  } else if (result == VerifySession.MISSING) {
+    return null;
+  }else if (result == VerifySession.EXPIRED){
+    window.location.replace(`${PUBLIC_URL}/login?login=true&msg=${btoa("Session expired")}`);
+    return null;
   }
   return result as User;
 }

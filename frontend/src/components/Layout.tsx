@@ -42,6 +42,10 @@ const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyReq
             if (err !== null) {
                 createToast(atob(err), MessageKind.Error);
             }
+            let info = urlParams.get('msg');
+            if (info !== null) {
+                createToast(atob(info), MessageKind.Info);
+            }
             consumeMessages();
         }
     }, [toastReady]);

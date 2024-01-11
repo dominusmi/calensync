@@ -353,7 +353,7 @@ class GoogleCalendarWrapper:
                     fetched_events = c.get_events(
                         private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
                     )
-                    c.events_handler.delete([e.id for e in fetched_events])
+                    c.events_handler.delete(fetched_events)
                     c.delete_events()
                     counter_event_changed += 1
 
@@ -385,9 +385,12 @@ class GoogleCalendarWrapper:
         sync_rules = list(get_sync_rules_from_source(self.calendar_db))
         counter_event_changed = 0
 
-        logger.info(f"Found {len(sync_rules)} active SyncRules for {self.calendar_db.uuid}")
+        logger.info(f"Found {(n_sync := len(sync_rules))} active SyncRules for {self.calendar_db.uuid}")
+        if n_sync == 0:
+            return 0
 
         events = self.get_updated_events()
+
         logger.info(f"Updated events: {[e.id for e in events]}")
         if not events:
             logger.info(f"No updates found for channel {self.calendar_db.channel_id}")

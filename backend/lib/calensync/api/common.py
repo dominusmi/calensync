@@ -1,3 +1,4 @@
+import base64
 import dataclasses
 import json
 import traceback
@@ -8,9 +9,7 @@ import pydantic
 import starlette.responses
 from fastapi.responses import JSONResponse, HTMLResponse
 
-
 from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEventV2
-
 
 from calensync.encode import AugmentedEncoder, ISerializable
 from calensync.log import get_logger
@@ -21,6 +20,7 @@ logger = get_logger(__file__)
 
 def with_proxy_event(f):
     """ Transforms the event into APIGatewayProxyEventV2"""
+
     @wraps(f)
     def wrapper(event, context):
         event = APIGatewayProxyEventV2(event)
@@ -30,7 +30,8 @@ def with_proxy_event(f):
 
 
 def json_response(content, status_code: int = 200):
-    return HTMLResponse(json.dumps(content, cls=AugmentedEncoder), headers={"Content-Type": "application/json"}, status_code=status_code)
+    return HTMLResponse(json.dumps(content, cls=AugmentedEncoder), headers={"Content-Type": "application/json"},
+                        status_code=status_code)
 
 
 def format_response(f):
@@ -97,7 +98,7 @@ class RedirectResponse(Exception):
     def to_response(self):
         response = starlette.responses.Response(
             content="""<html>If you are not redirected, <a href="{}">please click here</a></html>"""
-                .format(self.location),
+            .format(self.location),
             headers={"location": self.location},
             status_code=302
         )
@@ -122,3 +123,7 @@ class ApiError(Exception):
 
 def number_of_days_to_sync_in_advance() -> int:
     return 5 if is_local() else 30
+
+
+def encode_query_message(msg: str) -> str:
+    return base64.b64encode(msg.encode()).decode()

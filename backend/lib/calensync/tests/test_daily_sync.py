@@ -20,9 +20,9 @@ class MockEvent:
 
 
 def test_get_users_query_with_active_calendar(user, account1, calendar1, calendar2):
-    user2 = User(email="tejkj").save_new()
+    user2 = User().save_new()
     user2_account = CalendarAccount(key="whauh", credentials="", user=user2).save_new()
-    user2_calendar = Calendar(account=user2_account, platform_id="platform2", name="name2", active=False).save_new()
+    Calendar(account=user2_account, platform_id="platform2_1", name="name2", active=False).save_new()
 
     query = get_users_query_with_active_sync_rules()
     result = list(query)
