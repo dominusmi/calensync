@@ -13,7 +13,7 @@ const Home: React.FC = () => {
 
 
     const signup = () => {
-        window.location.href = `${PUBLIC_URL}/login`;
+        window.location.href = `${PUBLIC_URL}/dashboard`;
     }
 
     async function setupPaddle() {
