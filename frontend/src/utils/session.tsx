@@ -7,6 +7,7 @@ export enum VerifySession {
 }
 
 export interface User {
+  uuid: string;
   customer_id: string | null;
   date_created: Date;
   subscription_id: string | null;
@@ -54,6 +55,7 @@ export async function optimisticIsConnected(): Promise<boolean> {
 }
 
 export function setLocalSession(user: User) {
+  sessionStorage.setItem("user-id", user.uuid)
   return sessionStorage.setItem("session-id", JSON.stringify(user))
 }
 
@@ -62,7 +64,12 @@ export function getLocalSession() {
   return sessionStorage.getItem("session-id")
 }
 
+export function getLocalUserId(){
+  return sessionStorage.getItem("user-id")
+}
+
 export function removeLocalSession() {
+  sessionStorage.removeItem("user-id")
   sessionStorage.removeItem("session-id")
 }
 
