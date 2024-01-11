@@ -84,7 +84,7 @@ class User(UUIDBaseModel):
     subscription_id = CharField(null=True, default=None)
     marketing = peewee.BooleanField(default=True)
     # deprecated
-    email = CharField(null=True)
+    email = CharField(null=True, default=None)
 
     @staticmethod
     def from_email(email: str) -> User:

@@ -9,7 +9,7 @@ from calensync.api.common import ApiError
 from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env
 from calensync.api.service import received_webhook
 from calensync.calendar import EventsModificationHandler
-from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB
+from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB, Session
 from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
@@ -206,6 +206,10 @@ class TestGetOauthToken:
             patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
             patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
         ):
+            # check for bad select getting first email instead of where clause
+            useless = User(tos=utcnow()).save_new()
+            EmailDB(email="123", user=useless).save_new()
+
             user_db = User(tos=utcnow()).save_new()
             state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.ADD_GOOGLE_ACCOUNT, user=user_db).save_new()
             email = "test@test.com"
@@ -216,6 +220,8 @@ class TestGetOauthToken:
             assert (email_db := EmailDB.get_or_none(email=email)) is not None
             assert email_db.user == user_db
             assert OAuthState.get_or_none(id=state_db.id) is None
+            assert (session := Session.get_or_none(session_id=state_db.session_id)) is not None
+            assert session.user == user_db
 
     @staticmethod
     def test_normal_login(db):
@@ -255,9 +261,32 @@ class TestGetOauthToken:
             credentials_to_dict.return_value = {"email": email}
             result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
 
-            assert EmailDB.get_or_none(email=email)
+            assert EmailDB.get_or_none(email=email) is not None
             assert OAuthState.get_or_none(id=state_db.id) is None
 
+            assert result.location.startswith(f"{get_frontend_env()}/dashboard")
+            assert result.cookie is not None
+
+    @staticmethod
+    def test_signin_statedb_user_is_none_email_exists(db, user):
+        with (
+            patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
+            patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
+            patch("calensync.api.endpoints.get_google_email") as get_google_email,
+            patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            email = "test@testing.com"
+            EmailDB(email=email, user=user).save_new()
+            state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.GOOGLE_SSO).save_new()
+            get_google_email.return_value = email
+            credentials_to_dict.return_value = {"email": email}
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+
+            assert EmailDB.get_or_none(email=email) is not None
+            assert OAuthState.get_or_none(id=state_db.id) is None
+            assert (session := Session.get(session_id=state_db.session_id)) is not None
+            assert session.user_id == user.id
             assert result.location == f"{get_frontend_env()}/dashboard"
             assert result.cookie is not None
             assert (authorization := result.cookie.get("authorization")) is not None

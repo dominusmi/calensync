@@ -23,7 +23,7 @@ from calensync.log import get_logger
 import calensync.paddle as paddle
 from calensync.session import create_session_and_user
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
-    get_paddle_token
+    get_paddle_token, prefetch_get_or_none
 
 if os.environ.get("MOCK_GOOGLE"):
     from unittest.mock import MagicMock
@@ -96,6 +96,94 @@ def credentials_to_dict(credentials: google.oauth2.credentials.Credentials):
     return json.loads(credentials.to_json())
 
 
+def handle_signin_signup(state_db: OAuthState, email: str):
+    email_db = EmailDB.get_or_none(email=email)
+    session_id = state_db.session_id
+    cookie = {"authorization": str(session_id)}
+    state_db.delete_instance()
+    logger.info(f"State DB session id: {session_id}")
+
+    if state_db.user is None:
+        if email_db is None:
+            # error case
+            logger.info("Login #1")
+            user = User(tos=utcnow()).save_new()
+            EmailDB(email=email, user=user).save_new()
+            Session(session_id=session_id, user=user).save_new()
+            return RedirectResponse(location=f"{get_frontend_env()}/dashboard", cookie=cookie)
+        else:
+            logger.info("Login #2")
+            # normal case, create session and return
+            Session(session_id=session_id, user=email_db.user).save_new()
+            return RedirectResponse(location=f"{get_frontend_env()}/dashboard", cookie=cookie)
+
+    else:
+        if email_db is None:
+            logger.info("Login #3")
+            EmailDB(email=email, user=state_db.user).save_new()
+            Session(session_id=session_id, user=state_db.user).save_new()
+            return RedirectResponse(location=f"{get_frontend_env()}/dashboard", cookie=cookie)
+        else:
+            if email_db.user == state_db.user:
+                logger.info("Login #4")
+                Session(session_id=session_id, user=email_db.user).save_new()
+                return RedirectResponse(location=f"{get_frontend_env()}/dashboard", cookie=cookie)
+            else:
+                logger.info("Login #5")
+                # return email-based session
+                Session(session_id=session_id, user=email_db.user).save_new()
+                return RedirectResponse(location=f"{get_frontend_env()}/dashboard", cookie=cookie)
+
+
+def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict, db):
+    email_db = prefetch_get_or_none(
+        EmailDB.select().where(EmailDB.email == email),
+        User.select()
+    )
+
+    delete_state_user = False
+
+    if email_db is None:
+        if state_db.user is None:
+            msg = encode_query_message(f"You do not appear to have an account, please signup")
+            return RedirectResponse(location=f"{get_frontend_env()}/login?error_msg={msg}")
+        else:
+            EmailDB(email=email, user=state_db.user).save()
+
+    else:
+        if state_db.user is not None and email_db.user != state_db.user:
+            delete_state_user = True
+
+    account_added = False
+    account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
+    if account is None:
+        account = CalendarAccount(credentials=credentials_dict, user=state_db.user, key=email)
+        account.save()
+        account_added = True
+
+    else:
+        account.credentials = credentials_dict
+        account.save()
+
+    state_db.delete_instance()
+    if delete_state_user:
+        state_db.user.delete_instance()
+
+    if email_db is not None:
+        refresh_calendars(email_db.user, account.uuid, db)
+        user_id = email_db.user_id
+    else:
+        refresh_calendars(state_db.user, account.uuid, db)
+        user_id = state_db.user_id
+
+    Session(session_id=state_db.session_id, user=user_id).save_new()
+
+    redirect = f"{get_frontend_env()}/dashboard"
+    if account_added:
+        redirect = f"{redirect}?added_calendar=true"
+    return RedirectResponse(location=redirect)
+
+
 def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Database, session):
     state_db: OAuthState = OAuthState.get_or_none(state=state)
     if state_db is None:
@@ -135,55 +223,10 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
 
     credentials_dict = credentials_to_dict(credentials)
 
-    # if email does not exist yet, we create it and attach it to the user
-    email_db = EmailDB.get_or_none(email=email)
-    if state_db.user is not None:
-        if email_db is None:
-            logger.info(f"Added email {email_db} for user {state_db.user}")
-            EmailDB(email=email, user=state_db.user).save_new()
-        elif email_db is not None:
-            # what would this mean? The email is already registered, but with another user?
-            if email_db.user_id != state_db.user_id:
-                logger.error(
-                    f"EmailDB {email_db.id} already exists but is associated with user {email_db.user_id}. New request for user {state_db.user_id}")
-                msg = encode_query_message(f"The email {email} is already associated with another user. "
-                                           f"Please contact support@calensync.live if you believe there is an error")
-                return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
-            else:
-                # email exists and is already associated with same user so do nothing
-                pass
-
     if is_login:
-        with db.atomic():
-            create_session_and_user(state_db, email)
-        return RedirectResponse(location=f"{get_frontend_env()}/dashboard",
-                                cookie={"authorization": str(state_db.session_id)})
-
+        return handle_signin_signup(state_db, email)
     else:
-        if state_db.user is None:
-            logger.error(f"State {state_db} had no user and wasn't login, shouldn't happen")
-            msg = encode_query_message("The flow did not terminate properly, please go to the login page and try again")
-            return RedirectResponse(location=f"{get_frontend_env()}/login?error_msg={msg}")
-
-        account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
-        if account is None:
-            account = CalendarAccount(credentials=credentials_dict, user=state_db.user, key=email)
-            account.save()
-
-        else:
-            if account.user == state_db.user:
-                account.credentials = credentials_dict
-                account.save()
-            else:
-                logger.error("Same calendar account key, but different user")
-                raise ApiError("This calendar is associated with another account, please contact support if you need "
-                               "help.")
-
-        if Session.select(Session.id).join(User).where(User.id == state_db.user_id).count() < 1:
-            Session(user=state_db.user, session_id=state_db.session_id).save_new()
-        state_db.delete_instance()
-        refresh_calendars(state_db.user, account.uuid, db)
-        return RedirectResponse(f"{get_frontend_env()}/dashboard")
+        return handle_add_calendar(state_db, email, credentials_dict, db)
 
 
 def prepare_calendar_oauth_without_user(db: peewee.Database, session):
