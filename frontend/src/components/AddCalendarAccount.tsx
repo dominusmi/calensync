@@ -33,7 +33,7 @@ const AddCalendarAccount: React.FC<{ isConnected: boolean, glowing: boolean }> =
         <div className="align-items-center justify-content-center mx-sm-4 mt-2 mb-2 centered">
             { isLoading && <LoadingOverlay/> }
             <div className='d-flex flex-column'>
-                <div className="mx-auto" id="google-sso">
+                <div className="mx-auto my-3" id="google-sso">
                     <button className={`gsi-material-button ${glowing ? 'glowing' : ''}`} onClick={addAccount}>
                         <div className="gsi-material-button-state"></div>
                         <div className="gsi-material-button-content-wrapper">
