@@ -182,7 +182,7 @@ const Dashboard: React.FC = () => {
               <div className="break py-2"></div>
               <button className={`btn btn-primary ${(accounts.length >= 2 && rules.length == 0) ? 'glowing' : ''}`} onClick={() => setOpenDraft(true)}>Add Synchronization</button>
             </div>
-            {rules.length == 0 && accounts && accounts.length > 1 &&
+            {rules.length == 0 && accounts && accounts.length > 0 &&
               <div className="alert alert-secondary" role="alert">
                 You have no synchronizations yet, create the first one!
               </div>
@@ -204,7 +204,7 @@ const Dashboard: React.FC = () => {
         {accounts && accounts.length === 1 &&
           <div>
             <div className="alert alert-success" role="alert">
-              <span className='fw-bold'> One account connected ✅ </span>
+              <span className='fw-bold'> One account connected ✅ </span><br/>
               87% of people connect a second account, go ahead and click the button below
             </div>
           </div>
