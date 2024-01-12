@@ -50,7 +50,7 @@ jobs:
         with:
           python-version: '3.9'
           cache: 'pip' # caching pip dependencies
-          cache-dependency-path: backend/python/requirements.txt
+          cache-dependency-path: backend/lib/requirements.txt
 
       - name: Install dependencies
         working-directory: backend/lib
