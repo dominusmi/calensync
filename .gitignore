@@ -19,3 +19,4 @@ build
 /backend/docker/vol/
 /backend/api/src/calensync/
 /backend/awslambda/**/calensync/
+/sql/*
