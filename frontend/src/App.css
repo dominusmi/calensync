@@ -160,6 +160,22 @@ input[type='checkbox'] {
   border-color: black;
 }
 
+@keyframes glowing {
+  0% {
+    box-shadow: 0 0 0px #577CFF;
+  }
+  50% {
+    box-shadow: 0 0 10px #577CFF;
+  }
+  100% {
+    box-shadow: 0 0 0px #577CFF;
+  }
+}
+
+.glowing {
+  animation: glowing 1500ms infinite;
+}
+
 .gsi-material-button {
   -moz-user-select: none;
   -webkit-user-select: none;

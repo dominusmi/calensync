@@ -40,7 +40,7 @@ const OnboardingModal: React.FC<{ onClose: () => void }> = React.memo(({ onClose
 });
 
 const Dashboard: React.FC = () => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
@@ -55,9 +55,10 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     getLoggedUser().then((user) => {
-      if(user == null){
+      if (user == null) {
         setSessionChecked(true);
-      }else {
+      } else {
+        setLoading(true);
         setUser(user);
         setSessionChecked(true)
       }
@@ -82,8 +83,7 @@ const Dashboard: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    console.log(sessionChecked, user)
-    if(sessionChecked && user != null){
+    if (sessionChecked && user != null) {
       const fetchData = async () => {
         const accountsData = await fetchAccountsData();
         setAccounts(accountsData);
@@ -92,7 +92,7 @@ const Dashboard: React.FC = () => {
       };
 
       fetchData();
-    }else if(sessionChecked && user == null){
+    } else if (sessionChecked && user == null) {
       setLoading(false);
     }
   }, [sessionChecked, user]);
@@ -111,7 +111,7 @@ const Dashboard: React.FC = () => {
         method: 'GET'
       }
     )
-    if(!response.ok){
+    if (!response.ok) {
       createToast("Couldn't load sync rules", MessageKind.Error)
       return
     }
@@ -160,8 +160,8 @@ const Dashboard: React.FC = () => {
     <Layout onlyRequired={true}>
       <div className='container col-xxl-8'>
         {loading && <LoadingOverlay />}
-        { user == null && 
-          <div className='alert alert-light py-2 mt-4 border-2'>Already have an account? <a href='login?login=true'>Login</a></div>        
+        {user == null &&
+          <div className='alert alert-light py-2 mt-4 border-2'>Already have an account? <a href='login?login=true'>Login</a></div>
         }
         {user != null && user.customer_id == null &&
           // show trial message
@@ -180,19 +180,11 @@ const Dashboard: React.FC = () => {
             <div className='d-md-flex align-items-center justify-content-center d-flex-row my-3 px-0'>
               <span className='display-5 me-auto mb-2 mb-sm-0'>Synchronize Calendars</span>
               <div className="break py-2"></div>
-              <button className='btn btn-primary' onClick={() => setOpenDraft(true)}>Add Synchronization</button>
+              <button className={`btn btn-primary ${(accounts.length >= 2 && rules.length == 0) ? 'glowing' : ''}`} onClick={() => setOpenDraft(true)}>Add Synchronization</button>
             </div>
             {rules.length == 0 && accounts && accounts.length > 1 &&
               <div className="alert alert-secondary" role="alert">
                 You have no synchronizations yet, create the first one!
-              </div>
-            }
-            {accounts && accounts.length === 1 && rules.length == 0 &&
-              <div>
-                <div className="alert alert-success" role="alert">
-                  <span className='fw-bold'> One account connected ✅ </span>
-                  You can now create your first synchronization, or add other Google accounts as needed
-                </div>
               </div>
             }
             {rules.length > 0 && rules.map((rule) => <SyncRuleRow key={rule.uuid} rule={rule} />)
@@ -209,7 +201,15 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         }
-        <AddCalendarAccount isConnected={user != null} />
+        {accounts && accounts.length === 1 &&
+          <div>
+            <div className="alert alert-success" role="alert">
+              <span className='fw-bold'> One account connected ✅ </span>
+              87% of people connect a second account, go ahead and click the button below
+            </div>
+          </div>
+        }
+        <AddCalendarAccount isConnected={user != null} glowing={accounts != null && accounts.length < 2}/>
         {accounts && accounts.map((account) => (
           <AccountCard key={account.uuid} account={account} />
         ))}

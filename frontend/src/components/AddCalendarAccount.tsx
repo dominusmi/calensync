@@ -7,7 +7,7 @@ import LoadingOverlay from './LoadingOverlay';
 import { createToast } from './Toast';
 import { MessageKind } from '../utils/common';
 
-const AddCalendarAccount: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
+const AddCalendarAccount: React.FC<{ isConnected: boolean, glowing: boolean }> = ({ isConnected, glowing }) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const addAccount = async () => {
         try {
@@ -34,7 +34,7 @@ const AddCalendarAccount: React.FC<{ isConnected: boolean }> = ({ isConnected })
             { isLoading && <LoadingOverlay/> }
             <div className='d-flex flex-column'>
                 <div className="mx-auto" id="google-sso">
-                    <button className="gsi-material-button" onClick={addAccount}>
+                    <button className={`gsi-material-button ${glowing ? 'glowing' : ''}`} onClick={addAccount}>
                         <div className="gsi-material-button-state"></div>
                         <div className="gsi-material-button-content-wrapper">
                             <div className="gsi-material-button-icon" >
