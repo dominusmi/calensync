@@ -139,7 +139,7 @@ class Calendar(UUIDBaseModel):
         constraints = [peewee.SQL('UNIQUE (platform_id, account_id)')]
 
 
-
+# deprecated
 class Event(BaseModel):
     calendar = ForeignKeyField(Calendar,
                                help_text="Calendar of this particular copy of the event (not the original calendar)",
