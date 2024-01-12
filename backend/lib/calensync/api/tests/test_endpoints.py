@@ -72,28 +72,10 @@ class TestDeleteSyncRule:
             patch("calensync.api.endpoints.GoogleCalendarWrapper") as gwrapper,
             patch("calensync.gwrapper.delete_event") as delete_event
         ):
-            start, end = random_dates()
-
-            rule2 = SyncRule(source=calendar2, destination=calendar1, private=True).save_new()
-            source2_1 = Event(calendar=calendar2, event_id=uuid4(), start=start, end=end).save_new()
-            copy2_1to1 = Event(calendar=calendar1, event_id=uuid4(), start=start, end=end, source=source2_1,
-                               source_rule=rule2).save_new()
-
             rule = SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
-            source1_1 = Event(calendar=calendar1, event_id=uuid4(), start=start, end=end).save_new()
-            copy1_1to2 = Event(calendar=calendar2, event_id=uuid4(), start=start, end=end, source=source1_1,
-                               source_rule=rule).save_new()
-
-            source1_2 = Event(calendar=calendar1, event_id=uuid4(), start=start, end=end).save_new()
-            copy1_2to2 = Event(calendar=calendar2, event_id=uuid4(), start=start, end=end, source=source1_2,
-                               source_rule=rule).save_new()
-
-            source2_1 = Event(calendar=calendar2, event_id=uuid4(), start=start, end=end).save_new()
+            rule2 = SyncRule(source=calendar2, destination=calendar1, private=True).save_new()
 
             added_events: List[GoogleEvent] = []
-
-            def mock_events_handler_delete(events):
-                added_events.extend(events)
 
             def mock_delete_events(wrapper_instance):
                 assert len(wrapper_instance.return_value.events_handler.events_to_delete) == 1
@@ -130,18 +112,11 @@ class TestDeleteSyncRule:
             patch("calensync.api.endpoints.GoogleCalendarWrapper") as gwrapper,
             patch("calensync.gwrapper.delete_event") as delete_event
         ):
-            start, end = random_dates()
 
             rule = SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
-            source1_1 = Event(calendar=calendar1, event_id=uuid4(), start=start, end=end).save_new()
-            copy1_1to2 = Event(calendar=calendar2, event_id=uuid4(), start=start, end=end, source=source1_1,
-                               source_rule=rule).save_new()
 
             calendar3 = Calendar(account=account1, platform_id="platform3", name="name3", active=False).save_new()
             rule2 = SyncRule(source=calendar1, destination=calendar3, private=False).save_new()
-
-            # needed to avoid integrity error
-            gwrapper.return_value.delete_events.side_effect = lambda: copy1_1to2.delete_instance()
 
             delete_sync_rule(user, str(rule.uuid))
 
@@ -153,10 +128,6 @@ class TestDeleteSyncRule:
     def test_user_doesnt_have_permission(user, calendar1, calendar2):
         with patch("calensync.gwrapper.GoogleCalendarWrapper") as gwrapper:
             rule = SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
-            start, end = random_dates()
-            source1_1 = Event(calendar=calendar1, event_id=uuid4(), start=start, end=end).save_new()
-            copy1_1to2 = Event(calendar=calendar2, event_id=uuid4(), start=start, end=end, source=source1_1,
-                               source_rule=rule).save_new()
 
             new_user = User(email="test2@test.com").save_new()
             with pytest.raises(ApiError):
