@@ -1,28 +1,17 @@
 import os
 from typing import List
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-import pytest
+import starlette.responses
 
 from calensync.api import endpoints
 from calensync.api.common import ApiError
 from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env
 from calensync.api.service import received_webhook
 from calensync.calendar import EventsModificationHandler
-from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB, Session
-from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty, GoogleCalendar
-from calensync.tests.fixtures import *
-from calensync.utils import utcnow
-import os
-from unittest.mock import patch
-
-import pytest
-
-from calensync.api import endpoints
-from calensync.api.common import ApiError
-from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env
-from calensync.api.service import received_webhook
 from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB
+from calensync.database.model import Session
+from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty, GoogleCalendar
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
 
@@ -353,3 +342,36 @@ class TestGetOauthToken:
 
             result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
             assert "error_msg" in result.location
+
+    @staticmethod
+    def test_add_account_user_did_not_give_permissions(db, user, user2):
+        """
+        If a new user has a permission issue when adding an account, we need to
+        delete the authorization cookie otherwise they may get stuck in a "Session expired" loop
+        """
+        with (
+            patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
+            patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
+            patch("calensync.api.endpoints.get_google_email") as get_google_email,
+            patch("calensync.api.endpoints.credentials_to_dict") as credentials_to_dict,
+            patch("calensync.api.endpoints.google") as google,
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            def _raise_warning():
+                raise Warning("error")
+
+            flow = google_auth_oauthlib.flow.Flow.from_client_config.return_value
+            flow.fetch_token.side_effect = lambda *args, **kwargs: _raise_warning()
+
+            email = "test@testing.com"
+            state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.ADD_GOOGLE_ACCOUNT, user=user).save_new()
+            get_google_email.return_value = email
+            credentials_to_dict.return_value = {"email": email}
+
+            response = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            assert isinstance(response, starlette.responses.Response)
+            assert "Max-Age=-1" in response.headers["set-cookie"]
+
+            EmailDB(email=email, user=user).save_new()
+            response = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            assert "Max-Age=-1" not in response.headers.get("set-cookie", "")

@@ -223,8 +223,11 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
     try:
         flow.fetch_token(code=code)
     except Warning:
-        msg = base64.b64encode("You must give all the requested permissions")
-        return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
+        msg = encode_query_message("You must give all the requested permissions")
+        response = RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}").to_response()
+        if len(state_db.user.emails) == 0:
+            response.set_cookie(key="authorization", max_age=-1)
+        return response
 
     credentials = flow.credentials
     logger.info(credentials) if is_local() else None
