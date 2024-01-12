@@ -1,7 +1,7 @@
 // Home.tsx
 
 import React, { useEffect, useState } from 'react';
-import { getLoggedUser, User } from '../utils/session'; // Adjust the import path
+import { getLocalSession, getLoggedUser, User } from '../utils/session'; // Adjust the import path
 import API, { PUBLIC_URL } from '../utils/const';
 import AccountCard, { Account, Calendar } from '../components/AccountCard';
 import LoadingOverlay from '../components/LoadingOverlay';
@@ -54,9 +54,14 @@ const Dashboard: React.FC = () => {
 
 
   useEffect(() => {
+    if( getLocalSession() != null && !sessionChecked){
+      setLoading(true);
+    }
+
     getLoggedUser().then((user) => {
       if (user == null) {
         setSessionChecked(true);
+        setLoading(false);
       } else {
         setLoading(true);
         setUser(user);
