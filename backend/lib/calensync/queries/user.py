@@ -2,7 +2,8 @@ import datetime
 
 import peewee
 
-from calensync.database.model import User, CalendarAccount, Calendar
+from calensync.database.model import User, CalendarAccount, Calendar, EmailDB
+from calensync.utils import utcnow
 
 
 def get_users_with_no_calendar_account(min_date_created: datetime.datetime):
@@ -35,3 +36,25 @@ def get_users_with_only_one_calendar_active(min_date_created: datetime.datetime)
         .distinct()
     )
     return query
+
+
+def get_users_with_one_account_no_rules(min_date_created: datetime.datetime = utcnow() - datetime.timedelta(days=30)):
+    subquery = (
+        CalendarAccount
+        .select(CalendarAccount.user)
+        .join(User)
+        .where(User.date_created >= min_date_created)
+        .group_by(CalendarAccount.user)
+        .having(peewee.fn.Count("*") == 1)
+    )
+
+    users = peewee.prefetch(
+        User
+        .select(User.id)
+        .join(CalendarAccount)
+        .where(User.id.in_(subquery))
+        .distinct(),
+        EmailDB.select(EmailDB.email, EmailDB.user)
+    )
+
+    return users
