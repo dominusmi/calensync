@@ -104,19 +104,21 @@ jobs:
         with:
           toolchain: stable
 
-      # Allows to run build and deployment only if backend/frontend files were changed
-#      - uses: dorny/paths-filter@v2
-#        id: filter
-#        with:
-#          filters: |
-#            backend:
-#              - 'backend/**'
-#              - 'samconfig.toml'
-#              - 'template.yaml'
-#            frontend:
-#              - 'frontend/**'
-#              - 'samconfig.toml'
-#              - 'template.yaml'
+#       Allows to run build and deployment only if backend/frontend files were changed
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - '.github/**'
+              - 'backend/**'
+              - 'samconfig.toml'
+              - 'template.yaml'
+            frontend:
+              - '.github/**'
+              - 'frontend/**'
+              - 'samconfig.toml'
+              - 'template.yaml'
 
       - name: Modified directories
         run: |
