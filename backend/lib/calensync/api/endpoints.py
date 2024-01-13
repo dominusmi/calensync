@@ -31,14 +31,14 @@ if os.environ.get("MOCK_GOOGLE"):
 
     google_auth_oauthlib = MagicMock()
 
-    # todo: mock refresh_calendars
-    # todo: mock Credentials.from_authorized_user_info
-    # todo: mock get_google_calendars
     get_google_email = lambda x: f"{uuid.uuid4()}@test.com"
 
     google.oauth2.credentials.Credentials = MagicMock()
     google.oauth2.credentials.Credentials.from_authorized_user_info.return_value = MagicMock()
-    get_google_calendars = lambda credentials: [GoogleCalendar(kind="", id=str(uuid.uuid4()))]
+    get_google_calendars = lambda credentials: [
+        GoogleCalendar(kind="", id=str(uuid.uuid4())),
+        GoogleCalendar(kind="", id=str(uuid.uuid4()))
+    ]
 
 
     def new_flow(*args, **kwargs):
