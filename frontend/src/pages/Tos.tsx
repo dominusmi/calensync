@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { toast } from 'react-toastify';
 import API, { PUBLIC_URL } from '../utils/const';
 import { getLocalSession } from '../utils/session';
-import Toast, { createToast } from '../components/Toast';
+import { createToast } from '../components/Toast';
 import Layout from '../components/Layout';
 import { MessageKind } from '../utils/common';
 
