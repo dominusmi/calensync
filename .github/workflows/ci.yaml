@@ -143,14 +143,14 @@ jobs:
         run: |
           python python/scripts/build_layer.py
 
-#      - name: Deploy Backend
-#        working-directory: backend
-#        if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
-#        run: |
-#          CUSTOM_AWS_PROFILE=""  PARAMS="--force-upload --no-confirm-changeset" make deploy
-#
-#      - name: Deploy Frontend
-#        working-directory: frontend
-#        if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
-#        run: |
-#          npm run deploy:${{GITHUB_ENV}}
+      - name: Deploy Backend
+        working-directory: backend
+        if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          sam deploy --config-env ${{env.ENV}} --no-confirm-changeset 
+
+      - name: Deploy Frontend
+        working-directory: frontend
+        if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          npm run deploy:${{env.ENV}}
