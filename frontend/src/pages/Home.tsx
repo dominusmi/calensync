@@ -6,6 +6,7 @@ import { Paddle, initializePaddle } from '@paddle/paddle-js';
 import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
 import { Accordion, Alert } from 'react-bootstrap';
+import { TestimonialCard } from '../components/TestimonialCard';
 
 const Home: React.FC = () => {
     const { t } = useTranslation();
@@ -50,9 +51,7 @@ const Home: React.FC = () => {
                         </div>
                         <div className="col-lg-6">
                             <h1 className="display-5 fw-bold lh-1 mb-3">{t("home.hero.title")}</h1>
-                            <p className="lead">
-                                {t("home.hero.heading")}
-                            </p>
+                            <h2 className="lead">{t("home.hero.heading")}</h2>
                             <div className="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
                                 <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>{t("home.hero.cta")}</button>
                             </div>
@@ -87,42 +86,45 @@ const Home: React.FC = () => {
                 {paddle &&
                     <PaddlePricing paddle={paddle} isHome={true} />
                 }
-            </div>
-            <div className='container'>
-                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href="/blog/sync-all-google-calendars-into-one">
-                        <p className='text-muted small p-0 m-0'>Blog</p>
-                        <h2>{t("blog_list.sync_all_google_calendars.title")}</h2>
-                        <p className='text-muted'>
-                            {t("blog_list.sync_all_google_calendars.headline")}
-                        </p>
-                    </a>
-                </div>
-                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href="blog/avoid-calendly-conflicts">
-                        <p className='text-muted small p-0 m-0'>Blog</p>
-                        <h2>{t("blog_list.avoid_calendly_conflicts.title")}</h2>
-                        <p className='text-muted'>
-                            {t("blog_list.avoid_calendly_conflicts.headline")}
-                        </p>
-                    </a>
-                </div>
-                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href="/blog/sync-multiple-google-calendars">
-                        <p className='text-muted small p-0 m-0'>Blog</p>
-                        <h2>{t("blog_list.sync_google_calendars.title")}</h2>
-                        <p className='text-muted'>
-                            {t("blog_list.sync_google_calendars.headline")}
-                        </p>
-                    </a>
+                <div className='container'>
+                    <div className="d-grid gap-2 d-md-flex justify-content-center">
+                        <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>{t("home.hero.cta")}</button>
+                    </div>
                 </div>
             </div>
+            <div className='container mt-5 col-xxl-8 col-12'>
+                <div className='row mb-4 centered'>
+                    <div className="feature col">
+                        <h2 className='display-5'>Join hundreds of happy users 🫶</h2>
+                    </div>
+                </div>
+                <div className='row row-cols-1 row-cols-md-2'>
+                    <div className="col-md-6">
+                        {[0, 1, 2].map((idx) => {
+                            return <div className="">
+                                <TestimonialCard t={t} idx={idx}/>
+                            </div>
+                        })
+                        }
+                    </div>
+                    <div className="col-md-6">
+                        {[3, 4, 5].map((idx) => {
+                            return <div className="">
+                                <TestimonialCard t={t} idx={idx}/>
+                            </div>
+                        })
+                        }
+                    </div>
+                </div>
+            </div>
+
+
             <div className='bg-cyan'>
                 <div className='container my-4 py-4'>
                     <div className='col-xxl-8 mx-auto py-4'>
                         <div className='row mb-4 centered'>
                             <div className="feature col">
-                                <h1>F.A.Q.</h1>
+                                <p className='display-5'>F.A.Q.</p>
                             </div>
                         </div>
                         <Accordion>
@@ -151,6 +153,36 @@ const Home: React.FC = () => {
                     <div className='centered'>
                         <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>{t("home.hero.cta")}</button>
                     </div>
+                </div>
+            </div>
+
+            <div className='container'>
+                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
+                    <a className='block-link' href="/blog/sync-all-google-calendars-into-one">
+                        <p className='text-muted small p-0 m-0'>Blog</p>
+                        <h2>{t("blog_list.sync_all_google_calendars.title")}</h2>
+                        <p className='text-muted'>
+                            {t("blog_list.sync_all_google_calendars.headline")}
+                        </p>
+                    </a>
+                </div>
+                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
+                    <a className='block-link' href="blog/avoid-calendly-conflicts">
+                        <p className='text-muted small p-0 m-0'>Blog</p>
+                        <h2>{t("blog_list.avoid_calendly_conflicts.title")}</h2>
+                        <p className='text-muted'>
+                            {t("blog_list.avoid_calendly_conflicts.headline")}
+                        </p>
+                    </a>
+                </div>
+                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
+                    <a className='block-link' href="/blog/sync-multiple-google-calendars">
+                        <p className='text-muted small p-0 m-0'>Blog</p>
+                        <h2>{t("blog_list.sync_google_calendars.title")}</h2>
+                        <p className='text-muted'>
+                            {t("blog_list.sync_google_calendars.headline")}
+                        </p>
+                    </a>
                 </div>
             </div>
         </Layout >

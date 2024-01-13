@@ -9,8 +9,8 @@
 
         },
         "hero": {
-            "title": "No more event conflicts.",
-            "heading": "Sync all your Google calendars together and save yourself trouble of having to reschedule appointments. Make sure no one ever books a meeting when you're already busy.",
+            "title": "Sync your Google Calendars",
+            "heading": "Trusted by hundreds of users to merge their Google calendars together and avoid conflicts.",
             "cta": "Try for free"
         },
         "value": {
@@ -25,7 +25,7 @@
         },
         "faq": {
             "q1": "Will it affect existing events?",
-            "a1": "No, Calensync only creates new events (Blockers) and doesn't ever modify or delete existing events. When these events are modified, their related blocker is also automatically updated",
+            "a1": "No, Calensync only creates new events and doesn't ever modify or delete existing events. If the original event changes, the copies are automatically updated too.",
             "q2": "How many different calendars can I sync together?",
             "a2": "You can sync as many calendars from as many different Google accounts together.",
             "q3": "Is the name of the event and description copied?",
@@ -34,6 +34,38 @@
             "a4": "This slightly depends on Google, but count between 1 second to a maximum of 1 minute.",
             "q5": "Do you save data about my events? and do you resell it or share it?",
             "a5": "We do not save any data about your events, nor do we share it or resell it."
+        }
+    },
+    "testimonials": {
+        "1": {
+            "author": "Jim H.",
+            "title": "Father of three",
+            "message": "My family members all have their own calendars. We created a common calendar and use Calensync to <h3>sync all our calendars</h3> to it."
+        },
+        "4": {
+            "author": "Arjun L.",
+            "title": "University Professor",
+            "message": "My students can book appointments on my calendar directly during specific hours. Unfortunately, on a couple of occasions there were collisions with my personal account or my consultancy account, which means having to manually reschedule. I decided to look for a solution, and found Calensync. Set up in 2 minutes and been using it for one month and it’s been flawless."
+        },
+        "3": {
+            "author": "Federico M.",
+            "title": "Freelance Developer",
+            "message": "An <h3>app to sync calendars</h3>, simply. It’s surprising that Google doesn’t do it natively"
+        },
+        "2": {
+            "author": "Frederik K.",
+            "title": "Product Manager",
+            "message": "I was looking for solution to <h3>sync multiple google calendars</h3> together quickly, found Calensync and haven’t looked back. Great UX and most affordable on the market."
+        },
+        "5": {
+            "author": "Elena T.",
+            "title": "Project Manager",
+            "message": "I needed to keep my professional and personal events in sync to <h3>avoid conflicts</h3> with my team meeting, and Calensync solved this problem."
+        },
+        "0": {
+            "author": "Brian T.",
+            "title": "Serial Entrepreneur",
+            "message": "I run multiple side-hustles and having to deal with multiple calendars is absolutely nightmare. Thanks to Calensync I have I have found how simple it is to <h3>merge two or more google calendars together</h3>, and live has been that much simpler since."
         }
     },
     "blog_list": {

@@ -35,6 +35,38 @@
       "a5": "Non salviamo alcun dato sui tuoi eventi, né lo rivendiamo né lo condividiamo."
     }
   },
+  "testimonials": {
+    "1": {
+      "author": "Jim H.",
+      "title": "Padre di tre",
+      "message": "Tutta la mia famiglia ha un suo calendario. Abbiamo creato un calendario comune e utilizziamo Calensync per <h3>sincronizzare tutti i nostri calendari</h3> con esso."
+    },
+    "4": {
+      "author": "Arjun L.",
+      "title": "Professore universitario",
+      "message": "I miei studenti possono prenotare appuntamenti sul mio calendario direttamente durante alcune ore specifiche. Purtroppo, in un paio di occasioni ci sono state collisioni con il mio account personale o il mio account di consulenza, il che significa dover riprogrammare manualmente. Ho deciso di cercare una soluzione e ho trovato Calensync. Installato in 2 minuti e lo uso da un mese, ed è stato impeccabile."
+    },
+    "3": {
+      "author": "Federico M.",
+      "title": "Sviluppatore Freelance",
+      "message": "Un'<h3>app per sincronizzare i calendari</h3>, semplicemente. È sorprendente che Google non lo faccia nativamente."
+    },
+    "2": {
+      "author": "Frederik K.",
+      "title": "Product Manager",
+      "message": "Stavo cercando una soluzione per <h3>sincronizzare rapidamente più calendari Google</h3> insieme, ho trovato Calensync e non ho più guardato indietro. Ottima UX e il più conveniente sul mercato."
+    },
+    "5": {
+      "author": "Elena T.",
+      "title": "Project Manager",
+      "message": "Avevo bisogno di mantenere sincronizzati gli eventi professionali e personali per <h3>evitare conflitti</h3> con le riunioni del mio team, e Calensync ha risolto questo problema."
+    },
+    "0": {
+      "author": "Brian T.",
+      "title": "Imprenditore Seriale",
+      "message": "Gestisco diverse attività secondarie e dover gestire più calendari è assolutamente un incubo. Grazie a Calensync ho scoperto quanto sia semplice <h3>unire due o più calendari Google insieme</h3>, e la vita è stata molto più semplice da allora."
+    }
+  },
   "blog_list": {
     "sync_google_calendars": {
       "title": "Come sincronizzare insieme i calendari Google",
@@ -47,7 +79,7 @@
     "sync_all_google_calendars": {
       "title": "Come unire tutti i calendari Google in uno con Calensync",
       "headline": "Spiegazione passo dopo passo di un esempio tipico: sincronizzare un calendario professionale, personale e freelance in uno solo"
-    }    
+    }
   },
   "paddle_pricing": {
     "excluding_vat": "*IVA Esclusa",
