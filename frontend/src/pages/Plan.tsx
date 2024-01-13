@@ -4,7 +4,7 @@ import { CheckoutEventNames, Paddle, PaddleEventData, initializePaddle } from '@
 import Layout from '../components/Layout';
 import { Price } from '@paddle/paddle-js/types/price-preview/price-preview';
 import LoadingOverlay from '../components/LoadingOverlay';
-import { getLocalSession, getLoggedUser, User } from '../utils/session';
+import { getLoggedUser, User } from '../utils/session';
 import { MessageKind, setMessage } from '../utils/common';
 import { toast } from 'react-toastify';
 import { createToast } from '../components/Toast';

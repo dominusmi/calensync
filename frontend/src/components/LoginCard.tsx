@@ -1,9 +1,9 @@
-import React, { MouseEventHandler, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import API from '../utils/const';
 import LoadingOverlay from './LoadingOverlay';
-import { MessageKind, setMessage } from '../utils/common';
-import { whoami, getLocalSession, optimisticIsConnected } from '../utils/session';
+import { MessageKind } from '../utils/common';
+import { optimisticIsConnected } from '../utils/session';
 import { createToast } from './Toast';
 import { useTranslation } from 'react-i18next';
 
