@@ -10,34 +10,9 @@ import { createToast } from '../components/Toast';
 import Layout from '../components/Layout';
 import { MessageKind } from '../utils/common';
 import ContactButton, { TallyComponent } from '../components/FeedbackButton';
-import { Button, Modal } from 'react-bootstrap';
 import SyncRuleRow, { SyncRule } from '../components/SyncRuleRow';
 import SyncRuleDraftRow from '../components/SyncRuleDraftRow';
 
-const OnboardingModal: React.FC<{ onClose: () => void }> = React.memo(({ onClose }) => {
-  return (
-    <Modal
-      show={true}
-      size="lg"
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
-    >
-      <Modal.Header>
-        <Modal.Title id="contained-modal-title-vcenter">
-          Let's onboard together
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body className=''>
-        <div className='embed-container'>
-          <iframe width="560" height="315" src="https://www.youtube.com/embed/q672j6cNCNc?si=tncAOhutUdFo9QR_" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
-        </div>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button onClick={onClose} className='btn btn-ternary'>Skip</Button>
-      </Modal.Footer>
-    </Modal>
-  );
-});
 
 const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
