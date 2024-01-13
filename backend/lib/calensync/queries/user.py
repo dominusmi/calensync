@@ -50,7 +50,7 @@ def get_users_with_one_account_no_rules(min_date_created: datetime.datetime = ut
 
     users = peewee.prefetch(
         User
-        .select(User.id)
+        .select(User.id, User.uuid)
         .join(CalendarAccount)
         .where(User.id.in_(subquery))
         .distinct(),
