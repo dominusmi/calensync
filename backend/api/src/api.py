@@ -8,8 +8,7 @@ from calensync.api import endpoints
 from calensync.api.common import format_response
 from calensync.api.endpoints import *
 from calensync.database.utils import DatabaseSession
-from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PatchCalendarBody, PostSyncRuleBody, \
-    PostSyncRuleEvent
+from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PostSyncRuleBody
 from calensync.log import get_logger
 from calensync.utils import get_env
 
