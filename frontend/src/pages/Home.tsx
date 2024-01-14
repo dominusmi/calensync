@@ -5,7 +5,7 @@ import { PaddlePricing } from '../components/PaddlePricing';
 import { Paddle, initializePaddle } from '@paddle/paddle-js';
 import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
-import { Accordion, Alert } from 'react-bootstrap';
+import { Accordion } from 'react-bootstrap';
 import { TestimonialCard } from '../components/TestimonialCard';
 
 const Home: React.FC = () => {
@@ -18,7 +18,7 @@ const Home: React.FC = () => {
     }
 
     async function setupPaddle() {
-        const paddleInstance = await initializePaddle({ environment: ENV == "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
+        const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
         if (paddleInstance) {
             setPaddle(paddleInstance);
         }

@@ -17,7 +17,7 @@ const ForFreelancer: React.FC = () => {
     }
 
     async function setupPaddle() {
-        const paddleInstance = await initializePaddle({ environment: ENV == "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
+        const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
         if (paddleInstance) {
             setPaddle(paddleInstance);
         }

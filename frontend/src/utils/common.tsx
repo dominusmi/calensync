@@ -11,13 +11,13 @@ export enum MessageKind {
 }
 
 export function setMessage(msg: string, kind: MessageKind){
-    if(kind == MessageKind.Info){
+    if(kind === MessageKind.Info){
         sessionStorage.setItem("info-msg", msg);
     }
-    else if(kind == MessageKind.Error){
+    else if(kind === MessageKind.Error){
         sessionStorage.setItem("error-msg", msg);
     }
-    else if(kind == MessageKind.Success){
+    else if(kind === MessageKind.Success){
         sessionStorage.setItem("success-msg", msg);
     }
 }

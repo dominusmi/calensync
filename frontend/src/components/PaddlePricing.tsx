@@ -27,7 +27,7 @@ export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedB
         }
     }
 
-    async function getPricing() {
+    const getPricing = async () => {
         const pricings = PADDLE_PRICING!.split("|")
         try {
             // Make sure both state updates have taken place before calling paddle?.PricePreview
@@ -50,16 +50,18 @@ export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedB
     }, [])
 
     useEffect(() => {
-        getPricing().then((t) => {
-            if (t) {
-                t.data.details.lineItems.sort((a, b) => parseInt(a.price.unitPrice.amount) - parseInt(b.price.unitPrice.amount))
-                setPrices(t!.data.details.lineItems);
+        getPricing().then((pricings) => {
+            if (pricings) {
+                pricings.data.details.lineItems.sort((a, b) => parseInt(a.price.unitPrice.amount) - parseInt(b.price.unitPrice.amount))
+                setPrices(pricings!.data.details.lineItems);
                 if(isReady){
-                    isReady!();
+                    isReady();
                 }
             }
         });
-    }, [IP])
+    // Disable lint because it's asking getPricing to be added (why?)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [IP, isReady])
 
 
     const changePricingSwitch = () => {
@@ -79,7 +81,7 @@ export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedB
                     <p className='lead'>{t('paddle_pricing.free_trial')}</p>
                 </div>
             </div>
-            {isHome && prices.length == 0 && 
+            {isHome && prices.length === 0 && 
                 <div className='d-flex justify-content-center'>
                 <TailSpin
                 height="80"

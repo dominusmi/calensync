@@ -27,7 +27,7 @@ export async function whoami() {
     else if (!response.ok) {
       removeLocalSession()
       await logout()
-      if (response.status == 403) {
+      if (response.status === 403) {
         return VerifySession.EXPIRED;
       }
       return VerifySession.MISSING;
@@ -76,12 +76,12 @@ export function removeLocalSession() {
 
 export const getLoggedUser: () => Promise<User | null> = async () => {
   let result = await whoami();
-  if (result == VerifySession.TOS) {
+  if (result === VerifySession.TOS) {
     window.location.href = `${PUBLIC_URL}/tos?logged=true`;
     result = {date_created: new Date()}
-  } else if (result == VerifySession.MISSING) {
+  } else if (result === VerifySession.MISSING) {
     return null;
-  }else if (result == VerifySession.EXPIRED){
+  }else if (result === VerifySession.EXPIRED){
     window.location.replace(`${PUBLIC_URL}/login?login=true&msg=${btoa("Session expired")}`);
     return null;
   }

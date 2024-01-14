@@ -5,9 +5,9 @@ import { MessageKind } from '../utils/common';
 
 export function createToast(message: string, kind: MessageKind) {
   let f = toast.info;
-  if(kind == MessageKind.Error){
+  if(kind === MessageKind.Error){
     f = toast.error;
-  }else if(kind == MessageKind.Success){
+  }else if(kind === MessageKind.Success){
     f = toast.success;
   }
 

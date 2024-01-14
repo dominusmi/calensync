@@ -1,5 +1,4 @@
 import React from 'react';
-import Footer from '../components/Footer';
 import { PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
 

@@ -43,7 +43,7 @@ const Dashboard: React.FC = () => {
         setSessionChecked(true)
       }
     })
-  }, [])
+  }, [sessionChecked])
 
 
   useEffect(() => {
@@ -63,6 +63,26 @@ const Dashboard: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
+    const fetchAccountsData = async () => {
+
+      const response = await fetch(`${API}/accounts`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+  
+      if (!response.ok) {
+        const error = await response.json();
+        createToast(error.message || "Internal server error", MessageKind.Error);
+  
+        throw new Error(`Error fetching accounts data: ${error.message}`);
+      }
+      let accounts = await response.json() as Account[];
+      for (let i = 0; i < accounts.length; i++) {
+        accounts[i].calendars = await fetchCalendars(accounts[i].uuid);
+      }
+      return accounts; // Assuming the data is an array of Account objects
+    };
+
     if (sessionChecked && user != null) {
       const fetchData = async () => {
         const accountsData = await fetchAccountsData();
@@ -78,10 +98,10 @@ const Dashboard: React.FC = () => {
   }, [sessionChecked, user]);
 
   useEffect(() => {
-    if (accountsLoaded === true && accounts.length == 0 && showOnboarding === false) {
+    if (accountsLoaded === true && accounts.length === 0 && showOnboarding === false) {
       setShowOnboarding(true);
     }
-  }, [accountsLoaded])
+  }, [accountsLoaded, accounts, showOnboarding])
 
   const fetchSyncRule = async () => {
     const response = await fetch(
@@ -99,25 +119,7 @@ const Dashboard: React.FC = () => {
     setRules(rules_);
   }
 
-  const fetchAccountsData = async () => {
 
-    const response = await fetch(`${API}/accounts`, {
-      method: 'GET',
-      credentials: 'include'
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      createToast(error.message || "Internal server error", MessageKind.Error);
-
-      throw new Error(`Error fetching accounts data: ${error.message}`);
-    }
-    let accounts = await response.json() as Account[];
-    for (let i = 0; i < accounts.length; i++) {
-      accounts[i].calendars = await fetchCalendars(accounts[i].uuid);
-    }
-    return accounts; // Assuming the data is an array of Account objects
-  };
 
   async function fetchCalendars(uuid: string) {
     try {
@@ -160,9 +162,9 @@ const Dashboard: React.FC = () => {
             <div className='d-md-flex align-items-center justify-content-center d-flex-row my-3 px-0'>
               <span className='display-5 me-auto mb-2 mb-sm-0'>Synchronize Calendars</span>
               <div className="break py-2"></div>
-              <button className={`btn btn-primary ${(accounts.length >= 2 && rules.length == 0) ? 'glowing' : ''}`} onClick={() => setOpenDraft(true)}>Add Synchronization</button>
+              <button className={`btn btn-primary ${(accounts.length >= 2 && rules.length === 0) ? 'glowing' : ''}`} onClick={() => setOpenDraft(true)}>Add Synchronization</button>
             </div>
-            {rules.length == 0 && accounts && accounts.length > 0 &&
+            {rules.length === 0 && accounts && accounts.length > 0 &&
               <div className="alert alert-secondary" role="alert">
                 You have no synchronizations yet, create the first one!
               </div>
