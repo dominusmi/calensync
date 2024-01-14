@@ -143,7 +143,7 @@ jobs:
         env:
           MAXMIND_KEY: ${{ secrets.MAXMIND_KEY }}
         run: |
-          python python/scripts/build_layer.py
+          python scripts/build_layer.py
 
       - name: Deploy Backend
         working-directory: backend
