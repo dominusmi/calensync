@@ -1,0 +1,27 @@
+# Using makefile to prepare binaries
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-custom-runtimes.html
+version = 0.1
+[default]
+
+[dev]
+[dev.deploy]
+[dev.deploy.parameters]
+stack_name = "calensync-dev"
+region = "eu-north-1"
+confirm_changeset = false
+capabilities = ["CAPABILITY_IAM","CAPABILITY_NAMED_IAM"]
+image_repositories = []
+s3_bucket = "calensync"
+s3_prefix = "deployment/stack-dev"
+
+[prod]
+[prod.deploy]
+[prod.deploy.parameters]
+stack_name = "calensync-prod"
+region = "eu-north-1"
+confirm_changeset = false
+capabilities = ["CAPABILITY_IAM","CAPABILITY_NAMED_IAM"]
+image_repositories = []
+s3_bucket = "calensync"
+s3_prefix = "deployment/stack-prod"
+
