@@ -162,4 +162,4 @@ jobs:
         working-directory: frontend
         if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
         run: |
-          npm run deploy:${{env.ENV}}
+          npm run deploy-ci:${{env.ENV}}
