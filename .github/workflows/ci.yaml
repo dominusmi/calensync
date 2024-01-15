@@ -153,9 +153,9 @@ jobs:
           PARAMETERS_PROD: ${{secrets.AWS_PARAMETER_OVERRIDE_PROD}}
         run: |
           if [[ "${{ env.ENV }}" == 'dev' ]]; then
-            sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.yaml --parameter-overrides ${{env.PARAMETERS_DEV}}
+            sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.toml --parameter-overrides ${{env.PARAMETERS_DEV}}
           elif [[ "${{ env.ENV }}" == 'prod' ]]; then
-            sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.yaml --parameter-overrides ${{env.PARAMETERS_PROD}}
+            sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.toml --parameter-overrides ${{env.PARAMETERS_PROD}}
           fi
 
       - name: Deploy Frontend
