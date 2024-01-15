@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { getLocalSession, getLocalUserId } from '../utils/session';
+import { getLocalUserId } from '../utils/session';
 
 
 interface Window {
@@ -20,7 +20,7 @@ const ContactButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
       }}
     >
       <button onClick={onClick} style={{ padding: "4px", borderRadius: '15px', backgroundColor: 'rgba(87, 124, 255, 0.3)', borderWidth: '0px' }} className="d-flex btn btn-primary justify-content-center">
-        <img style={{ padding: '5px' }} width={'40px'} height={'40px'} src="question.png"></img>
+        <img alt="" style={{ padding: '5px' }} width={'40px'} height={'40px'} src="question.png"></img>
       </button>
     </div>
   );
@@ -39,16 +39,14 @@ export const TallyComponent = () => {
         }
       };
     }
-    if (tallyReady) {
-      // Initialize Tally popup
-      const userId = getLocalUserId() || "";
-      if (userId != null) {
-        options.hiddenFields = { "user": userId }
-      }
-      let win = (window as unknown) as Window;
-      sessionStorage.setItem("feedback-shown", "true");
-      const tallyPopup = new win.Tally.openPopup("nroQgv", options);
+    // Initialize Tally popup
+    const userId = getLocalUserId() || "";
+    if (userId != null) {
+      options.hiddenFields = { "user": userId }
     }
+    let win = (window as unknown) as Window;
+    sessionStorage.setItem("feedback-shown", "true");
+    new win.Tally.openPopup("nroQgv", options);
   }
 
   useEffect(() => {
@@ -70,19 +68,21 @@ export const TallyComponent = () => {
       return
     }
     else {
-      // Set up Tally configuration after script has loaded
-      showPopup({
-        hideTitle: true,
-        emoji: {
-          text: '👋',
-          animation: 'wave'
-        }
-        ,
-        open: {
-          trigger: "time",
-          ms: 20000
-        }
-      });
+      if(tallyReady){
+        // Set up Tally configuration after script has loaded
+        showPopup({
+          hideTitle: true,
+          emoji: {
+            text: '👋',
+            animation: 'wave'
+          }
+          ,
+          open: {
+            trigger: "time",
+            ms: 20000
+          }
+        });
+      }
     }
   }, [tallyReady])
 

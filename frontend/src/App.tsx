@@ -2,7 +2,6 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useParams,
 } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -17,10 +16,9 @@ import GoogleDisclosure from "./pages/GoogleDisclosure";
 import HowToSynchronizeCalendars from "./pages/blog/HowToSynchronizeCalendars";
 import HowToAvoidCalendlyConflicts from "./pages/blog/HowToAvoidCalendlyConflicts";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { initReactI18next, I18nextProvider } from "react-i18next";
+import { initReactI18next } from "react-i18next";
 import i18nextBrowserLanguageDetector from "i18next-browser-languagedetector"
-import i18next, { BackendModule, LanguageDetectorModule } from "i18next";
-import LanguageDetector from 'i18next-browser-languagedetector';
+import i18next from "i18next";
 import LocalesImportPlugin from "./components/LocalesLazyImport";
 import ForFreelancer from "./pages/ForFreelancer";
 import SynchronizeAllCalendarsIntoOne from "./pages/blog/SynchronizeAllCalendarsIntoOne";
@@ -51,11 +49,6 @@ i18next
 
 
 function App() {
-  const { lang } = useParams();
-  // if (i18next.resolvedLanguage && sessionStorage.getItem("i18nextLng") === null) {
-    // sessionStorage.setItem("i18nextLng", i18next.resolvedLanguage!);
-  // }
-
   return (
     <ErrorBoundary>
       <Router basename={PUBLIC_URL}>

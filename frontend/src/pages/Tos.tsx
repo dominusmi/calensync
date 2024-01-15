@@ -1,54 +1,7 @@
-import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { toast } from 'react-toastify';
-import API, { PUBLIC_URL } from '../utils/const';
-import { getLocalSession } from '../utils/session';
-import Toast, { createToast } from '../components/Toast';
+import React from 'react';
 import Layout from '../components/Layout';
-import { MessageKind } from '../utils/common';
 
 const Tos: React.FC = () => {
-    const [isChecked, setIsChecked] = useState(false);
-
-    const handleCheckboxChange = () => {
-        setIsChecked(!isChecked);
-    };
-
-    
-    const isConnected = getLocalSession() !== null || window.location.search.includes("logged");
-
-    const acceptTos = async () => {
-        if (!isChecked) {
-            createToast("You must accept the Terms and Conditions", MessageKind.Error);
-            return
-        }
-        try {
-            const response = await fetch(
-                `${API}/tos`,
-                {
-                    method: 'POST',
-                    credentials: 'include'
-                }
-            );
-            if(response.ok){
-                window.location.href = `${PUBLIC_URL}/dashboard`;
-            }
-            else {
-                try {
-                    let error = await response.json();
-                    createToast(error.detail || "Unknown error", MessageKind.Error)
-                } catch(e) {
-                    createToast(`Unknown error, status ${response.status}`, MessageKind.Error)
-                }
-            }
-        }
-        catch {
-            console.log("Error")
-        }
-
-    }
-
     return (
         <Layout>
             <div className="container-sm card my-4 p-4 shadow-sm rounded border-0">

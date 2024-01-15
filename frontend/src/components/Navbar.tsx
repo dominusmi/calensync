@@ -18,7 +18,7 @@ const NavBar: React.FC<{ verify_session?: boolean }> = ({ verify_session = true 
     } else {
       setIsConnected(getLocalSession() !== null);
     }
-  }, [])
+  }, [verify_session])
 
   function handleLogout() {
     setIsLoading(true);

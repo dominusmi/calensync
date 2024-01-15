@@ -4,7 +4,6 @@ import NavBar from './Navbar';
 import Toast, { createToast } from './Toast';
 import { MessageKind, consumeMessages } from '../utils/common';
 import axios from 'axios';
-import API from '../utils/const';
 
 interface LayoutProps {
     children: ReactNode;

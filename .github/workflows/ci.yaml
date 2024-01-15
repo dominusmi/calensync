@@ -83,7 +83,7 @@ jobs:
           elif [[ "${{ github.ref_name }}" == "dev" || "${{ github.event.inputs.env }}" == "dev" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
           fi
-          echo "Environment is $ENV"
+          echo "Environment is ${{env.ENV}}"
 
       - uses: aws-actions/setup-sam@v1
       - uses: aws-actions/configure-aws-credentials@v1
@@ -104,16 +104,18 @@ jobs:
         with:
           toolchain: stable
 
-      # Allows to run build and deployment only if backend/frontend files were changed
+#       Allows to run build and deployment only if backend/frontend files were changed
       - uses: dorny/paths-filter@v2
         id: filter
         with:
           filters: |
             backend:
+              - '.github/**'
               - 'backend/**'
               - 'samconfig.toml'
               - 'template.yaml'
             frontend:
+              - '.github/**'
               - 'frontend/**'
               - 'samconfig.toml'
               - 'template.yaml'
@@ -141,16 +143,23 @@ jobs:
         env:
           MAXMIND_KEY: ${{ secrets.MAXMIND_KEY }}
         run: |
-          python python/scripts/build_layer.py
+          python scripts/build_layer.py
 
-#      - name: Deploy Backend
-#        working-directory: backend
-#        if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
-#        run: |
-#          CUSTOM_AWS_PROFILE=""  PARAMS="--force-upload --no-confirm-changeset" make deploy
-#
-#      - name: Deploy Frontend
-#        working-directory: frontend
-#        if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
-#        run: |
-#          npm run deploy:${{GITHUB_ENV}}
+      - name: Deploy Backend
+        working-directory: backend
+        if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          PARAMETERS_DEV: ${{secrets.AWS_PARAMETER_OVERRIDE_DEV}}
+          PARAMETERS_PROD: ${{secrets.AWS_PARAMETER_OVERRIDE_PROD}}
+        run: |
+          if [[ "${{ env.ENV }}" == 'dev' ]]; then
+            sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.toml --parameter-overrides ${{env.PARAMETERS_DEV}}
+          elif [[ "${{ env.ENV }}" == 'prod' ]]; then
+            sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.toml --parameter-overrides ${{env.PARAMETERS_PROD}}
+          fi
+
+      - name: Deploy Frontend
+        working-directory: frontend
+        if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          npm run deploy-ci:${{env.ENV}}

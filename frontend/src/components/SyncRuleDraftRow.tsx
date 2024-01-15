@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Account } from './AccountCard';
 import { createToast } from './Toast';
 import { MessageKind, refactorCalendarName, refreshPage, sleep } from '../utils/common';
@@ -22,7 +22,7 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                 createToast("Invalid source or destination", MessageKind.Error);
                 return
             }
-            else if (source == destination) {
+            else if (source === destination) {
                 createToast("Source and destination must be different", MessageKind.Error);
                 return
             }

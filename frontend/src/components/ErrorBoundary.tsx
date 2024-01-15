@@ -13,7 +13,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
             componentStack: errorInfo.componentStack,
         });
 
-        if (ENV == "development" || ENV == "production") {
+        if (ENV === "development" || ENV === "production") {
             fetch(`${API}/console-error`, {
                 method: 'PUT',
                 headers: {

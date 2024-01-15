@@ -4,7 +4,7 @@ import { CheckoutEventNames, Paddle, PaddleEventData, initializePaddle } from '@
 import Layout from '../components/Layout';
 import { Price } from '@paddle/paddle-js/types/price-preview/price-preview';
 import LoadingOverlay from '../components/LoadingOverlay';
-import { getLocalSession, getLoggedUser, User } from '../utils/session';
+import { getLoggedUser, User } from '../utils/session';
 import { MessageKind, setMessage } from '../utils/common';
 import { toast } from 'react-toastify';
 import { createToast } from '../components/Toast';
@@ -30,9 +30,7 @@ interface PaddleSubscription {
 
 const Plan: React.FC = () => {
   const [paddle, setPaddle] = useState<Paddle | null>(null);
-  const [IP, setIP] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [sessionChecked, setSessionChecked] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [subscription, setSubscription] = useState<PaddleSubscription | null>(null);
   const [pricingLoaded, setPricingLoaded] = useState<boolean>(false);
@@ -62,7 +60,7 @@ const Plan: React.FC = () => {
   }
 
   async function paddleCallback(event: PaddleEventData) {
-    if (event.name == CheckoutEventNames.CHECKOUT_COMPLETED) {
+    if (event.name === CheckoutEventNames.CHECKOUT_COMPLETED) {
 
       paddle?.Checkout.close();
       setIsLoading(true);
@@ -89,8 +87,8 @@ const Plan: React.FC = () => {
     paddle?.Checkout.open(args);
   }
 
-  async function setupPaddle() {
-    const paddleInstance = await initializePaddle({ environment: ENV == "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN, eventCallback: paddleCallback });
+  const setupPaddle = async () => {
+    const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN, eventCallback: paddleCallback });
     if (paddleInstance) {
       setPaddle(paddleInstance);
     }
@@ -100,10 +98,10 @@ const Plan: React.FC = () => {
     Promise.all([
       setupPaddle(),
       getLoggedUser().then((user) => {
-        setSessionChecked(true);
         setUser(user);
       })
     ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getPricingOrSubscription = async () => {
@@ -155,10 +153,11 @@ const Plan: React.FC = () => {
 
   useEffect(() => {
     getPricingOrSubscription()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
-    if (pricingLoaded == true) {
+    if (pricingLoaded === true) {
       setIsLoading(false);
     }
   }, [pricingLoaded])
@@ -176,7 +175,7 @@ const Plan: React.FC = () => {
             <p className='text-muted'>Want to cancel? Contact us at support@calensync.live</p>
           </div>
         }
-        {paddle != null && showPricing == true &&
+        {paddle != null && showPricing === true &&
           <PaddlePricing paddle={paddle} clickedBuy={buy} isHome={false} isReady={updateStatePricing} />
         }
       </div>

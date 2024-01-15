@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import API from '../utils/const';
-import { getLocalSession } from '../utils/session';
-import axios from 'axios';
-import { createToast } from './Toast';
 import { Accordion } from 'react-bootstrap';
 import { Tooltip } from 'react-tooltip'
 import LoadingOverlay from './LoadingOverlay';
@@ -16,10 +13,6 @@ export interface Account {
     uuid: string;
     key: string;
     calendars: Calendar[] | null;
-}
-
-interface AccountCardProps {
-    account: Account;
 }
 
 

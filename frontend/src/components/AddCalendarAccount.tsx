@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import API from '../utils/const';
 import axios from 'axios';
-import { getLocalSession } from '../utils/session';
 import LoadingOverlay from './LoadingOverlay';
 import { createToast } from './Toast';
 import { MessageKind } from '../utils/common';

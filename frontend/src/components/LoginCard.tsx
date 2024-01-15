@@ -1,18 +1,11 @@
-import React, { MouseEventHandler, useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useEffect, useState } from 'react';
 import API from '../utils/const';
 import LoadingOverlay from './LoadingOverlay';
-import { MessageKind, setMessage } from '../utils/common';
-import { whoami, getLocalSession, optimisticIsConnected } from '../utils/session';
+import { MessageKind } from '../utils/common';
+import { optimisticIsConnected } from '../utils/session';
 import { createToast } from './Toast';
 import { useTranslation } from 'react-i18next';
 
-const cardContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh', // Ensure the container takes the full height of the viewport
-};
 
 const loginCardStyle: React.CSSProperties = {
     width: '18rem',
@@ -47,7 +40,6 @@ const LoginCard: React.FC = () => {
         try {
             const tos_string = "1"
             setLoading(true);
-            const sessionId = uuidv4();
 
             const response = await fetch(`${API}/google/sso/prepare?tos=${tos_string}`, {
                 method: 'GET',
@@ -114,7 +106,7 @@ const LoginCard: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        <p>Already have an account? <a href="" onClick={(e) => { e.preventDefault(); e.stopPropagation(); clickLogin() }}>Login</a></p>
+                        <p>Already have an account? <a href="/login" onClick={(e) => { e.preventDefault(); e.stopPropagation(); clickLogin() }}>Login</a></p>
                     </div>
                 }
                 {isLogin &&
@@ -151,7 +143,7 @@ const LoginCard: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-                        <p>Don't have an account? <a href="" onClick={(e) => { e.preventDefault(); e.stopPropagation(); clickLogin() }}>Signup</a></p>
+                        <p>Don't have an account? <a href="/login" onClick={(e) => { e.preventDefault(); e.stopPropagation(); clickLogin() }}>Signup</a></p>
                     </div>
                 }
             </div>

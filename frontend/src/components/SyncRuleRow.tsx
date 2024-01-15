@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { MessageKind, refactorCalendarName, refreshPage } from '../utils/common';
 import API from '../utils/const';
 import { createToast } from './Toast';
@@ -65,7 +65,7 @@ const SyncRuleRow: React.FC<{ rule: SyncRule }> = ({ rule}) => {
         </div>
       </div>
         <Modal
-          show={clickedDelete==true}
+          show={clickedDelete===true}
           onHide={() => setClickedDelete(false)}
           size="lg"
           aria-labelledby="contained-modal-title-vcenter"

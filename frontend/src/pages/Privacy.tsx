@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
+import React from 'react';
 import Footer from '../components/Footer';
-import API from '../utils/const';
-import { getLocalSession } from '../utils/session';
 
 const Privacy: React.FC = () => {
     return (
