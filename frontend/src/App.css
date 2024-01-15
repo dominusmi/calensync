@@ -178,14 +178,14 @@ input[type='checkbox'] {
 
 .testimonial-maintxt{
 	color: #1f1f1f;
-	font-weight: 500;
-	font-size: 14.5px;
+	font-size: 18px;
+  font-weight: 300;
 }
 
 .testimonial-maintxt h3 {
   color: #1f1f1f;
   font-weight: 500;
-  font-size: 14.5px;
+  /* font-size: 14.5px; */
   margin: 0;
   padding: 0;
   display: inline;
@@ -203,9 +203,8 @@ input[type='checkbox'] {
 
 .testimonial-para{
 	color: #8c8c8c;
-	font-size: 12px;
+	font-size: 14px;
 	position: relative;
-	bottom: 3px;
 }
 
 .testimonial-card{
