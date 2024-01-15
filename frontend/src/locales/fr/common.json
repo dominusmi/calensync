@@ -23,38 +23,39 @@
             "4_content": "Vous pouvez avoir tous vos agendas synchronisés en moins d'une minute. Vous n'y nous croyez pas ? Allez-y et commencez dès maintenant !"
         },
         "faq": {
-            "q1": "Est-ce que cela affectera les événements existants ?",
+            "q1": "Est-ce que cela affectera les événements existants?",
             "a1": "Non, Calensync ne crée que de nouveaux événements (Blockers) et ne modifie jamais ou ne supprime jamais les événements existants. Lorsque ces événements sont modifiés, leur bloqueur associé est également automatiquement mis à jour.",
-            "q2": "Combien de agendas différents puis-je synchroniser ensemble ?",
-            "a2": "Vous pouvez synchroniser autant de agendas que vous le souhaitez à partir de différents comptes Google.",
-            "q3": "Le nom de l'événement et la description sont-ils copiés ?",
-            "a3": "Lorsque vous configurez vos synchronisations, vous pouvez décider de copier le nom et la description, ou de le remplacer par `Occupé`, vous donnant un contrôle total sur votre vie privée.",
+            "q2": "Combien d'agendas différents puis-je synchroniser ensemble?",
+            "a2": "Vous pouvez synchroniser autant d'agendas que vous le souhaitez à partir de différents comptes Google.",
+            "q3": "Le nom de l'événement et la description sont-ils copiés?",
+            "a3": "Lorsque vous configurez vos synchronisations, vous pouvez décider de copier le nom et la description, ou de le remplacer par `Busy`, vous donnant un contrôle total sur votre vie privée.",
             "q4": "À quelle vitesse les événements sont-ils synchronisés ?",
-            "a4": "Cela dépend légèrement de Google, mais comptez entre 1 seconde et un maximum de 1 minute.",
-            "q5": "Enregistrez-vous des données sur mes événements ? Et les revendez-vous ou les partagez-vous ?",
-            "a5": "Nous ne sauvegardons aucune donnée sur vos événements, et nous ne les revendons ni ne les partageons."
+            "a4": "Cela dépend légèrement de Google, mais comptez entre quelques seconde et un maximum de 1 minute.",
+            "q5": "Enregistrez-vous des données sur mes événements? :es partagez-vous avec d'autres services?",
+            "a5": "Nous ne sauvegardons aucune donnée sur vos événements, et nous ne les revendons ni ne les partageons a personne."
         }
     },
     "testimonials": {
+        "title": "Rejoignez des centaines d'utilisateurs satisfait 🫶",
         "1": {
             "author": "Jim H.",
             "title": "Père de famille",
-            "message": "Tous les membres de ma famille ont leurs propres calendriers. Nous avons créé un calendrier commun et utilisons Calensync pour <h3>synchroniser tous nos calendriers</h3> avec lui."
+            "message": "Tous les membres de ma famille ont leurs propres agendas. Nous avons créé un agenda commun et utilisons Calensync pour <h3>synchroniser tous nos calendriers</h3> ensemble."
         },
         "4": {
             "author": "Arjun L.",
             "title": "Professeur d'université",
-            "message": "Mes étudiants peuvent prendre rendez-vous sur mon calendrier directement pendant des heures spécifiques. Malheureusement, à quelques occasions, il y a eu des collisions avec mon compte personnel ou mon compte de consultation, ce qui signifie de devoir le reprogrammer manuellement. J'ai décidé de chercher une solution et j'ai trouvé Calensync. Mis en place en 2 minutes et l'utilise depuis un mois, et cela a été impeccable."
+            "message": "Mes étudiants peuvent prendre rendez-vous directement sur mon calendrier. Malheureusement, à quelques occasions, il y a eu des collisions avec mon compte personnel ou mon compte de cunsultant, ce qui a conduit a plusieurs conflits. J'ai décidé de chercher une solution et j'ai trouvé Calensync. Je l'ai Mis en place en 2 minutes et l'utilise depuis un mois, impeccable jusqu'a present."
         },
         "3": {
             "author": "Federico M.",
             "title": "Développeur Freelance",
-            "message": "Une <h3>application pour synchroniser des calendriers</h3>, simplement. Il est étonnant que Google ne le fasse pas nativement."
+            "message": "Une <h3>application pour synchroniser des calendriers</h3>, tout simplement. Il est étonnant que Google ne le fasse pas eux-meme."
         },
         "2": {
             "author": "Frederik K.",
             "title": "Product Manager",
-            "message": "Je cherchais une solution pour <h3>synchroniser rapidement plusieurs calendriers Google</h3>, j'ai trouvé Calensync et je n'ai pas regardé en arrière. Excellente expérience utilisateur et le plus abordable sur le marché."
+            "message": "Je cherchais une solution pour <h3>synchroniser rapidement plusieurs agendas Google</h3>, j'ai trouvé Calensync et depuis c'est actif. Excellente expérience utilisateur tout en etant la moins chere du marché."
         },
         "5": {
             "author": "Elena T.",
@@ -63,8 +64,8 @@
         },
         "0": {
             "author": "Brian T.",
-            "title": "Serial Entrepreneur",
-            "message": "Je gère plusieurs projets secondaires et devoir jongler avec plusieurs calendriers est absolument cauchemardesque. Grâce à Calensync, j'ai découvert à quel point il est simple de <h3>fusionner deux calendriers Google ou plus</h3>, et la vie est devenue beaucoup plus simple depuis."
+            "title": "Entrepreneur en serie",
+            "message": "Je gère plusieurs projets secondaires et devoir jongler avec plusieurs calendriers est absolument cauchemardesque. Grâce à Calensync, j'ai découvert à quel point il est simple de <h3>fusionner deux calendriers Google ou plus</h3>, et depuis, ma vie est s'est simplifié!"
         }
     },
     "blog_list": {

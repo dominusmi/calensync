@@ -95,7 +95,7 @@ const Home: React.FC = () => {
             <div className='container mt-5 col-xxl-8 col-12'>
                 <div className='row mb-4 centered'>
                     <div className="feature col">
-                        <h2 className='display-5'>Join hundreds of happy users 🫶</h2>
+                        <h2 className='display-5'>{t("testimonials.title")}</h2>
                     </div>
                 </div>
                 <div className='row row-cols-1 row-cols-md-2'>

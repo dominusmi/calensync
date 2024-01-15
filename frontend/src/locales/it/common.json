@@ -24,7 +24,7 @@
     },
     "faq": {
       "q1": "Influirà sugli eventi esistenti?",
-      "a1": "No, Calensync crea solo nuovi eventi (Blocchi) e non modifica mai o cancella eventi esistenti. Quando questi eventi vengono modificati, il loro bloccante correlato viene automaticamente aggiornato.",
+      "a1": "No, Calensync non tocca nessun evento esistente, ne crea solo nuovi. Quando gli eventi originali vengono modificati, ogni sincronizzazioni é automaticamente aggiornata.",
       "q2": "Quanti calendari diversi posso sincronizzare insieme?",
       "a2": "Puoi sincronizzare quanti calendari desideri da qualsiasi account Google differente.",
       "q3": "Il nome dell'evento e la descrizione vengono copiati?",
@@ -32,19 +32,20 @@
       "q4": "A che velocità vengono sincronizzati gli eventi?",
       "a4": "Questo dipende leggermente da Google, ma conta tra 1 secondo e un massimo di 1 minuto.",
       "q5": "Salvate dati sui miei eventi? E li rivendete o li condividete?",
-      "a5": "Non salviamo alcun dato sui tuoi eventi, né lo rivendiamo né lo condividiamo."
+      "a5": "Non salviamo nessuna informazione sui tuoi eventi, né la rivendiamo o condividiamo."
     }
   },
   "testimonials": {
+    "title": "Unisciti a centinaia di utenti soddisfatti 🫶",
     "1": {
       "author": "Jim H.",
-      "title": "Padre di tre",
-      "message": "Tutta la mia famiglia ha un suo calendario. Abbiamo creato un calendario comune e utilizziamo Calensync per <h3>sincronizzare tutti i nostri calendari</h3> con esso."
+      "title": "Padre di famiglia",
+      "message": "Tutta la mia famiglia ha un suo calendario. Ne abbiamo creato uno in comune e utilizziamo Calensync per <h3>sincronizzare tutti i nostri calendari</h3> con esso."
     },
     "4": {
       "author": "Arjun L.",
       "title": "Professore universitario",
-      "message": "I miei studenti possono prenotare appuntamenti sul mio calendario direttamente durante alcune ore specifiche. Purtroppo, in un paio di occasioni ci sono state collisioni con il mio account personale o il mio account di consulenza, il che significa dover riprogrammare manualmente. Ho deciso di cercare una soluzione e ho trovato Calensync. Installato in 2 minuti e lo uso da un mese, ed è stato impeccabile."
+      "message": "I miei studenti possono prenotare appuntamenti direttamente sul mio calendario durante alcune ore specifiche. Purtroppo, in un paio di occasioni ci sono state collisioni con il mio account personale o il mio account di consulenza, il che significa dover riprogrammare manualmente. Ho deciso di cercare una soluzione e ho trovato Calensync. L'ho installato in 2 minuti e lo utilizzo da un mese, sono molto soddisfatto!"
     },
     "3": {
       "author": "Federico M.",
@@ -54,17 +55,17 @@
     "2": {
       "author": "Frederik K.",
       "title": "Product Manager",
-      "message": "Stavo cercando una soluzione per <h3>sincronizzare rapidamente più calendari Google</h3> insieme, ho trovato Calensync e non ho più guardato indietro. Ottima UX e il più conveniente sul mercato."
+      "message": "Stavo cercando una soluzione per <h3>sincronizzare rapidamente tanti calendari Google</h3> insieme, ho trovato Calensync e non ho più guardato indietro. Ottima UX e con un prezzo imbattibile."
     },
     "5": {
       "author": "Elena T.",
       "title": "Project Manager",
-      "message": "Avevo bisogno di mantenere sincronizzati gli eventi professionali e personali per <h3>evitare conflitti</h3> con le riunioni del mio team, e Calensync ha risolto questo problema."
+      "message": "Avevo bisogno di mantenere sincronizzati gli eventi professionali e personali per <h3>evitare conflitti</h3> con le riunioni del mio team. Calensync ha risolto questo problema."
     },
     "0": {
       "author": "Brian T.",
       "title": "Imprenditore Seriale",
-      "message": "Gestisco diverse attività secondarie e dover gestire più calendari è assolutamente un incubo. Grazie a Calensync ho scoperto quanto sia semplice <h3>unire due o più calendari Google insieme</h3>, e la vita è stata molto più semplice da allora."
+      "message": "Gestisco diverse attività secondarie e dover coordinare molteplici calendari è un incubo. Grazie a Calensync ho scoperto quanto sia semplice <h3>unire due o più calendari Google insieme</h3>, semplificando la mia vita parecchio."
     }
   },
   "blog_list": {
@@ -77,7 +78,7 @@
       "headline": "I conflitti di Calendly possono essere terribili, quindi come evitarli? Discutiamo come Calensync ti aiuta a risolvere questo problema in due minuti!"
     },
     "sync_all_google_calendars": {
-      "title": "Come unire tutti i calendari Google in uno con Calensync",
+      "title": "Come unire tutti i calendari Google in un unico con Calensync",
       "headline": "Spiegazione passo dopo passo di un esempio tipico: sincronizzare un calendario professionale, personale e freelance in uno solo"
     }
   },
