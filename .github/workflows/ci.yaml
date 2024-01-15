@@ -149,8 +149,8 @@ jobs:
         working-directory: backend
         if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
         env:
-          PARAMETERS_DEV: ${{secrets.AWS_PARAMETER_OVERRIDES_DEV}}
-          PARAMETERS_PROD: ${{secrets.AWS_PARAMETER_OVERRIDES_PROD}}
+          PARAMETERS_DEV: ${{secrets.AWS_PARAMETER_OVERRIDE_DEV}}
+          PARAMETERS_PROD: ${{secrets.AWS_PARAMETER_OVERRIDE_PROD}}
         run: |
           if [[ "${{ env.ENV }}" == 'dev' ]]; then
             sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.yaml --parameter-overrides ${{env.PARAMETERS_DEV}}
