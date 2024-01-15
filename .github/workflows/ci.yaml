@@ -154,7 +154,7 @@ jobs:
           elif [[ "${{ env.ENV }}" == 'prod' ]]; then
             AWS_PARAMETER_OVERRIDES="${AWS_PARAMETER_OVERRIDES_PROD}"
           fi
-          sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.yaml --parameter-overrides ${{AWS_PARAMETER_OVERRIDES}}
+          sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.yaml --parameter-overrides ${{env.AWS_PARAMETER_OVERRIDES}}
 
       - name: Deploy Frontend
         working-directory: frontend
