@@ -150,9 +150,9 @@ jobs:
         if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           if [[ "${{ env.ENV }}" == 'dev' ]]; then
-            AWS_PARAMETER_OVERRIDES="${AWS_PARAMETER_OVERRIDES_DEV}"
+            echo "AWS_PARAMETER_OVERRIDES=${AWS_PARAMETER_OVERRIDES_DEV}" >> $GITHUB_ENV
           elif [[ "${{ env.ENV }}" == 'prod' ]]; then
-            AWS_PARAMETER_OVERRIDES="${AWS_PARAMETER_OVERRIDES_PROD}"
+            echo "AWS_PARAMETER_OVERRIDES=${AWS_PARAMETER_OVERRIDES_PROD}" >> $GITHUB_ENV
           fi
           sam deploy --config-env ${{env.ENV}} --config-file samconfig-ci.yaml --parameter-overrides ${{env.AWS_PARAMETER_OVERRIDES}}
 
