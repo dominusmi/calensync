@@ -65,7 +65,7 @@ export function languageAwareUrl(url: string){
     }
     let result = url;
     if(SUPPORTED_LANGUAGES.includes(prefixlgn)){
-        result = `${prefixlgn}${url}`
+        result = `/${prefixlgn}${url}`
     } else if(i18lgn !== null && SUPPORTED_LANGUAGES.includes(i18lgn)){
         result = `/${i18lgn}${url}`
     }
