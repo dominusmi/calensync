@@ -21,6 +21,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       postgres:
@@ -72,6 +73,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     needs: test
     if: ( github.ref == 'refs/heads/dev' && github.event_name != 'pull_request') ||
       ( github.event.inputs.env != '' ) || ( github.ref == 'refs/heads/master' )
