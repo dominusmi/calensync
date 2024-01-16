@@ -4,12 +4,12 @@
   "free_trial": "Prova gratuita di 7 giorni, perché non provare?",
   "home": {
     "meta": {
-      "description": "Calensync ti consente di sincronizzare facilmente più calendari Google, preservando la privacy della descrizione dell'evento. Copia gli eventi tra i calendari e li sostituisce con un 'Blocker'.",
+      "description": "Calensync ti consente di sincronizzare facilmente più calendari Google, preservando la privacy della descrizione dell'evento. Sincronizzare eventi tra vari calendari, rimpiazzando o no con un blocco a scelta tua.",
       "og_title": "Sincronizza i tuoi calendari Google"
     },
     "hero": {
-      "title": "Basta conflitti tra eventi",
-      "heading": "Sincronizza tutti i tuoi calendari Google insieme e risparmia il fastidio di dover riprogrammare gli appuntamenti. Assicurati che nessuno prenoti mai una riunione quando sei già occupato.",
+      "title": "Sincronizza tutti i tuoi calendari Google",
+      "heading": "Basta conflitti tra eventi. Sincronizza tutti i tuoi calendari Google insieme e risparmiati il fastidio di dover cambiare gli appuntamenti.",
       "cta": "Vai!"
     },
     "value": {
