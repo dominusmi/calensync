@@ -3,6 +3,7 @@ import Layout from '../../components/Layout';
 import { Helmet } from 'react-helmet';
 import { PUBLIC_URL } from '../../utils/const';
 import { useTranslation } from 'react-i18next';
+import { languageAwareUrl } from '../../utils/common';
 
 
 const HowToAvoidCalendlyConflicts: React.FC = () => {
@@ -39,7 +40,7 @@ const HowToAvoidCalendlyConflicts: React.FC = () => {
               {ts("s1.content")}
             </p>
             <p className="fs-5 mb-4">
-              {ts("s1.link")} <a href="/blog/sync-multiple-google-calendars">{ts("s1.link-span")}</a> {ts("s1.link-post")}
+              {ts("s1.link")} <a href={languageAwareUrl("/blog/sync-multiple-google-calendars")}>{ts("s1.link-span")}</a> {ts("s1.link-post")}
             </p>
             <h2 className="fw-bolder mb-4 mt-5">{ts("s2.title")}</h2>
             <p className="fs-5 mb-4">

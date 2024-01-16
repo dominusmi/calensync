@@ -1,4 +1,5 @@
 import { createToast } from "../components/Toast";
+import { ENV } from "./const";
 
 export interface ApiError {
     message: string
@@ -58,13 +59,17 @@ export const SUPPORTED_LANGUAGES = ["en", "fr", "it"];
 
 export function languageAwareUrl(url: string){
     const i18lgn = sessionStorage.getItem("i18nextLng");
-    const prefixlgn = window.location.pathname.slice(1,3);
-    if(i18lgn !== null && SUPPORTED_LANGUAGES.includes(i18lgn)){
-        return `/${i18lgn}${url}`
-    } else if(SUPPORTED_LANGUAGES.includes(prefixlgn)){
-        return `/${prefixlgn}${url}`
+    let env_prefix = ""
+    let prefixlgn = window.location.pathname.slice(1,3);
+    if(ENV == "development"){
+        env_prefix = "/dev";
+        prefixlgn = window.location.pathname.slice(5,7);
     }
-    else{
-        return url
+    let result=url;
+    if(SUPPORTED_LANGUAGES.includes(prefixlgn)){
+        result = `${prefixlgn}${url}`
+    } else if(i18lgn !== null && SUPPORTED_LANGUAGES.includes(i18lgn)){
+        result = `/${i18lgn}${url}`
     }
+    return result
 }

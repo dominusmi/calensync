@@ -83,7 +83,7 @@ const HowToSynchronizeCalendars: React.FC = () => {
           </section>
           <div className='d-flex justify-content-center'>
             <div className='row'>
-            <button className='btn btn-primary centered' onClick={() => window.location.href="/login"}>{ts("cta")}</button>
+            <button className='btn btn-primary centered' onClick={() => window.location.href=`${PUBLIC_URL}/login`}>{ts("cta")}</button>
             </div>
           </div>
         </article>
