@@ -59,13 +59,11 @@ export const SUPPORTED_LANGUAGES = ["en", "fr", "it"];
 
 export function languageAwareUrl(url: string){
     const i18lgn = sessionStorage.getItem("i18nextLng");
-    let env_prefix = ""
     let prefixlgn = window.location.pathname.slice(1,3);
-    if(ENV == "development"){
-        env_prefix = "/dev";
+    if(ENV === "development"){
         prefixlgn = window.location.pathname.slice(5,7);
     }
-    let result=url;
+    let result = url;
     if(SUPPORTED_LANGUAGES.includes(prefixlgn)){
         result = `${prefixlgn}${url}`
     } else if(i18lgn !== null && SUPPORTED_LANGUAGES.includes(i18lgn)){
