@@ -39,7 +39,7 @@ i18next
     detection: {
       order: ['path', 'sessionStorage', 'navigator'],
       caches: ['sessionStorage'],
-      lookupFromPathIndex: ENV == "development" ? 1 : 0
+      lookupFromPathIndex: ENV === "development" ? 1 : 0
     },
     supportedLngs: SUPPORTED_LANGUAGES,
     saveMissing: true, // for missing key handler to fire
