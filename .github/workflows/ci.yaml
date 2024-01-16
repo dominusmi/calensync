@@ -136,6 +136,7 @@ jobs:
         run: |
           npm install
           npm run build:${{env.ENV}}
+          npm run postbuild
 
       - name: Build layer
         if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
