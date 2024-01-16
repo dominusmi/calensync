@@ -42,6 +42,9 @@
     "postbuild:dev": "PUBLIC_URL=/dev react-snap",
     "postbuild:prod": "react-snap"
   },
+  "reactSnap": {
+    "skipThirdPartyRequests": true
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
