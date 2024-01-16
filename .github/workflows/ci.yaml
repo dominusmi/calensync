@@ -134,6 +134,7 @@ jobs:
           node-version: '16'
 
       - name: Install and build frontend
+        uses: browser-actions/setup-chrome@v1
         working-directory: frontend
         if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
         run: |
@@ -143,8 +144,6 @@ jobs:
       - name: Build layer
         if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
         working-directory: backend
-        env:
-          MAXMIND_KEY: ${{ secrets.MAXMIND_KEY }}
         run: |
           python scripts/build_layer.py
 
