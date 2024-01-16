@@ -30,7 +30,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build:dev": "PUBLIC_URL=/dev/ BUILD_PATH='./build-dev' dotenv -e .env.development react-scripts build",
+    "build:dev": "PUBLIC_URL=/dev/ dotenv -e .env.development react-scripts build",
     "build:prod": "dotenv -e .env.production react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -38,13 +38,21 @@
     "deploy:dev": "aws s3 --profile opali sync build-dev s3://calensync/frontend/dev",
     "deploy:prod": "aws s3 --profile opali sync build s3://calensync/frontend/prod",
     "deploy-ci:dev": "aws s3 sync build-dev s3://calensync/frontend/dev",
-    "deploy-ci:prod": "aws s3 sync build s3://calensync/frontend/prod && aws cloudfront create-invalidation --distribution-id E295TYJFC3TR5Y --paths \"/*\""
+    "deploy-ci:prod": "aws s3 sync build s3://calensync/frontend/prod && aws cloudfront create-invalidation --distribution-id E295TYJFC3TR5Y --paths \"/*\"",
+    "postbuild": "react-snap"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
     ]
+  },
+  "devDependencies": {
+    "@types/react-helmet": "^6.1.11",
+    "@types/uuid": "^9.0.7",
+    "dotenv": "^16.3.1",
+    "dotenv-cli": "^7.3.0",
+    "react-snap": "^1.23.0"
   },
   "browserslist": {
     "production": [
@@ -57,11 +65,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@types/react-helmet": "^6.1.11",
-    "@types/uuid": "^9.0.7",
-    "dotenv": "^16.3.1",
-    "dotenv-cli": "^7.3.0"
   }
 }
