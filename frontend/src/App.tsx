@@ -36,7 +36,7 @@ i18next
       escapeValue: false,
     },
     ns: ['common'],
-    detection: { 
+    detection: {
       order: ['path', 'sessionStorage', 'navigator'],
       caches: ['sessionStorage']
     },
@@ -57,9 +57,9 @@ function App() {
           <Route path="/:lang?/" element={<Home />} />
           <Route path="/:lang?/dashboard" element={<Dashboard />} />
           <Route path="/:lang?/login" element={<Login />} />
+          <Route path="/:lang?/plan" element={<Plan />} />
           <Route path="/:lang?/tos" element={<Tos />} />
           <Route path="/:lang?/privacy" element={<Privacy />} />
-          <Route path="/:lang?/plan" element={<Plan />} />
           <Route path="/:lang?/google-privacy" element={<GoogleDisclosure />}></Route>
           <Route path="/:lang?/for-freelancers" element={<ForFreelancer />}></Route>
           <Route path="/:lang?/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route>
