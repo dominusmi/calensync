@@ -7,6 +7,7 @@ import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
 import { Accordion } from 'react-bootstrap';
 import { TestimonialCard } from '../components/TestimonialCard';
+import { languageAwareUrl } from '../utils/common';
 
 const Home: React.FC = () => {
     const { t } = useTranslation();
@@ -47,7 +48,7 @@ const Home: React.FC = () => {
                 <div className="container col-xxl-8 py-5">
                     <div className="row flex-lg-row-reverse align-items-center g-4 py-3 py-sm-5 justify-content-center">
                         <div className="col-12 col-sm-10 col-lg-6">
-                            <img src="hero.gif" className="d-block mx-lg-auto img-fluid hero-gif" alt="Bootstrap Themes" width="700" height="500" loading="lazy" />
+                            <img src="/hero.gif" className="d-block mx-lg-auto img-fluid hero-gif" alt="Bootstrap Themes" width="700" height="500" loading="lazy" />
                         </div>
                         <div className="col-lg-6">
                             <h1 className="display-5 fw-bold lh-1 mb-3">{t("home.hero.title")}</h1>
@@ -158,7 +159,7 @@ const Home: React.FC = () => {
 
             <div className='container'>
                 <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href="/blog/sync-all-google-calendars-into-one">
+                    <a className='block-link' href={languageAwareUrl("/blog/sync-all-google-calendars-into-one")}>
                         <p className='text-muted small p-0 m-0'>Blog</p>
                         <h2>{t("blog_list.sync_all_google_calendars.title")}</h2>
                         <p className='text-muted'>
@@ -167,7 +168,7 @@ const Home: React.FC = () => {
                     </a>
                 </div>
                 <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href="blog/avoid-calendly-conflicts">
+                    <a className='block-link' href={languageAwareUrl("/blog/avoid-calendly-conflicts")}>
                         <p className='text-muted small p-0 m-0'>Blog</p>
                         <h2>{t("blog_list.avoid_calendly_conflicts.title")}</h2>
                         <p className='text-muted'>
@@ -176,7 +177,7 @@ const Home: React.FC = () => {
                     </a>
                 </div>
                 <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href="/blog/sync-multiple-google-calendars">
+                    <a className='block-link' href={languageAwareUrl("/blog/sync-multiple-google-calendars")}>
                         <p className='text-muted small p-0 m-0'>Blog</p>
                         <h2>{t("blog_list.sync_google_calendars.title")}</h2>
                         <p className='text-muted'>

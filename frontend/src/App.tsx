@@ -22,6 +22,7 @@ import i18next from "i18next";
 import LocalesImportPlugin from "./components/LocalesLazyImport";
 import ForFreelancer from "./pages/ForFreelancer";
 import SynchronizeAllCalendarsIntoOne from "./pages/blog/SynchronizeAllCalendarsIntoOne";
+import { SUPPORTED_LANGUAGES } from "./utils/common";
 
 
 
@@ -39,7 +40,7 @@ i18next
       order: ['path', 'sessionStorage', 'navigator'],
       caches: ['sessionStorage']
     },
-    supportedLngs: ["en", "fr", "it"],
+    supportedLngs: SUPPORTED_LANGUAGES,
     saveMissing: true, // for missing key handler to fire
     missingKeyHandler: function (lng, ns, key, fallbackValue) {
       console.log("Missing:", key);

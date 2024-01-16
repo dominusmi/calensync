@@ -20,6 +20,15 @@ const Footer: React.FC<{ onlyRequired?: boolean }> = ({ onlyRequired = false }) 
             <a href={`${PUBLIC_URL}/google-privacy`}>{t("footer.google_disclosure")}</a>
           </div>
           <div className="row">
+            <a href={`${PUBLIC_URL}/en`}>English</a>
+          </div>
+          <div className="row">
+            <a href={`${PUBLIC_URL}/fr`}>Français</a>
+          </div>
+          <div className="row">
+            <a href={`${PUBLIC_URL}/it`}>Italiano</a>
+          </div>
+          <div className="row">
             <p>Calensync © 2023</p>
           </div>
         </div>

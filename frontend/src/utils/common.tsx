@@ -53,3 +53,18 @@ export function refactorCalendarName(name: string){
 export function sleep(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
+
+export const SUPPORTED_LANGUAGES = ["en", "fr", "it"];
+
+export function languageAwareUrl(url: string){
+    const i18lgn = sessionStorage.getItem("i18nextLng");
+    const prefixlgn = window.location.pathname.slice(1,3);
+    if(i18lgn !== null && SUPPORTED_LANGUAGES.includes(i18lgn)){
+        return `/${i18lgn}${url}`
+    } else if(SUPPORTED_LANGUAGES.includes(prefixlgn)){
+        return `/${prefixlgn}${url}`
+    }
+    else{
+        return url
+    }
+}
