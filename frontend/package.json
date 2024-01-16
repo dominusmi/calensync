@@ -42,6 +42,14 @@
     "postbuild:dev": "react-snap",
     "postbuild:prod": "react-snap"
   },
+  "reactSnap": {
+    "puppeteerArgs": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--single-process"
+    ]
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
