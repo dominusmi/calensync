@@ -11,7 +11,7 @@ import Plan from './pages/Plan';
 import Home from "./pages/Home";
 import './App.css'; // Make sure the file path is correct
 import Privacy from "./pages/Privacy";
-import { PUBLIC_URL } from "./utils/const";
+import { ENV, PUBLIC_URL } from "./utils/const";
 import GoogleDisclosure from "./pages/GoogleDisclosure";
 import HowToSynchronizeCalendars from "./pages/blog/HowToSynchronizeCalendars";
 import HowToAvoidCalendlyConflicts from "./pages/blog/HowToAvoidCalendlyConflicts";
@@ -38,7 +38,8 @@ i18next
     ns: ['common'],
     detection: {
       order: ['path', 'sessionStorage', 'navigator'],
-      caches: ['sessionStorage']
+      caches: ['sessionStorage'],
+      lookupFromPathIndex: ENV == "development" ? 1 : 0
     },
     supportedLngs: SUPPORTED_LANGUAGES,
     saveMissing: true, // for missing key handler to fire
