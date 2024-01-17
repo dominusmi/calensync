@@ -4,7 +4,7 @@
     "free_trial": "Essai gratuit de 7 jours, sans engagements!",
     "home": {
         "meta": {
-            "description": "Calensync vous permet de synchroniser facilement plusieurs agendas Google tout en préservant la confidentialité de la description de l'événement. Il copie les événements entre les agendas et les remplace par un bloqueur.",
+            "description": "Calensync vous permet de synchroniser facilement plusieurs agendas Google tout en préservant la confidentialité vos données.",
             "og_title": "Synchronisez vos agendas Google"
         },
         "hero": {
