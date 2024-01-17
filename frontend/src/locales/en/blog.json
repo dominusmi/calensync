@@ -2,7 +2,7 @@
     "sync_google_calendars": {
         "title": "How to Synchronize Google Calendars together",
         "date": "December 2023",
-        "headline": "If you're looking for how to sync multiple Google Calendars together, look no further. This brief article will explain all there is to know.",
+        "headline": "Discover how to sync multiple Google Calendars together easily.",
         "meta": {
             "description": "In this post, we describe the two ways to synchronize Google Calendars together",
             "og_title": "How to sync Google Calendars"
@@ -33,7 +33,7 @@
             }
         },
         "calensync": {
-            "title": "Using Calensync",
+            "title": "Using Calensync to link Google Calendars together",
             "headline": "That's precisely why we created Calensync: to provide a better service at a very fair price. Here's how the setup works:",
             "steps": {
                 "1_span": "Login",
@@ -93,7 +93,7 @@
         "cta": "Get started",
         "date": "January 2024",
         "meta": {
-            "description": "This article explains how to synchronize all Google calendars from different accounts into one",
+            "description": "Learn how to to link Google calendars from multiple accounts into one",
             "og_title": "Synchronize all your calendars",
             "title": "Synchronize all your calendars"
         },

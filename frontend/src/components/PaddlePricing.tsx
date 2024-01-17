@@ -77,7 +77,7 @@ export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedB
         <div className="container centered content">
             <div className='row mb-4'>
                 <div className="feature col">
-                    <h1>Pricing</h1>
+                    <h2 className="display-4">Pricing</h2>
                     <p className='lead'>{t('paddle_pricing.free_trial')}</p>
                 </div>
             </div>
