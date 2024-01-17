@@ -48,7 +48,7 @@ const Home: React.FC = () => {
                 <div className="container col-xxl-8 py-5">
                     <div className="row flex-lg-row-reverse align-items-center g-4 py-3 py-sm-5 justify-content-center">
                         <div className="col-12 col-sm-10 col-lg-6">
-                            <img src="/hero.gif" className="d-block mx-lg-auto img-fluid hero-gif" alt="Bootstrap Themes" width="700" height="500" loading="lazy" />
+                            <img src={`${PUBLIC_URL}/hero.gif`} className="d-block mx-lg-auto img-fluid hero-gif" alt="Bootstrap Themes" width="700" height="500" loading="lazy" />
                         </div>
                         <div className="col-lg-6">
                             <h1 className="display-5 fw-bold lh-1 mb-3">{t("home.hero.title")}</h1>
