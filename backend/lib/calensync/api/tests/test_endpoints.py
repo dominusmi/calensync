@@ -145,15 +145,15 @@ class TestGetSyncRules:
         account21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
         calendar21 = Calendar(account=account21, platform_id="platform_id21", name="name21", active=True,
                               last_processed=utcnow(), last_inserted=utcnow()).save_new()
-        calendar22 = Calendar(account=account21, platform_id="platform_id22", name="name21", active=True,
+        calendar22 = Calendar(account=account21, platform_id="platform_id22", name="name22", active=True,
                               last_processed=utcnow(), last_inserted=utcnow()).save_new()
         SyncRule(source=calendar21, destination=calendar22, private=True).save_new()
 
         # should not be able to fetch them
         rules = endpoints.get_sync_rules(user)
         assert len(rules) == 2
-        assert rules[0]["source"] == "platform1"
-        assert rules[0]["destination"] == "platform2"
+        assert rules[0]["source"] == "name1"
+        assert rules[0]["destination"] == "name2"
 
 
 class TestGetOauthToken:

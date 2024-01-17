@@ -36,8 +36,8 @@ if os.environ.get("MOCK_GOOGLE"):
     google.oauth2.credentials.Credentials = MagicMock()
     google.oauth2.credentials.Credentials.from_authorized_user_info.return_value = MagicMock()
     get_google_calendars = lambda credentials: [
-        GoogleCalendar(kind="", id=str(uuid.uuid4())),
-        GoogleCalendar(kind="", id=str(uuid.uuid4()))
+        GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}"),
+        GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}")
     ]
 
 
@@ -542,8 +542,10 @@ def get_sync_rules(user: User):
     return list(
         SyncRule.select(
             SyncRule.uuid,
-            Source.platform_id.alias("source"),
-            Destination.platform_id.alias("destination"),
+            Source.name.alias("source"),
+            Source.platform_id.alias("source_id"),
+            Destination.name.alias("destination"),
+            Destination.platform_id.alias("destination_id"),
             SyncRule.private
         )
         .join(Source, on=(Source.id == SyncRule.source_id))
