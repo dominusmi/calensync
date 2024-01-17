@@ -26,7 +26,7 @@
         "faq": {
             "q1": "Will it affect existing events?",
             "a1": "No, Calensync only creates new events and doesn't ever modify or delete existing events. If the original event changes, the copies are automatically updated too.",
-            "q2": "How many different calendars can I sync together?",
+            "q2": "How many different calendars can I link together?",
             "a2": "You can sync as many calendars from as many different Google accounts together.",
             "q3": "Is the name of the event and description copied?",
             "a3": "When you setup your synchronizations, you can decide whether to copy the name and description, or replace it with `Busy`, giving you complete control over your privacy.",

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import API from '../utils/const';
+import API, { PUBLIC_URL } from '../utils/const';
 import LoadingOverlay from './LoadingOverlay';
 import { MessageKind } from '../utils/common';
 import { optimisticIsConnected } from '../utils/session';
@@ -106,7 +106,7 @@ const LoginCard: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        <p>Already have an account? <a href="/login" onClick={(e) => { e.preventDefault(); e.stopPropagation(); clickLogin() }}>Login</a></p>
+                        <p>Already have an account? <a href={`${PUBLIC_URL}/login`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); clickLogin() }}>Login</a></p>
                     </div>
                 }
                 {isLogin &&
@@ -143,7 +143,7 @@ const LoginCard: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-                        <p>Don't have an account? <a href="/login" onClick={(e) => { e.preventDefault(); e.stopPropagation(); clickLogin() }}>Signup</a></p>
+                        <p>Don't have an account? <a href={`${PUBLIC_URL}/login`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); clickLogin() }}>Signup</a></p>
                     </div>
                 }
             </div>

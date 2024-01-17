@@ -11,7 +11,7 @@ import Plan from './pages/Plan';
 import Home from "./pages/Home";
 import './App.css'; // Make sure the file path is correct
 import Privacy from "./pages/Privacy";
-import { PUBLIC_URL } from "./utils/const";
+import { ENV, PUBLIC_URL } from "./utils/const";
 import GoogleDisclosure from "./pages/GoogleDisclosure";
 import HowToSynchronizeCalendars from "./pages/blog/HowToSynchronizeCalendars";
 import HowToAvoidCalendlyConflicts from "./pages/blog/HowToAvoidCalendlyConflicts";
@@ -22,6 +22,7 @@ import i18next from "i18next";
 import LocalesImportPlugin from "./components/LocalesLazyImport";
 import ForFreelancer from "./pages/ForFreelancer";
 import SynchronizeAllCalendarsIntoOne from "./pages/blog/SynchronizeAllCalendarsIntoOne";
+import { SUPPORTED_LANGUAGES } from "./utils/common";
 
 
 
@@ -35,11 +36,12 @@ i18next
       escapeValue: false,
     },
     ns: ['common'],
-    detection: { 
+    detection: {
       order: ['path', 'sessionStorage', 'navigator'],
-      caches: ['sessionStorage']
+      caches: ['sessionStorage'],
+      lookupFromPathIndex: ENV === "development" ? 1 : 0
     },
-    supportedLngs: ["en", "fr", "it"],
+    supportedLngs: SUPPORTED_LANGUAGES,
     saveMissing: true, // for missing key handler to fire
     missingKeyHandler: function (lng, ns, key, fallbackValue) {
       console.log("Missing:", key);
@@ -56,9 +58,9 @@ function App() {
           <Route path="/:lang?/" element={<Home />} />
           <Route path="/:lang?/dashboard" element={<Dashboard />} />
           <Route path="/:lang?/login" element={<Login />} />
+          <Route path="/:lang?/plan" element={<Plan />} />
           <Route path="/:lang?/tos" element={<Tos />} />
           <Route path="/:lang?/privacy" element={<Privacy />} />
-          <Route path="/:lang?/plan" element={<Plan />} />
           <Route path="/:lang?/google-privacy" element={<GoogleDisclosure />}></Route>
           <Route path="/:lang?/for-freelancers" element={<ForFreelancer />}></Route>
           <Route path="/:lang?/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route>

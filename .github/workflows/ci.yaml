@@ -21,6 +21,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       postgres:
@@ -72,6 +73,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     needs: test
     if: ( github.ref == 'refs/heads/dev' && github.event_name != 'pull_request') ||
       ( github.event.inputs.env != '' ) || ( github.ref == 'refs/heads/master' )
@@ -130,6 +133,21 @@ jobs:
         with:
           node-version: '16'
 
+      - name: Add chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Set up environment for Puppeteer
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq gconf-service libasound2 libatk1.0-0 libc6 libcairo2 \
+            libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 \
+            libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 \
+            libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 \
+            libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 \
+            libxss1 libxtst6 ca-certificates fonts-liberation libnss3 lsb-release \
+            xdg-utils wget
+            
       - name: Install and build frontend
         working-directory: frontend
         if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
@@ -140,8 +158,6 @@ jobs:
       - name: Build layer
         if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
         working-directory: backend
-        env:
-          MAXMIND_KEY: ${{ secrets.MAXMIND_KEY }}
         run: |
           python scripts/build_layer.py
 
