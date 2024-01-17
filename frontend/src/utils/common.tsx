@@ -1,5 +1,5 @@
 import { createToast } from "../components/Toast";
-import { ENV } from "./const";
+import { ENV, PUBLIC_URL } from "./const";
 
 export interface ApiError {
     message: string
@@ -65,9 +65,11 @@ export function languageAwareUrl(url: string){
     }
     let result = url;
     if(SUPPORTED_LANGUAGES.includes(prefixlgn)){
-        result = `/${prefixlgn}${url}`
+        result = `${PUBLIC_URL}/${prefixlgn}${url}`;
     } else if(i18lgn !== null && SUPPORTED_LANGUAGES.includes(i18lgn)){
-        result = `/${i18lgn}${url}`
+        result = `${PUBLIC_URL}/${i18lgn}${url}`;
+    } else {
+        result = `${PUBLIC_URL}${result}`;
     }
-    return result
+    return result;
 }
