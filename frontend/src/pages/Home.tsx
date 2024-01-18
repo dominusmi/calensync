@@ -125,7 +125,7 @@ const Home: React.FC = () => {
                     <div className='col-xxl-8 mx-auto py-4'>
                         <div className='row mb-4 centered'>
                             <div className="feature col">
-                                <p className='display-5'>F.A.Q.</p>
+                                <h2 className='display-4'>F.A.Q.</h2>
                             </div>
                         </div>
                         <Accordion>
