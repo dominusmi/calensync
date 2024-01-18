@@ -20,3 +20,4 @@ build
 /backend/api/src/calensync/
 /backend/awslambda/**/calensync/
 /sql/*
+.DS_Store
