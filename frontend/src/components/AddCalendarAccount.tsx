@@ -5,8 +5,10 @@ import axios from 'axios';
 import LoadingOverlay from './LoadingOverlay';
 import { createToast } from './Toast';
 import { MessageKind } from '../utils/common';
+import { useTranslation } from 'react-i18next';
 
 const AddCalendarAccount: React.FC<{ isConnected: boolean, glowing: boolean }> = ({ isConnected, glowing }) => {
+    const { t } = useTranslation(['app']);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const addAccount = async () => {
         try {
@@ -54,14 +56,12 @@ const AddCalendarAccount: React.FC<{ isConnected: boolean, glowing: boolean }> =
                                 </svg>
                                 {/* <img style={{ height: "25px", marginRight: "12px", minWidth: "20px", width: "25px"}} src='https://lh3.googleusercontent.com/K0vgpnn9Vour8ByU3htR3ou5Cx70Me-lW_51VEAIS5dfzXCQ0otXakVuPiQVc0V6qcf9aP_vkVul59airN27m3mttf4zQ1TPv4MVrw'></img> */}
                             </div>
-                            <span className="gsi-material-button-contents">Connect a Google Calendar</span>
+                            <span className="gsi-material-button-contents">{t("connect-google")}</span>
                         </div>
                     </button>
                 </div>
                 {!isConnected &&
-                    <div className='mx-auto mt-1 small'>
-                        <p className="mt-2 mb-0 small">By clicking this button, you acknowledge <br />you have read and accepted the <br />
-                            <a className='text-break' href='/tos'>Terms of Service</a> and the <a href='/privacy'>Privacy Policy</a></p>
+                    <div className='mx-auto mt-1 small' dangerouslySetInnerHTML={{ __html: t("accept-tos") }}>
                     </div>
                 }
             </div>

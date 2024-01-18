@@ -1,0 +1,40 @@
+{
+    "internal-server-error": "Erreur interne du serveur",
+    "accept-tos": "<p className=\"mt-2 mb-0 small\">En cliquant sur ce bouton, vous reconnaissez <br />avoir lu et accepté les <br /><a className='text-break' href='/tos'>Conditions d'utilisation</a> et la <a href='/privacy'>Politique de confidentialité</a></p>",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "dashboard": {
+        "error": {
+            "fetching-account": "Erreur lors de la récupération des données du compte",
+            "loading-rules": "Impossible de charger les règles de synchronisation",
+            "fetching-calendars": "Erreur lors de la récupération des agendas"
+        },
+        "already-have-account": "Vous avez déjà un compte?",
+        "trial-ended": "Votre essai a pris fin. Mettez à niveau maintenant ou risquez de perdre tous les événements synchronisés.",
+        "days-left": "Il vous reste DAYS jours dans votre essai gratuit.",
+        "upgrade": "Mettre à niveau",
+        "synchronize-calendars": "Synchroniser les agendas",
+        "no-syncs": "Vous n'avez pas encore de synchronisations, créez la première!",
+        "connected-accounts": "Comptes connectés",
+        "welcome": "Bienvenue sur Calensync !",
+        "first-thing": "La première chose à faire est de connecter un ou plusieurs comptes Google en cliquant sur le bouton ci-dessous",
+        "one-account": "Un compte connecté",
+        "second-account": "87% des personnes connectent un deuxième compte, allez-y et cliquez sur le bouton ci-dessous",
+        "refresh-calendars": "Actualiser les agendas",
+        "connect-google": "Connecter un agenda Google",
+        "sync": {
+            "draft": {
+                "source": "Agenda source",
+                "destination": "Agenda de destination",
+                "replace-busy": "Remplacer le nom de l'événement par 'Busy'"
+            },
+            "valid": {
+                "from": "De",
+                "to": "à",
+                "mark-busy": "Marquer les événements comme 'Busy'",
+                "are-you-sure": "Êtes-vous sûr?",
+                "delete-info": "Cela supprimera la règle et également tous les événements synchronisés par cette règle dans vos agendas Google."
+            }
+        }
+    }
+}

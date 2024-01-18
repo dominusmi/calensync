@@ -1,0 +1,40 @@
+{
+    "internal-server-error": "Internal server error",
+    "accept-tos": "<p className=\"mt-2 mb-0 small\">By clicking this button, you acknowledge <br />you have read and accepted the <br /><a className='text-break' href='/tos'>Terms of Service</a> and the <a href='/privacy'>Privacy Policy</a></p>",
+    "save": "Save",
+    "cancel": "Cancel",
+    "dashboard": {
+        "error": {
+            "fetching-account": "Error fetching accounts data",
+            "loading-rules": "Couldn't load sync rules",
+            "fetching-calendars": "Error fetching calendars"
+        },
+        "already-have-account": "Already have an account?",
+        "trial-ended": "Your trial has ended. Upgrade now or risk losing all synchronised events.",
+        "days-left": "You have DAYS days left on your free trial.",
+        "upgrade": "Upgrade",
+        "synchronize-calendars": "Synchronize Calendars",
+        "no-syncs": "You have no synchronizations yet, create the first one!",
+        "connected-accounts": "Connected accounts",
+        "welcome": "Welcome to Calensync!",
+        "first-thing": "The first thing you need to do is connect one or more Google accounts by clicking the button below",
+        "one-account": "One account connected",
+        "second-account": "87% of people connect a second account, go ahead and click the button below",
+        "refresh-calendars": "Refresh Calendars",
+        "connect-google": "Connect a Google Calendar",
+        "sync": {
+            "draft": {
+                "source": "Source calendar",
+                "destination": "Destinations calendar",
+                "replace-busy": "Replace event name with 'Busy'"
+            },
+            "valid": {
+                "from": "From",
+                "to": "to",
+                "mark-busy": "Mark events as 'Busy'",
+                "are-you-sure": "Are you sure?",
+                "delete-info": "This will delete the rule, and also remove all the events that were synchronized by this rule in your Google calendars."
+            }
+        }
+    }
+}
