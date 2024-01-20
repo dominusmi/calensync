@@ -146,7 +146,7 @@ const Dashboard: React.FC = () => {
       <div className='container col-xxl-8'>
         {loading && <LoadingOverlay />}
         {user == null &&
-          <div className='alert alert-light py-2 mt-4 border-2'>{t("dashboard.already-have-account")}<a href='login?login=true'>{t("login")}</a></div>
+          <div className='alert alert-light py-2 mt-4 border-2'>{t("dashboard.already-have-account")} <a href='login?login=true'>{t("dashboard.login")}</a></div>
         }
         {user != null && user.customer_id == null &&
           // show trial message

@@ -3,12 +3,14 @@
     "accept-tos": "<p className=\"mt-2 mb-0 small\">Cliccando su questo pulsante, confermi <br />di aver letto e accettato le <br /><a className='text-break' href='/tos'>Condizioni di Servizio</a> e l'<a href='/privacy'>Informativa sulla Privacy</a></p>",
     "save": "Salva",
     "cancel": "Annulla",
+    "login": "Login",
     "dashboard": {
         "error": {
             "fetching-account": "Errore durante il recupero dei dati dell'account",
             "loading-rules": "Impossibile caricare le regole di sincronizzazione",
             "fetching-calendars": "Errore durante il recupero dei calendari"
         },
+        "login": "Accedi",
         "already-have-account": "Hai già un account?",
         "trial-ended": "La tua prova è terminata. Esegui l'upgrade ora o rischi di perdere tutti gli eventi sincronizzati.",
         "days-left": "Ti restano DAYS giorni nel tuo periodo di prova gratuito.",

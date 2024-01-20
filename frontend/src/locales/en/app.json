@@ -9,6 +9,7 @@
             "loading-rules": "Couldn't load sync rules",
             "fetching-calendars": "Error fetching calendars"
         },
+        "login": "Login",
         "already-have-account": "Already have an account?",
         "trial-ended": "Your trial has ended. Upgrade now or risk losing all synchronised events.",
         "days-left": "You have DAYS days left on your free trial.",

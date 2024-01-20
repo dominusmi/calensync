@@ -56,7 +56,7 @@ const AddCalendarAccount: React.FC<{ isConnected: boolean, glowing: boolean }> =
                                 </svg>
                                 {/* <img style={{ height: "25px", marginRight: "12px", minWidth: "20px", width: "25px"}} src='https://lh3.googleusercontent.com/K0vgpnn9Vour8ByU3htR3ou5Cx70Me-lW_51VEAIS5dfzXCQ0otXakVuPiQVc0V6qcf9aP_vkVul59airN27m3mttf4zQ1TPv4MVrw'></img> */}
                             </div>
-                            <span className="gsi-material-button-contents">{t("connect-google")}</span>
+                            <span className="gsi-material-button-contents">{t("dashboard.connect-google")}</span>
                         </div>
                     </button>
                 </div>

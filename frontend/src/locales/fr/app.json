@@ -9,6 +9,7 @@
             "loading-rules": "Impossible de charger les règles de synchronisation",
             "fetching-calendars": "Erreur lors de la récupération des agendas"
         },
+        "login": "Se connecter",
         "already-have-account": "Vous avez déjà un compte?",
         "trial-ended": "Votre essai a pris fin. Mettez à niveau maintenant ou risquez de perdre tous les événements synchronisés.",
         "days-left": "Il vous reste DAYS jours dans votre essai gratuit.",
