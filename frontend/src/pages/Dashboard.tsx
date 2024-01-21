@@ -12,9 +12,12 @@ import { MessageKind } from '../utils/common';
 import ContactButton, { TallyComponent } from '../components/FeedbackButton';
 import SyncRuleRow, { SyncRule } from '../components/SyncRuleRow';
 import SyncRuleDraftRow from '../components/SyncRuleDraftRow';
+import { useTranslation } from 'react-i18next';
 
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation(['app']);
+
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
@@ -72,9 +75,9 @@ const Dashboard: React.FC = () => {
   
       if (!response.ok) {
         const error = await response.json();
-        createToast(error.message || "Internal server error", MessageKind.Error);
+        createToast(error.message || t("internal-server-error"), MessageKind.Error);
   
-        throw new Error(`Error fetching accounts data: ${error.message}`);
+        throw new Error(`${t('dashboard.error.fetching-account')}: ${error.message}`);
       }
       let accounts = await response.json() as Account[];
       for (let i = 0; i < accounts.length; i++) {
@@ -112,7 +115,7 @@ const Dashboard: React.FC = () => {
       }
     )
     if (!response.ok) {
-      createToast("Couldn't load sync rules", MessageKind.Error)
+      createToast(t("dashboard.error.loading-rules"), MessageKind.Error)
       return
     }
     const rules_ = await response.json();
@@ -132,7 +135,7 @@ const Dashboard: React.FC = () => {
       );
       return await response.json() as Calendar[];
     } catch (error) {
-      console.error('Error fetching calendars:', error);
+      console.error(`${t("dashboard.error.fetching-calendars")}:`, error);
       return null
     }
   }
@@ -143,30 +146,30 @@ const Dashboard: React.FC = () => {
       <div className='container col-xxl-8'>
         {loading && <LoadingOverlay />}
         {user == null &&
-          <div className='alert alert-light py-2 mt-4 border-2'>Already have an account? <a href='login?login=true'>Login</a></div>
+          <div className='alert alert-light py-2 mt-4 border-2'>{t("dashboard.already-have-account")} <a href='login?login=true'>{t("dashboard.login")}</a></div>
         }
         {user != null && user.customer_id == null &&
           // show trial message
           <div className='container-sm p-0 my-2'>
             {daysLeft < 0 &&
-              <p className='p-0 m-0 text-danger'>Your trial has ended. Upgrade now or risk losing all synchronised events. </p>
+              <p className='p-0 m-0 text-danger'> {t("dashboard.trial-ended")} </p>
             }
             {daysLeft >= 0 &&
-              <p className='p-0 m-0'>You have {daysLeft} days left on your free trial. </p>
+              <p className='p-0 m-0'>{t("dashboard.days-left").replace("DAYS", daysLeft.toString())}</p>
             }
-            <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>Upgrade</a>
+            <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>{t("dashboard.upgrade")}</a>
           </div>
         }
         {accounts.length > 0 &&
           <>
             <div className='d-md-flex align-items-center justify-content-center d-flex-row my-3 px-0'>
-              <span className='display-5 me-auto mb-2 mb-sm-0'>Synchronize Calendars</span>
+              <span className='display-5 me-auto mb-2 mb-sm-0'>{t("dashboard.synchronize-calendars")}</span>
               <div className="break py-2"></div>
               <button className={`btn btn-primary ${(accounts.length >= 2 && rules.length === 0) ? 'glowing' : ''}`} onClick={() => setOpenDraft(true)}>Add Synchronization</button>
             </div>
             {rules.length === 0 && accounts && accounts.length > 0 &&
               <div className="alert alert-secondary" role="alert">
-                You have no synchronizations yet, create the first one!
+                {t("dashboard.no-syncs")}
               </div>
             }
             {rules.length > 0 && rules.map((rule) => <SyncRuleRow key={rule.uuid} rule={rule} />)
@@ -174,20 +177,20 @@ const Dashboard: React.FC = () => {
             <SyncRuleDraftRow accounts={accounts} state={openDraft} setState={setOpenDraft} />
           </>
         }
-        <div className='display-5 my-4'>Connected accounts</div>
+        <div className='display-5 my-4'>{t("dashboard.connected-accounts")}</div>
         {accounts && accounts.length === 0 &&
           <div>
             <div className="alert alert-success" role="alert">
-              <span className='fw-bold'> Welcome to Calensync! 🎉 </span>
-              The first thing you need to do is connect one or more Google accounts by clicking the button below
+              <span className='fw-bold'> {t("dashboard.welcome")} 🎉 </span>
+              {t("dashboard.first-thing")}
             </div>
           </div>
         }
         {accounts && accounts.length === 1 &&
           <div>
             <div className="alert alert-success" role="alert">
-              <span className='fw-bold'> One account connected ✅ </span><br/>
-              87% of people connect a second account, go ahead and click the button below
+              <span className='fw-bold'> {t("dashboard.one-account")} ✅ </span><br/>
+              {t("dashboard.second-account")}
             </div>
           </div>
         }

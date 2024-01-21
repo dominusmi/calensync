@@ -4,6 +4,7 @@ import API from '../utils/const';
 import { createToast } from './Toast';
 import { Button, Modal } from 'react-bootstrap';
 import LoadingOverlay from './LoadingOverlay';
+import { useTranslation } from 'react-i18next';
 
 export interface SyncRule {
   source: string,
@@ -13,6 +14,8 @@ export interface SyncRule {
 }
 
 const SyncRuleRow: React.FC<{ rule: SyncRule }> = ({ rule}) => {
+  const { t } = useTranslation(['app']);
+
   const [clickedDelete, setClickedDelete] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -48,12 +51,12 @@ const SyncRuleRow: React.FC<{ rule: SyncRule }> = ({ rule}) => {
       <div className="d-flex flex-column flex-md-row align-items-md-center my-2 px-2 ps-4">
         <span className="badge bg-primary text-light mx-2my-sm-1 border" style={{ maxWidth: "94px" }}>Active</span>
         <div className="px-md-4 my-sm-1 my-2 pe-4">
-          <div className='text-wrap'> From <span className='fw-bold'>{refactorCalendarName(rule.source)}</span> </div>
-          <div className='text-wrap'>to <span className='fw-bold'>{refactorCalendarName(rule.destination)}</span></div>
+          <div className='text-wrap'> {t("dashboard.sync.valid.from")} <span className='fw-bold'>{refactorCalendarName(rule.source)}</span> </div>
+          <div className='text-wrap'>{t("dashboard.sync.valid.to")} <span className='fw-bold'>{refactorCalendarName(rule.destination)}</span></div>
         </div>
         <div className="me-md-auto mb-4 my-sm-1">
           <input className='form-check-input' type="checkbox" checked={rule.private} readOnly={true}></input>
-          <label className='ps-1'>Marks events as busy</label>
+          <label className='ps-1'>{t("dashboard.sync.valid.mark-busy")}</label>
         </div>
         <div className="ms-md-auto my-sm-1">
           <button type="button" className="btn btn-outline-danger" onClick={()=>setClickedDelete(true)}>
@@ -73,12 +76,12 @@ const SyncRuleRow: React.FC<{ rule: SyncRule }> = ({ rule}) => {
         >
           <Modal.Header closeButton>
             <Modal.Title id="contained-modal-title-vcenter">
-              Are you sure?
+            {t("dashboard.sync.valid.are-you-sure")}
             </Modal.Title>
           </Modal.Header>
           <Modal.Body className=''>
             <p>
-              This will delete the rule, and also remove all the events that were synchronized by this rule in your Google calendars.
+            {t("dashboard.sync.valid.delete-info")}
             </p>
           </Modal.Body>
           <Modal.Footer>

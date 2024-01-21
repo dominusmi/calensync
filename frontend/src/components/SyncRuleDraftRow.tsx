@@ -4,8 +4,11 @@ import { createToast } from './Toast';
 import { MessageKind, refactorCalendarName, refreshPage, sleep } from '../utils/common';
 import API from '../utils/const';
 import LoadingOverlay from './LoadingOverlay';
+import { useTranslation } from 'react-i18next';
 
 const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState: (x: boolean) => void }> = ({ accounts, state, setState }) => {
+      const { t } = useTranslation(['app']);
+
     const sourceRef = useRef<HTMLSelectElement | null>(null);
     const destinationRef = useRef<HTMLSelectElement | null>(null);
     const busyRef = useRef<HTMLInputElement | null>(null);
@@ -81,7 +84,7 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                             }
                             )}
                         </select>
-                        <label className='' >Source calendar</label>
+                        <label className='' >{t("dashboard.sync.draft.source")}</label>
                     </div>
                     <div className="btn-group pe-lg-2 col-12 col-lg-3 form-floating my-lg-0 my-2">
                         <select className="form-select" aria-label="Floating label select example" ref={destinationRef} >
@@ -98,21 +101,21 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                             }
                             )}
                         </select>
-                        <label className='' >Destinations calendar</label>
+                        <label className='' >{t("dashboard.sync.draft.destination")}</label>
                     </div>
                     <div className="btn-group pe-lg-2 col-12 col-lg-4 my-lg-0 my-2" role="group" aria-label="Third group">
                         <div className="me-2 form-check px-4">
                             <input className="form-check-input" type="checkbox" value="" readOnly={true} ref={busyRef} />
                             <label className="form-check-label text-start">
-                                Replace event name with "Busy"
+                            {t("dashboard.sync.draft.replace-busy")}
                             </label>
                         </div>
                     </div>
                     <div className="btn-group pe-lg-2 my-2 col-12 col-lg-1 my-lg-0 my-2" role="group" aria-label="Fourth group">
-                        <button type="button" className="btn btn-primary" onClick={createSyncRule}>Save</button>
+                        <button type="button" className="btn btn-primary" onClick={createSyncRule}>{t("save")}</button>
                     </div>
                     <div className="btn-group pe-lg-2 my-2 col-12 col-lg-1 my-lg-0 my-2" role="group" aria-label="Fourth group">
-                        <button type="button" className="btn btn-outline-primary" onClick={() => setState(false)}>Cancel</button>
+                        <button type="button" className="btn btn-outline-primary" onClick={() => setState(false)}>{t("cancel")}</button>
                     </div>
                 </div>
             </div>
