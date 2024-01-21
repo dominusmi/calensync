@@ -63,6 +63,7 @@ const Dashboard: React.FC = () => {
     if (user != null) {
       fetchSyncRule()
     }
+    // eslint-disable-next-line
   }, [user]);
 
   useEffect(() => {
@@ -98,6 +99,7 @@ const Dashboard: React.FC = () => {
     } else if (sessionChecked && user == null) {
       setLoading(false);
     }
+    // eslint-disable-next-line
   }, [sessionChecked, user]);
 
   useEffect(() => {
@@ -121,8 +123,6 @@ const Dashboard: React.FC = () => {
     const rules_ = await response.json();
     setRules(rules_);
   }
-
-
 
   async function fetchCalendars(uuid: string) {
     try {
