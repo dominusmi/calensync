@@ -102,7 +102,8 @@
         "home": "Accueil",
         "login": "Connexion",
         "dashboard": "Tableau de bord",
-        "for_freelancers": "Pour les freelancers"
+        "for_freelancers": "Pour les freelancers",
+        "plan": "Abonnements"
     },
     "for_freelancers": {
         "meta": {
