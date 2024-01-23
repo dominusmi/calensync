@@ -103,7 +103,8 @@
         "home": "Home",
         "login": "Login",
         "dashboard": "Dashboard",
-        "for_freelancers": "For Freelancers"
+        "for_freelancers": "For Freelancers",
+        "plan": "Plan"
     },
     "for_freelancers": {
         "meta": {

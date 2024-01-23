@@ -1,0 +1,42 @@
+{
+    "internal-server-error": "Errore server",
+    "accept-tos": "<p className=\"mt-2 mb-0 small\">Cliccando su questo pulsante, confermi <br />di aver letto e accettato le <br /><a className='text-break' href='/tos'>Condizioni di Servizio</a> e l'<a href='/privacy'>Informativa sulla Privacy</a></p>",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "login": "Login",
+    "dashboard": {
+        "error": {
+            "fetching-account": "Errore durante il recupero dei dati dell'account",
+            "loading-rules": "Impossibile caricare le regole di sincronizzazione",
+            "fetching-calendars": "Errore durante il recupero dei calendari"
+        },
+        "login": "Accedi",
+        "already-have-account": "Hai già un account?",
+        "trial-ended": "La tua prova è terminata. Esegui l'upgrade ora o rischi di perdere tutti gli eventi sincronizzati.",
+        "days-left": "Ti restano DAYS giorni nel tuo periodo di prova gratuito.",
+        "upgrade": "Esegui l'upgrade",
+        "synchronize-calendars": "Sincronizza Calendari",
+        "no-syncs": "Non hai ancora sincronizzazioni, crea la prima!",
+        "connected-accounts": "Account collegati",
+        "welcome": "Benvenuto in Calensync!",
+        "first-thing": "La prima cosa da fare è collegare uno o più account Google cliccando il pulsante qui sotto",
+        "one-account": "Un account collegato",
+        "second-account": "87% delle persone collega un secondo account, procedi e clicca il pulsante qui sotto",
+        "refresh-calendars": "Aggiorna Calendari",
+        "connect-google": "Collega un Calendario Google",
+        "sync": {
+            "draft": {
+                "source": "Calendario di origine",
+                "destination": "Calendario di destinazione",
+                "replace-busy": "Sostituisci il nome dell'evento con 'Busy'"
+            },
+            "valid": {
+                "from": "Da",
+                "to": "a",
+                "mark-busy": "Segna gli eventi come 'Busy'",
+                "are-you-sure": "Sei sicuro?",
+                "delete-info": "Ciò cancellerà la regola e rimuoverà anche tutti gli eventi sincronizzati da questa regola nei tuoi calendari Google."
+            }
+        }
+    }
+}

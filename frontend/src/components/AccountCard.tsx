@@ -3,6 +3,7 @@ import API from '../utils/const';
 import { Accordion } from 'react-bootstrap';
 import { Tooltip } from 'react-tooltip'
 import LoadingOverlay from './LoadingOverlay';
+import { useTranslation } from 'react-i18next';
 
 export interface Calendar {
     uuid: string;
@@ -17,6 +18,7 @@ export interface Account {
 
 
 const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
+    const { t } = useTranslation(['app']);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const refreshCalendars = async () => {
         setIsLoading(true);
@@ -61,7 +63,7 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
                                         }
                                     </div>
                                 ))}
-                                <button className='btn btn-primary mt-2' onClick={refreshCalendars}>Refresh Calendars</button>
+                                <button className='btn btn-primary mt-2' onClick={refreshCalendars}>{t("refresh-calendars")}</button>
                             </>
 
                         </Accordion.Body>
