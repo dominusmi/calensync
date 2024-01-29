@@ -49,7 +49,8 @@
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
       "--single-process"
-    ]
+    ],
+    "sitemapPath": "sitemap.xml"
   },
   "eslintConfig": {
     "extends": [
