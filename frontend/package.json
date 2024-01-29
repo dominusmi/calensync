@@ -40,7 +40,8 @@
     "deploy-ci:dev": "aws s3 sync build s3://calensync/frontend/dev",
     "deploy-ci:prod": "aws s3 sync build s3://calensync/frontend/prod && aws cloudfront create-invalidation --distribution-id E295TYJFC3TR5Y --paths \"/*\"",
     "postbuild:dev": "PUBLIC_URL=/dev react-snap",
-    "postbuild:prod": "react-snap"
+    "postbuild:prod": "react-snap",
+    "sitemap": "node scripts/generateSitemap.js"
   },
   "reactSnap": {
     "puppeteerArgs": [

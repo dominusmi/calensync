@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>http://127.0.0.1:8080/en/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/dashboard</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/dashboard" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/dashboard" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/login</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/login" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/login" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/plan</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/plan" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/plan" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/tos</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/tos" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/tos" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/privacy" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/google-privacy</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/google-privacy" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/for-freelancers</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/for-freelancers" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/blog/sync-multiple-google-calendars</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/blog/sync-multiple-google-calendars" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/blog/sync-multiple-google-calendars" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/blog/avoid-calendly-conflicts</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/blog/avoid-calendly-conflicts" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/blog/avoid-calendly-conflicts" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/en/blog/sync-all-google-calendars-into-one</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/blog/sync-all-google-calendars-into-one" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/blog/sync-all-google-calendars-into-one" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/dashboard</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/dashboard" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/dashboard" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/login</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/login" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/login" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/plan</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/plan" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/plan" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/tos</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/tos" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/tos" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/privacy" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/google-privacy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/google-privacy" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/for-freelancers</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/for-freelancers" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/blog/sync-multiple-google-calendars</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/blog/sync-multiple-google-calendars" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/blog/sync-multiple-google-calendars" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/blog/avoid-calendly-conflicts</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/blog/avoid-calendly-conflicts" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/blog/avoid-calendly-conflicts" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/fr/blog/sync-all-google-calendars-into-one</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/blog/sync-all-google-calendars-into-one" />
+    <xhtml:link rel="alternate" hreflang="it" href="http://127.0.0.1:8080/it/blog/sync-all-google-calendars-into-one" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/dashboard</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/dashboard" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/dashboard" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/login</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/login" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/login" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/plan</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/plan" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/plan" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/tos</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/tos" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/tos" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/privacy" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/google-privacy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/google-privacy" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/for-freelancers</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/for-freelancers" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/blog/sync-multiple-google-calendars</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/blog/sync-multiple-google-calendars" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/blog/sync-multiple-google-calendars" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/blog/avoid-calendly-conflicts</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/blog/avoid-calendly-conflicts" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/blog/avoid-calendly-conflicts" />
+  </url>
+  <url>
+    <loc>http://127.0.0.1:8080/it/blog/sync-all-google-calendars-into-one</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="http://127.0.0.1:8080/en/blog/sync-all-google-calendars-into-one" />
+    <xhtml:link rel="alternate" hreflang="fr" href="http://127.0.0.1:8080/fr/blog/sync-all-google-calendars-into-one" />
+  </url>
+</urlset>
