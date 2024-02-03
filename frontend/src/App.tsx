@@ -4,27 +4,30 @@ import {
   Route,
 } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Tos from './pages/Tos';
-import Plan from './pages/Plan';
-import Home from "./pages/Home";
+
 import './App.css'; // Make sure the file path is correct
-import Privacy from "./pages/Privacy";
 import { ENV, PUBLIC_URL } from "./utils/const";
-import GoogleDisclosure from "./pages/GoogleDisclosure";
-import HowToSynchronizeCalendars from "./pages/blog/HowToSynchronizeCalendars";
-import HowToAvoidCalendlyConflicts from "./pages/blog/HowToAvoidCalendlyConflicts";
+
 import ErrorBoundary from "./components/ErrorBoundary";
 import { initReactI18next } from "react-i18next";
 import i18nextBrowserLanguageDetector from "i18next-browser-languagedetector"
 import i18next from "i18next";
 import LocalesImportPlugin from "./components/LocalesLazyImport";
-import ForFreelancer from "./pages/ForFreelancer";
-import SynchronizeAllCalendarsIntoOne from "./pages/blog/SynchronizeAllCalendarsIntoOne";
+
 import { SUPPORTED_LANGUAGES } from "./utils/common";
+import React from "react";
 
-
+const Login = React.lazy(() => import("./pages/Login"));
+const Dashboard = React.lazy(() => import("./pages/Dashboard"));
+const Tos = React.lazy(() => import('./pages/Tos'));
+const Plan = React.lazy(() => import('./pages/Plan'));
+const Home = React.lazy(() => import("./pages/Home"));
+const Privacy = React.lazy(() => import("./pages/Privacy"));
+const GoogleDisclosure = React.lazy(() => import("./pages/GoogleDisclosure"));
+const HowToSynchronizeCalendars = React.lazy(() => import("./pages/blog/HowToSynchronizeCalendars"));
+const HowToAvoidCalendlyConflicts = React.lazy(() => import("./pages/blog/HowToAvoidCalendlyConflicts"));
+const ForFreelancer = React.lazy(() => import("./pages/ForFreelancer"));
+const SynchronizeAllCalendarsIntoOne = React.lazy(() => import("./pages/blog/SynchronizeAllCalendarsIntoOne"));
 
 i18next
   .use(initReactI18next)
