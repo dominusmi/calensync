@@ -63,7 +63,7 @@
     "@types/uuid": "^9.0.7",
     "dotenv": "^16.3.1",
     "dotenv-cli": "^7.3.0",
-    "react-snap": "github:dominusmi/react-snap#feature/add-sitemap-to-config"
+    "react-snap": "github:dominusmi/react-snap#update-puppeteer"
   },
   "browserslist": {
     "production": [
