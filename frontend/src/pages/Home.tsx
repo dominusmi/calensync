@@ -7,10 +7,12 @@ import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
 import { Accordion } from 'react-bootstrap';
 import { TestimonialCard } from '../components/TestimonialCard';
-import { languageAwareUrl } from '../utils/common';
+import { BlogProperties, getBlogForLanguage } from 'reactyll';
+import { blogs } from '../_blog/routes';
+import { ExtraProperties } from '../components/BlogTemplate';
 
 const Home: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [paddle, setPaddle] = useState<Paddle | null>(null);
 
 
@@ -103,7 +105,7 @@ const Home: React.FC = () => {
                     <div className="col-md-6">
                         {[0, 1, 2].map((idx) => {
                             return <div className="">
-                                <TestimonialCard t={t} idx={idx}/>
+                                <TestimonialCard t={t} idx={idx} />
                             </div>
                         })
                         }
@@ -111,7 +113,7 @@ const Home: React.FC = () => {
                     <div className="col-md-6">
                         {[3, 4, 5].map((idx) => {
                             return <div className="">
-                                <TestimonialCard t={t} idx={idx}/>
+                                <TestimonialCard t={t} idx={idx} />
                             </div>
                         })
                         }
@@ -158,33 +160,39 @@ const Home: React.FC = () => {
             </div>
 
             <div className='container'>
-                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href={languageAwareUrl("/blog/sync-all-google-calendars-into-one")}>
-                        <p className='text-muted small p-0 m-0'>Blog</p>
-                        <h2>{t("blog_list.sync_all_google_calendars.title")}</h2>
-                        <p className='text-muted'>
-                            {t("blog_list.sync_all_google_calendars.headline")}
-                        </p>
-                    </a>
-                </div>
-                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href={languageAwareUrl("/blog/avoid-calendly-conflicts")}>
-                        <p className='text-muted small p-0 m-0'>Blog</p>
-                        <h2>{t("blog_list.avoid_calendly_conflicts.title")}</h2>
-                        <p className='text-muted'>
-                            {t("blog_list.avoid_calendly_conflicts.headline")}
-                        </p>
-                    </a>
-                </div>
-                <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                    <a className='block-link' href={languageAwareUrl("/blog/sync-multiple-google-calendars")}>
-                        <p className='text-muted small p-0 m-0'>Blog</p>
-                        <h2>{t("blog_list.sync_google_calendars.title")}</h2>
-                        <p className='text-muted'>
-                            {t("blog_list.sync_google_calendars.headline")}
-                        </p>
-                    </a>
-                </div>
+                {[getBlogForLanguage(blogs["synchronize-all-into-one"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
+                    <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
+                        <a className='block-link' href={blog.url}>
+                            <p className='text-muted small p-0 m-0'>Blog</p>
+                            <h2>{blog.title}</h2>
+                            <p className='text-muted'>
+                                {blog.headline}
+                            </p>
+                        </a>
+                    </div>
+                ))}
+                {[getBlogForLanguage(blogs["avoid-calendaly-conflicts"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
+                    <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
+                        <a className='block-link' href={blog.url}>
+                            <p className='text-muted small p-0 m-0'>Blog</p>
+                            <h2>{blog.title}</h2>
+                            <p className='text-muted'>
+                                {blog.headline}
+                            </p>
+                        </a>
+                    </div>
+                ))}
+                {[getBlogForLanguage(blogs["how-to-synchronize-multiple-google-calendars"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
+                    <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
+                        <a className='block-link' href={blog.url}>
+                            <p className='text-muted small p-0 m-0'>Blog</p>
+                            <h2>{blog.title}</h2>
+                            <p className='text-muted'>
+                                {blog.headline}
+                            </p>
+                        </a>
+                    </div>
+                ))}
             </div>
         </Layout >
     );
