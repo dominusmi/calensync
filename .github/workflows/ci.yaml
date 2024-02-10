@@ -153,6 +153,7 @@ jobs:
         if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           npm install
+          npm run build:blog
           npm run build:${{env.ENV}}
 
       - name: Build layer
