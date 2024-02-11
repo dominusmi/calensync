@@ -130,6 +130,7 @@ url: "/blog/sincronizza-tutti-i-tuoi-calendari-google-in-uno"
 language: "it"
 date: Gennaio 2024
 description: "Questo articolo spiega come sincronizzare tutti i calendari Google da diversi account in uno solo."
+headline: "Passo dopo passo: come sincronizzare un calendario professionale, personale e freelance insieme in"
  - -
 
 Ci sono molte ragioni per cui qualcuno potrebbe possedere più account Google e i relativi calendari. Potresti avere il tuo personale, professionale, forse quello freelance. Io stesso ad esempio ho 3 calendari Google che devono assolutamente essere sincronizzati in ogni momento.
