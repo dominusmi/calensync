@@ -32,8 +32,8 @@ const ForFreelancer: React.FC = () => {
             <Helmet>
                 <meta charSet="utf-8" />
                 <title>{t('title_sync_calendars')}</title>
-                <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}/for-freelancer`} />
-                <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}/for-freelancer`} />
+                <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}${window.location.pathname}`} />
+                <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}${window.location.pathname}`} />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr/for-freelancer`} hrefLang="fr" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en/for-freelancer`} hrefLang="en" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it/for-freelancer`} hrefLang="it" />

@@ -3,6 +3,7 @@ url: "/blog/sync-all-google-calendars-into-one"
 language: "en"
 date: January 2024
 headline: "A step by step explanation of a typical example: syncing a professional, private, and freelance calendar into one"
+description: "Learn how to to link Google calendars from multiple accounts into one"
  - -
 There are many reasons for someone to own multiple Google accounts and their associated calendars. You may have your personal, professional, maybe your freelance one. Myself for example have 3 Google calendars that absolutely need to be in sync at all time.
 
@@ -65,6 +66,7 @@ url: "/blog/synchroniser-tous-vos-calendriers-google-en-un-seul"
 language: "fr"
 date: Janvier 2024
 headline: "Explication étape par étape d'un exemple typique : synchroniser un calendrier professionnel, personnel et freelance en un seul"
+description: "Cet article explique comment synchroniser tous les calendriers Google de différents comptes en un seul."
  - -
 
 Il existe de nombreuses raisons pour lesquelles quelqu'un peut posséder plusieurs comptes Google et leurs calendriers associés. Vous pouvez avoir votre calendrier personnel, professionnel, peut-être votre compte freelance. Par exemple, moi-même, j'ai 3 calendriers Google qui doivent absolument être synchronisés en tout temps.
