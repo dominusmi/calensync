@@ -10,6 +10,7 @@ import rehypeRaw from 'rehype-raw';
 export interface ExtraProperties {
     date: string
     headline: string
+    description: string
 }
 
 const content: BlogPage<ExtraProperties> = JSON.parse(atob(`%REPLACE%`));
@@ -48,10 +49,10 @@ const BlogTemplate: React.FC = () => {
                 {content.languages.map(([language, url]) => (
                     <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/${language}${url}`} hrefLang={language} />
                 ))}
-                <meta name="description" content={ts("meta.description")} />
-                <meta name="og:title" content={ts("meta.og_title")} />
-                <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}/blog/sync-all-google-calendars-into-one`} />
-                <meta name="og:description" content={ts("meta.description")} />
+                <meta name="description" content={content.properties.description} />
+                <meta name="og:title" content={content.properties.title} />
+                <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}${content.properties.url}`} />
+                <meta name="og:description" content={content.properties.description} />
             </Helmet>
             <div className="container mt-4 d-flex m-auto d-flex justify-content-center" id="blog-wrapper">
                 <article className='col-lg-8 col-sm-11 col-12'>

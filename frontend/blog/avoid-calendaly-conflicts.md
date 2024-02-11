@@ -3,6 +3,7 @@ url: "/blog/avoid-calendly-conflicts"
 language: "en"
 date: December 2023
 headline: "Calendly conflicts can be terrible, so how can you avoid them? We discuss how Calensync helps you solve this issue in two minutes!"
+description: "Calendly conflicts can be terrible, so how can you avoid them?"
  - -
  Automated event creation has been one of the simplest yet greatest inventions for productivity enhancement. However, in this day and age, it is common for people to have multiple calendars, including a mix of personal and professional, and it's never nice having to reschedule events because of a conflict between your medical appointment and a demo for a lead. So how do you avoid these conflicts?
 
@@ -35,6 +36,7 @@ url: "/blog/eviter-les-conflits-calendly"
 language: "fr"
 date: Decembre 2023
 headline: "Les conflits Calendly peuvent être terribles, alors comment les éviter ? Nous expliquons comment Calensync vous aide à résoudre ce problème en deux minutes !"
+description: "Les conflits Calendly peuvent avoir des effets nefastes, alors comment les éviter ?"
  - -
 
 La création automatique d'événements a été l'une des inventions les plus simples mais les plus grandes pour l'amélioration de la productivité. Cependant, de nos jours, il est courant que les gens aient plusieurs agendas, mélangeant personnel et professionnel. Il n'est jamais agréable de devoir reprogrammer des événements en raison d'un conflit entre un rendez-vous médical et une démo pour un prospect. Alors, comment éviter ces conflits ?
@@ -68,6 +70,7 @@ date: Dicembre 2023
 url: "/blog/come-evitare-conflitti-di-calendly"
 language: "it"
 headline: "Calendly conflicts can be terrible, so how can you avoid them? We discuss how Calensync helps you solve this issue in two minutes!"
+description: "I conflitti con Calendly possono essere terribili, quindi come evitarli?"
  - -
 
 La creazione automatica di eventi è stata una delle invenzioni più semplici ma più grandi per l'aumento della produttività. Tuttavia, al giorno d'oggi è comune che le persone abbiano diversi calendari, tra cui una combinazione di personali e professionali. Non è mai piacevole dover riprogrammare eventi a causa di un conflitto tra un appuntamento medico e una presentazione per un potenziale cliente. Quindi, come evitare questi conflitti?
