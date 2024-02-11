@@ -15,7 +15,7 @@ export interface ExtraProperties {
 const content: BlogPage<ExtraProperties> = JSON.parse(atob(`%REPLACE%`));
 
 
-const HowToSynchronizeCalendars: React.FC = () => {
+const BlogTemplate: React.FC = () => {
     const { t } = useTranslation(['blog']);
     const ts = (s: string) => t(`sync_google_calendars_into_one.${s}`)
 
@@ -96,4 +96,4 @@ const HowToSynchronizeCalendars: React.FC = () => {
     );
 };
 
-export default HowToSynchronizeCalendars;
+export default BlogTemplate;
