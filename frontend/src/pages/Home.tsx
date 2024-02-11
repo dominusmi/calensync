@@ -162,7 +162,7 @@ const Home: React.FC = () => {
             <div className='container'>
                 {[getBlogForLanguage(blogs["synchronize-all-into-one"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
                     <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                        <a className='block-link' href={blog.url}>
+                        <a className='block-link' href={`${PUBLIC_URL}${blog.url}`}>
                             <p className='text-muted small p-0 m-0'>Blog</p>
                             <h2>{blog.title}</h2>
                             <p className='text-muted'>
@@ -173,7 +173,7 @@ const Home: React.FC = () => {
                 ))}
                 {[getBlogForLanguage(blogs["avoid-calendaly-conflicts"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
                     <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                        <a className='block-link' href={blog.url}>
+                        <a className='block-link' href={`${PUBLIC_URL}${blog.url}`}>
                             <p className='text-muted small p-0 m-0'>Blog</p>
                             <h2>{blog.title}</h2>
                             <p className='text-muted'>
@@ -184,7 +184,7 @@ const Home: React.FC = () => {
                 ))}
                 {[getBlogForLanguage(blogs["how-to-synchronize-multiple-google-calendars"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
                     <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                        <a className='block-link' href={blog.url}>
+                        <a className='block-link' href={`${PUBLIC_URL}${blog.url}`}>
                             <p className='text-muted small p-0 m-0'>Blog</p>
                             <h2>{blog.title}</h2>
                             <p className='text-muted'>
