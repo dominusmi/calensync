@@ -16,6 +16,7 @@ import LocalesImportPlugin from "./components/LocalesLazyImport";
 
 import { SUPPORTED_LANGUAGES } from "./utils/common";
 import React from "react";
+import { blogRoutes } from "./_blog/routes";
 
 const Login = React.lazy(() => import("./pages/Login"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -24,10 +25,7 @@ const Plan = React.lazy(() => import('./pages/Plan'));
 const Home = React.lazy(() => import("./pages/Home"));
 const Privacy = React.lazy(() => import("./pages/Privacy"));
 const GoogleDisclosure = React.lazy(() => import("./pages/GoogleDisclosure"));
-const HowToSynchronizeCalendars = React.lazy(() => import("./pages/blog/HowToSynchronizeCalendars"));
-const HowToAvoidCalendlyConflicts = React.lazy(() => import("./pages/blog/HowToAvoidCalendlyConflicts"));
 const ForFreelancer = React.lazy(() => import("./pages/ForFreelancer"));
-const SynchronizeAllCalendarsIntoOne = React.lazy(() => import("./pages/blog/SynchronizeAllCalendarsIntoOne"));
 
 i18next
   .use(initReactI18next)
@@ -52,7 +50,6 @@ i18next
   });
 
 
-
 function App() {
   return (
     <ErrorBoundary>
@@ -66,9 +63,12 @@ function App() {
           <Route path="/:lang?/privacy" element={<Privacy />} />
           <Route path="/:lang?/google-privacy" element={<GoogleDisclosure />}></Route>
           <Route path="/:lang?/for-freelancers" element={<ForFreelancer />}></Route>
-          <Route path="/:lang?/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route>
-          <Route path="/:lang?/blog/avoid-calendly-conflicts" element={<HowToAvoidCalendlyConflicts />}></Route>
-          <Route path="/:lang?/blog/sync-all-google-calendars-into-one" element={<SynchronizeAllCalendarsIntoOne />}></Route>
+          {blogRoutes.map(([url, Component]) => {
+            return <Route path={`/:lang?${url}`} element={<Component />} />
+          })}
+          {/* <Route path="/:lang?/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route> */}
+          {/* <Route path="/:lang?/blog/avoid-calendly-conflicts" element={<HowToAvoidCalendlyConflicts />}></Route> */}
+          {/* <Route path="/:lang?/blog/sync-all-google-calendars-into-one" element={<SynchronizeAllCalendarsIntoOne />}></Route> */}
         </Routes>
       </Router>
     </ErrorBoundary>
