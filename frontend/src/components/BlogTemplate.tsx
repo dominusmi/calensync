@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { useTranslation } from 'react-i18next';
 import Layout from '../components/Layout';
 import { PUBLIC_URL } from '../utils/const';
-import { BlogPage } from 'blogger';
+import { BlogPage } from 'reactyll';
 import MarkDown from 'react-markdown'
 import rehypeRaw from 'rehype-raw';
 
