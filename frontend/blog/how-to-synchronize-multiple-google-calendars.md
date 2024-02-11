@@ -3,6 +3,7 @@ date: December 2023
 headline: "If you're looking for how to sync multiple Google Calendars together, look no further. This brief article will explain all there is to know."
 language: "en"
 url: "/blog/sync-multiple-google-calendars"
+description: "In this post, we describe the two ways to synchronize Google Calendars together"
  - -
 ## Syncing manually
 
@@ -52,6 +53,7 @@ date: Decembre 2023
 headline: "Si vous cherchez comment synchroniser plusieurs agendas Google ensemble, ne cherchez pas plus loin. Cet article bref expliquera tout ce qu'il y a à savoir."
 url: "/blog/synchroniser-plusieurs-agendas-google"
 language: "fr"
+description: "Dans cet article, nous décrivons les deux façons de synchroniser les agendas Google ensemble."
  - -
 Si vous cherchez comment synchroniser plusieurs agendas Google ensemble, ne cherchez pas plus loin. Cet article vous expliquera brièvement tout ce qu'il faut savoir.
 
@@ -104,6 +106,7 @@ headline: "Se stai cercando come sincronizzare più calendari Google insieme, no
 date: Dicembre 2023
 url: "/blog/come-sincronizzare-calendar-google"
 language: "it"
+description: "In questo post, descriviamo i due modi per sincronizzare i calendari Google insieme"
  - -
 # Come sincronizzare i calendari Google insieme
 
