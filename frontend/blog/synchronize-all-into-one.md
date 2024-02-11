@@ -123,10 +123,11 @@ Enregistrez et voilà, c'est tout ! Merci d'avoir lu et à bientôt sur Calensyn
     <button type="button" className="btn btn-primary btn-lg px-4 me-md-2 cta    " >Commencez</button>
 </div>
  - - -
-title: "Sincronizza tutti i tuoi calendari Google"
+title: "Sincronizza tutti i tuoi calendari Google in uno solo"
 url: "/blog/sincronizza-tutti-i-tuoi-calendari-google-in-uno"
 language: "it"
 date: Gennaio 2024
+description: "Questo articolo spiega come sincronizzare tutti i calendari Google da diversi account in uno solo."
  - -
 
 Ci sono molte ragioni per cui qualcuno potrebbe possedere più account Google e i relativi calendari. Potresti avere il tuo personale, professionale, forse quello freelance. Io stesso ad esempio ho 3 calendari Google che devono assolutamente essere sincronizzati in ogni momento.
