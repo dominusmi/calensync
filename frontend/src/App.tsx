@@ -26,10 +26,7 @@ const Plan = React.lazy(() => import('./pages/Plan'));
 const Home = React.lazy(() => import("./pages/Home"));
 const Privacy = React.lazy(() => import("./pages/Privacy"));
 const GoogleDisclosure = React.lazy(() => import("./pages/GoogleDisclosure"));
-const HowToSynchronizeCalendars = React.lazy(() => import("./pages/blog/HowToSynchronizeCalendars"));
-const HowToAvoidCalendlyConflicts = React.lazy(() => import("./pages/blog/HowToAvoidCalendlyConflicts"));
 const ForFreelancer = React.lazy(() => import("./pages/ForFreelancer"));
-const SynchronizeAllCalendarsIntoOne = React.lazy(() => import("./pages/blog/SynchronizeAllCalendarsIntoOne"));
 
 i18next
   .use(initReactI18next)

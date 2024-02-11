@@ -66,25 +66,25 @@ const HowToSynchronizeCalendars: React.FC = () => {
                             children={content.markdown}
                             components={{
                                 h1(props) {
-                                    const { children, className, node, ...rest } = props
+                                    const { children } = props
                                     return <h1 className='test'>{children}</h1>
                                 },
                                 p(props) {
-                                    const { children, className, node, ...rest } = props
+                                    const { children } = props
                                     return <p className="fs-5 mb-4">
                                         {children}
                                     </p>
                                 },
                                 strong(props) {
-                                    const { children, className, node, ...rest } = props
+                                    const { children } = props
                                     return <b className='bold'>{children}</b>
                                 },
                                 h2(props) {
-                                    const { children, className, node, ...rest } = props
+                                    const { children} = props
                                     return <h2 className="mt-5 pt-3">{children}</h2>
                                 },
                                 img(props) {
-                                    const { children, className, node, src, alt, ...rest } = props
+                                    const { src, alt } = props
                                     return <img className='container my-2' src={src} alt={alt}></img>
                                 }
                             }}
