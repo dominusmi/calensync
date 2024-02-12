@@ -159,7 +159,18 @@ const Home: React.FC = () => {
                 </div>
             </div>
 
-            <div className='container'>
+            <div className='container mb-4 pb-4'>
+                {[getBlogForLanguage(blogs["creating-a-shared-calendar"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
+                    <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
+                        <a className='block-link' href={`${PUBLIC_URL}${blog.url}`}>
+                            <p className='text-muted small p-0 m-0'>Blog</p>
+                            <h2>{blog.title}</h2>
+                            <p className='text-muted'>
+                                {blog.headline}
+                            </p>
+                        </a>
+                    </div>
+                ))}
                 {[getBlogForLanguage(blogs["synchronize-all-into-one"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
                     <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
                         <a className='block-link' href={`${PUBLIC_URL}${blog.url}`}>
@@ -172,17 +183,6 @@ const Home: React.FC = () => {
                     </div>
                 ))}
                 {[getBlogForLanguage(blogs["avoid-calendaly-conflicts"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
-                    <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
-                        <a className='block-link' href={`${PUBLIC_URL}${blog.url}`}>
-                            <p className='text-muted small p-0 m-0'>Blog</p>
-                            <h2>{blog.title}</h2>
-                            <p className='text-muted'>
-                                {blog.headline}
-                            </p>
-                        </a>
-                    </div>
-                ))}
-                {[getBlogForLanguage(blogs["how-to-synchronize-multiple-google-calendars"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
                     <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
                         <a className='block-link' href={`${PUBLIC_URL}${blog.url}`}>
                             <p className='text-muted small p-0 m-0'>Blog</p>
