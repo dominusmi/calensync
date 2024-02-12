@@ -103,7 +103,8 @@
         "login": "Connexion",
         "dashboard": "Tableau de bord",
         "for_freelancers": "Pour les freelancers",
-        "plan": "Abonnements"
+        "plan": "Abonnements",
+        "blog": "Blog"
     },
     "for_freelancers": {
         "meta": {

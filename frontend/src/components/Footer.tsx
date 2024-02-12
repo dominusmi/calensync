@@ -41,7 +41,7 @@ const Footer: React.FC<{ onlyRequired?: boolean }> = ({ onlyRequired = false }) 
               <a href={`${PUBLIC_URL}/login`}>{t("footer.login")}</a>
             </div>
             <div className="row">
-              <a href={`${PUBLIC_URL}/plan`}>{t("footer.plan")}</a>
+              <a href={`${PUBLIC_URL}/blog`}>{t("footer.blog")}</a>
             </div>
             <div className="row">
               <a href={`${PUBLIC_URL}/dashboard`}>{t("footer.dashboard")}</a>

@@ -59,6 +59,7 @@ const paths = [
   '/privacy',
   '/google-privacy',
   '/for-freelancers',
+  '/blog'
 ];
 
 
