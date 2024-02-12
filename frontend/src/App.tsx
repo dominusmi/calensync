@@ -17,6 +17,7 @@ import LocalesImportPlugin from "./components/LocalesLazyImport";
 import { SUPPORTED_LANGUAGES } from "./utils/common";
 import React from "react";
 import { blogRoutes } from "./_blog/routes";
+import Blog from "./pages/Blog";
 
 const Login = React.lazy(() => import("./pages/Login"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -63,6 +64,7 @@ function App() {
           <Route path="/:lang?/privacy" element={<Privacy />} />
           <Route path="/:lang?/google-privacy" element={<GoogleDisclosure />}></Route>
           <Route path="/:lang?/for-freelancers" element={<ForFreelancer />}></Route>
+          <Route path="/:lang?/blog" element={<Blog />}></Route>
           {blogRoutes.map(([url, Component]) => {
             return <Route path={`/:lang?${url}`} element={<Component />} />
           })}
