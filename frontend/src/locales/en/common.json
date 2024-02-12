@@ -104,7 +104,8 @@
         "login": "Login",
         "dashboard": "Dashboard",
         "for_freelancers": "For Freelancers",
-        "plan": "Plan"
+        "plan": "Plan",
+        "blog": "Blog"
     },
     "for_freelancers": {
         "meta": {
