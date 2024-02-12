@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ENV, PUBLIC_URL } from '../utils/const';
+import React from 'react';
+import { PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
 import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
