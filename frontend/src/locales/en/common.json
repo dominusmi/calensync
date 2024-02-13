@@ -104,7 +104,8 @@
         "login": "Login",
         "dashboard": "Dashboard",
         "for_freelancers": "For Freelancers",
-        "plan": "Plan"
+        "plan": "Plan",
+        "blog": "Blog"
     },
     "for_freelancers": {
         "meta": {
@@ -126,6 +127,13 @@
             "3_content": "Information about events is not synchronized between calendars - clients will just see a Blocker",
             "4_head": "Ready to go in 30 Seconds",
             "4_content": "So why wait? Get started right now, and save yourself time while avoiding future problems!"
+        }
+    },
+    "blog": {
+        "title": "Blog",
+        "meta": {
+            "description": "Discover insightful articles about Google Calendar synchronization.",
+            "og_title": "Calensync Blog"
         }
     }
 }

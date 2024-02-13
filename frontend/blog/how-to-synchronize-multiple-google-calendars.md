@@ -100,19 +100,17 @@ C'est précisément pourquoi nous avons créé Calensync : pour fournir un meill
 
 - Pas gratuit (mais abordable).
 
-- - -
+ - - -
 title: Come sincronizzare i calendari Google insieme
 headline: "Se stai cercando come sincronizzare più calendari Google insieme, non cercare oltre. Questo breve articolo spiegherà tutto ciò che c'è da sapere."
 date: Dicembre 2023
 url: "/blog/come-sincronizzare-calendar-google"
 language: "it"
-description: "In questo post, descriviamo i due modi per sincronizzare i calendari Google insieme"
+description: "In questo post, speighiamo i due metodi per sincronizzare i calendari Google insieme"
  - -
 # Come sincronizzare i calendari Google insieme
 
 *Dicembre 2023*
-
----
 
 Se stai cercando come sincronizzare più calendari Google insieme, non cercare oltre. Questo breve articolo spiegherà tutto ciò che c'è da sapere.
 

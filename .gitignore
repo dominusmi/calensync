@@ -21,3 +21,4 @@ build
 /backend/awslambda/**/calensync/
 /sql/*
 .DS_Store
+frontend/src/_blog/
