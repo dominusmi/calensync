@@ -11,6 +11,7 @@ export interface ExtraProperties {
     date: string
     headline: string
     description: string
+    publishDate: string
 }
 
 const content: BlogPage<ExtraProperties> = JSON.parse(atob(`%REPLACE%`));
