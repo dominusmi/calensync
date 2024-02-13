@@ -128,5 +128,12 @@
             "4_head": "Ready to go in 30 Seconds",
             "4_content": "So why wait? Get started right now, and save yourself time while avoiding future problems!"
         }
+    },
+    "blog": {
+        "title": "Blog",
+        "meta": {
+            "description": "Discover insightful articles about Google Calendar synchronization.",
+            "og_title": "Calensync Blog"
+        }
     }
 }

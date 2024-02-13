@@ -126,5 +126,12 @@
       "4_head": "Pronto in 30 secondi",
       "4_content": "Quindi, perché aspettare? Inizia subito e risparmia tempo evitando problemi futuri!"
     }
+  },
+  "blog": {
+      "title": "Blog",
+      "meta": {
+          "description": "Scopri articoli interessanti su Google Calendar e la sincronizzazione tra calendari!",
+          "og_title": "Calensync Blog"
+      }
   }
 }

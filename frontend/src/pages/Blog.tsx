@@ -14,16 +14,16 @@ const Blog: React.FC = () => {
         <Layout verifySession={false} onlyRequired={false}>
             <Helmet>
                 <meta charSet="utf-8" />
-                <title>{t('blogs.title')}</title>
+                <title>{t('blog.title')}</title>
                 <link rel="canonical" href={`https://calensync.live${window.location.pathname}`} />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en`} hrefLang="en" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it`} hrefLang="it" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}`} hrefLang="x-default" />
-                <meta name="description" content={t("blogs.meta.description")} />
-                <meta name="og:title" content={t("blogs.meta.og_title")} />
+                <meta name="description" content={t("blog.meta.description")} />
+                <meta name="og:title" content={t("blog.meta.og_title")} />
                 <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}`} />
-                <meta name="og:description" content={t("blogs.meta.description")} />
+                <meta name="og:description" content={t("blog.meta.description")} />
             </Helmet>
             <div className='container col-xxl-8 gy-4'>
                 <div className="row g-lg-4 mt-4 mt-lg-3 mb-lg-3 pt-lg-3 pb-lg-2 row-cols-1 row-cols-lg-2">

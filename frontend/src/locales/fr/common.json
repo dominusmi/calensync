@@ -126,5 +126,12 @@
             "4_head": "Prêt à l'emploi en 30 secondes",
             "4_content": "Alors pourquoi attendre ? Commencez dès maintenant et gagnez du temps tout en évitant les problèmes futurs !"
         }
+    },
+    "blog": {
+        "title": "Blog",
+        "meta": {
+            "description": "Decouvrez des articles interessants sur Google Calendar et la synchronisation entre agendas!",
+            "og_title": "Calensync Blog"
+        }
     }
 }
