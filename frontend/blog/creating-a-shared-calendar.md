@@ -1,6 +1,7 @@
 title: "Creating a Shared Google Calendar for Your Group or Organization"
 description: "Learn how to create and utilize a shared Google Calendar for your group or organization. Discover the benefits of centralized scheduling, collaborative planning, and seamless integration, enhancing communication and productivity."
 date: February 2024
+publishDate: "2024-02-10"
 url: "/blog/creating-a-shared-calendar"
 language: "en"
 headline: "Learn how to create and utilize a shared Google Calendar for your group or organization."
