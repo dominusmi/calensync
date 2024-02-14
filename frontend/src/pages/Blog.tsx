@@ -16,7 +16,7 @@ const Blog: React.FC = () => {
             <Helmet>
                 <meta charSet="utf-8" />
                 <title>{t('blog.title')}</title>
-                <link rel="canonical" href={`https://calensync.live${window.location.pathname}`} />
+                <link rel="canonical" href={`https://calensync.live${window.location.pathname.replace(/\/$/, '')}`} />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en`} hrefLang="en" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it`} hrefLang="it" />
