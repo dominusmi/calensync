@@ -46,7 +46,7 @@ const BlogTemplate: React.FC = () => {
             <Helmet>
                 <meta charSet="utf-8" />
                 <title>{ts("title")}</title>
-                <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}/${content.properties.language}${content.properties.url}`} />
+                <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}${content.properties.language === "en" ? "" : `/${content.properties.language}`}${content.properties.url}`} />
                 {content.languages.map(([language, url]) => (
                     <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/${language}${url}`} hrefLang={language} />
                 ))}
@@ -69,7 +69,7 @@ const BlogTemplate: React.FC = () => {
                             components={{
                                 h1(props) {
                                     const { children } = props
-                                    return <h1 className='test'>{children}</h1>
+                                    return <h1>{children}</h1>
                                 },
                                 p(props) {
                                     const { children } = props
