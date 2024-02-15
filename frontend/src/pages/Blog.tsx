@@ -17,9 +17,9 @@ const Blog: React.FC = () => {
                 <meta charSet="utf-8" />
                 <title>{t('blog.title')}</title>
                 <link rel="canonical" href={`https://calensync.live${window.location.pathname.replace(/\/$/, '')}`} />
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr" />
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en`} hrefLang="en" />
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it`} hrefLang="it" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr/blog`} hrefLang="fr" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en/blog`} hrefLang="en" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it/blog`} hrefLang="it" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}`} hrefLang="x-default" />
                 <meta name="description" content={t("blog.meta.description")} />
                 <meta name="og:title" content={t("blog.meta.og_title")} />
