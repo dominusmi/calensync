@@ -42,7 +42,7 @@ jobs:
           elif [[ "${{ github.ref_name }}" == "dev" || "${{ github.event.inputs.env }}" == "dev" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
           fi
-          echo "Environment is $ENV"
+          echo "Environment is ${{env.ENV}}"
 
       - name: Checkout code
         uses: actions/checkout@v2
