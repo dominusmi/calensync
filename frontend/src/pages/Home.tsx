@@ -21,9 +21,13 @@ const Home: React.FC = () => {
     }
 
     async function setupPaddle() {
-        const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
-        if (paddleInstance) {
-            setPaddle(paddleInstance);
+        try {
+            const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
+            if (paddleInstance) {
+                setPaddle(paddleInstance);
+            }
+        }catch(e){
+            console.log(`Failed to initialize paddle: ${e}`)
         }
     }
 
