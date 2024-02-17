@@ -23,7 +23,7 @@ const Home: React.FC = () => {
     }
 
     async function setupPaddle() {
-        if (!process.env.CI) {
+        if (!window.origin.includes("localhost")) {
             try {
                 const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
                 if (paddleInstance) {
