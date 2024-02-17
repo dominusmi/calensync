@@ -41,6 +41,8 @@ jobs:
             echo "ENV=prod" >> $GITHUB_ENV
           elif [[ "${{ github.ref_name }}" == "dev" || "${{ github.event.inputs.env }}" == "dev" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
+          else
+            echo "ENV=dev" >> $GITHUB_ENV
           fi
           echo "Environment is ${{env.ENV}}"
 
