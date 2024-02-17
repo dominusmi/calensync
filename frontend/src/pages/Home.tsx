@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ENV, PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
 import { PaddlePricing } from '../components/PaddlePricing';
-// import { Paddle, initializePaddle } from '@paddle/paddle-js';
+import { Paddle, initializePaddle } from '@paddle/paddle-js';
 import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
 import { Accordion } from 'react-bootstrap';
@@ -13,27 +13,27 @@ import { ExtraProperties } from '../components/BlogTemplate';
 
 const Home: React.FC = () => {
     const { t, i18n } = useTranslation();
-    const [paddle, setPaddle] = useState< null>(null);
+    const [paddle, setPaddle] = useState<Paddle | null>(null);
 
 
     const signup = () => {
         window.location.href = `${PUBLIC_URL}/dashboard`;
     }
 
-    // async function setupPaddle() {
-    //     try {
-    //         const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
-    //         if (paddleInstance) {
-    //             setPaddle(paddleInstance);
-    //         }
-    //     }catch(e){
-    //         console.log(`Failed to initialize paddle: ${e}`)
-    //     }
-    // }
+    async function setupPaddle() {
+        try {
+            const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
+            if (paddleInstance) {
+                setPaddle(paddleInstance);
+            }
+        }catch(e){
+            console.log(`Failed to initialize paddle: ${e}`)
+        }
+    }
 
-    // useEffect(() => {
-    //     setupPaddle();
-    // }, [])
+    useEffect(() => {
+        setupPaddle();
+    }, [])
 
     return (
         <Layout verifySession={false} onlyRequired={false}>
