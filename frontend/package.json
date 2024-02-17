@@ -26,7 +26,7 @@
     "react-scripts": "^5.0.1",
     "react-toastify": "^9.1.3",
     "react-tooltip": "^5.25.0",
-    "reactyll": "^0.0.2",
+    "reactyll": "^0.0.4",
     "rehype-raw": "^7.0.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
@@ -43,7 +43,7 @@
     "deploy:prod": "aws s3 --profile opali sync build s3://calensync/frontend/prod",
     "deploy-ci:dev": "aws s3 sync build s3://calensync/frontend/dev",
     "deploy-ci:prod": "aws s3 sync build s3://calensync/frontend/prod && aws cloudfront create-invalidation --distribution-id E295TYJFC3TR5Y --paths \"/*\"",
-    "postbuild:dev": "node scripts/generateSitemap.js https://calensync.live/dev && PUBLIC_URL=/dev react-snap && cp sitemap.xml build/",
+    "postbuild:dev": "node scripts/generateSitemap.js https://calensync.live && PUBLIC_URL=/dev react-snap && cp sitemap.xml build/",
     "postbuild:prod": "node scripts/generateSitemap.js https://calensync.live && react-snap && cp sitemap.xml build/",
     "sitemap": "node scripts/generateSitemap.js"
   },

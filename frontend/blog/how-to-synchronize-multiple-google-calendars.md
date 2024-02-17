@@ -1,5 +1,6 @@
 title: How to Synchronize Google Calendars together
 date: December 2023
+publishDate: "2023-12-10"
 headline: "If you're looking for how to sync multiple Google Calendars together, look no further. This brief article will explain all there is to know."
 language: "en"
 url: "/blog/sync-multiple-google-calendars"

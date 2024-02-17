@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import React, { useEffect, useState } from 'react';
 import { ENV, PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
@@ -21,9 +23,15 @@ const Home: React.FC = () => {
     }
 
     async function setupPaddle() {
-        const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
-        if (paddleInstance) {
-            setPaddle(paddleInstance);
+        if (!window.origin.includes("localhost")) {
+            try {
+                const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
+                if (paddleInstance) {
+                    setPaddle(paddleInstance);
+                }
+            } catch (e) {
+                console.log(`Failed to initialize paddle: ${e}`)
+            }
         }
     }
 
@@ -36,7 +44,7 @@ const Home: React.FC = () => {
             <Helmet>
                 <meta charSet="utf-8" />
                 <title>{t('title_sync_calendars')}</title>
-                <link rel="canonical" href={`https://calensync.live${window.location.pathname}`} />
+                <link rel="canonical" href={`https://calensync.live${window.location.pathname.replace(/\/$/, '')}`} />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en`} hrefLang="en" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it`} hrefLang="it" />
@@ -86,9 +94,7 @@ const Home: React.FC = () => {
                 </div>
             </div>
             <div className='hero py-5'>
-                {paddle &&
-                    <PaddlePricing paddle={paddle} isHome={true} />
-                }
+                <PaddlePricing paddle={paddle} isHome={true} />
                 <div className='container'>
                     <div className="d-grid gap-2 d-md-flex justify-content-center">
                         <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>{t("home.hero.cta")}</button>

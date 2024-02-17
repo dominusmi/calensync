@@ -3,9 +3,10 @@ import { PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
 import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
-import { BlogProperties, getBlogForLanguage } from 'reactyll';
+import { BlogProperties, RouteWrapper, getBlogForLanguage } from 'reactyll';
 import { blogs } from '../_blog/routes';
 import { ExtraProperties } from '../components/BlogTemplate';
+import { sortBlogsByDate } from '../utils/blog';
 
 const Blog: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -15,10 +16,10 @@ const Blog: React.FC = () => {
             <Helmet>
                 <meta charSet="utf-8" />
                 <title>{t('blog.title')}</title>
-                <link rel="canonical" href={`https://calensync.live${window.location.pathname}`} />
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr" />
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en`} hrefLang="en" />
-                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it`} hrefLang="it" />
+                <link rel="canonical" href={`https://calensync.live${window.location.pathname.replace(/\/$/, '')}`} />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr/blog`} hrefLang="fr" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en/blog`} hrefLang="en" />
+                <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it/blog`} hrefLang="it" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}`} hrefLang="x-default" />
                 <meta name="description" content={t("blog.meta.description")} />
                 <meta name="og:title" content={t("blog.meta.og_title")} />
@@ -34,9 +35,8 @@ const Blog: React.FC = () => {
                 </div>
             </div>
             <div className='hero py-5'>
-                {Object.values(blogs).map((blogLang) => {
-                    console.log(blogLang)
-                    return [getBlogForLanguage(blogLang, i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
+            {sortBlogsByDate(blogs as RouteWrapper<ExtraProperties>).map((data) => {
+                    return [getBlogForLanguage(data, i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
                         <div  key={blog.url} className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto'>
                             <a className='block-link' href={`${PUBLIC_URL}${blog.url}`}>
                                 <h2>{blog.title}</h2>
