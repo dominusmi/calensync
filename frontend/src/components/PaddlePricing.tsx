@@ -6,7 +6,7 @@ import { PADDLE_PRICING } from "../utils/const";
 import { useTranslation } from "react-i18next";
 
 
-export const PaddlePricing: React.FC<{ paddle: Paddle, isHome: boolean, clickedBuy?: (price: Price) => void, isReady?: () => void }> = ({ isHome, clickedBuy, paddle, isReady }) => {
+export const PaddlePricing: React.FC<{ paddle: Paddle | null, isHome: boolean, clickedBuy?: (price: Price) => void, isReady?: () => void }> = ({ isHome, clickedBuy, paddle, isReady }) => {
     const { t } = useTranslation();
     const [prices, setPrices] = useState<LineItem[]>([]);
     const [currentPrice, setCurrentPrice] = useState<number>(0);

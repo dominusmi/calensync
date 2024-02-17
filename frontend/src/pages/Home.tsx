@@ -94,9 +94,7 @@ const Home: React.FC = () => {
                 </div>
             </div>
             <div className='hero py-5'>
-                {paddle &&
-                    <PaddlePricing paddle={paddle} isHome={true} />
-                }
+                <PaddlePricing paddle={paddle} isHome={true} />
                 <div className='container'>
                     <div className="d-grid gap-2 d-md-flex justify-content-center">
                         <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>{t("home.hero.cta")}</button>
