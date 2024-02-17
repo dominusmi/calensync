@@ -23,14 +23,16 @@ const Home: React.FC = () => {
     }
 
     async function setupPaddle() {
-        // try {
-        //     const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
-        //     if (paddleInstance) {
-        //         setPaddle(paddleInstance);
-        //     }
-        // }catch(e){
-        //     console.log(`Failed to initialize paddle: ${e}`)
-        // }
+        if (!window.origin.includes("localhost")) {
+            try {
+                const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
+                if (paddleInstance) {
+                    setPaddle(paddleInstance);
+                }
+            } catch (e) {
+                console.log(`Failed to initialize paddle: ${e}`)
+            }
+        }
     }
 
     useEffect(() => {
