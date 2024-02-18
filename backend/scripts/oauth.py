@@ -3,14 +3,14 @@ from pathlib import Path
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 
-from calensync.utils import get_client_secret, get_scopes
+from calensync.utils import get_client_secret, get_profile_and_calendar_scopes
 
 if __name__ == "__main__":
     # Use the client_secret.json file to identify the application requesting
     # authorization. The client ID (from that file) and access scopes are required.
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         get_client_secret(),
-        scopes=get_scopes())
+        scopes=get_profile_and_calendar_scopes())
 
     # Indicate where the API server will redirect the user after the user completes
     # the authorization flow. The redirect URI is required. The value must exactly

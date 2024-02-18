@@ -19,7 +19,7 @@ class MockEvent:
     status = EventStatus.confirmed
 
 
-def test_get_users_query_with_active_calendar(user, account1, calendar1, calendar2):
+def test_get_users_query_with_active_calendar(user, account1_1, calendar1_1, calendar1_2):
     user2 = User().save_new()
     user2_account = CalendarAccount(key="whauh", credentials="", user=user2).save_new()
     Calendar(account=user2_account, platform_id="platform2_1", name="name2", active=False).save_new()
@@ -28,7 +28,7 @@ def test_get_users_query_with_active_calendar(user, account1, calendar1, calenda
     result = list(query)
     assert len(result) == 0
 
-    SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
+    SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
 
     query = get_users_query_with_active_sync_rules()
     result = list(query)
@@ -36,18 +36,18 @@ def test_get_users_query_with_active_calendar(user, account1, calendar1, calenda
     assert result[0].id == user.id
 
 
-def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2: Calendar):
+def test_daily_sync(db, user, account1_1, calendar1_1: Calendar, account1_2, calendar1_2: Calendar):
     with (
         patch("calensync.gwrapper.insert_event") as insert_event,
         patch("calensync.gwrapper.get_events") as get_events,
         patch("calensync.awslambda.daily_sync.service_from_account") as service_from_account
     ):
 
-        calendar1.active = True
-        calendar1.save()
-        calendar2.active = True
-        calendar2.save()
-        calendar3 = Calendar(account=account2, platform_id="platform3", name="name3", active=True).save_new()
+        calendar1_1.active = True
+        calendar1_1.save()
+        calendar1_2.active = True
+        calendar1_2.save()
+        calendar3 = Calendar(account=account1_2, platform_id="platform3", name="name3", active=True).save_new()
         calendar3.save()
 
         source_ids = ["1", "2", "3"]
@@ -59,10 +59,10 @@ def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2
 
         def mock_insert_event(*args, **kwargs):
             calendar_id = kwargs["calendar_id"]
-            if calendar_id == calendar1.platform_id:
+            if calendar_id == calendar1_1.platform_id:
                 insert_iteration[0] += 1
                 return {"id": f"e1_{insert_iteration[0]}"}
-            elif calendar_id == calendar2.platform_id:
+            elif calendar_id == calendar1_2.platform_id:
                 insert_iteration[1] += 1
                 return {"id": f"e2_{insert_iteration[1]}"}
             elif calendar_id == calendar3.platform_id:
@@ -97,12 +97,12 @@ def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2
 
         sync_user_calendars_by_date(db)
 
-        # events = list(Event.select().where(Event.calendar_id == calendar1.id, Event.source.is_null(False)))
+        # events = list(Event.select().where(Event.calendar_id == calendar1_1.id, Event.source.is_null(False)))
         # assert len(events) == 2
         # assert next(filter(lambda x: x.source.event_id == "2", events))
         # assert next(filter(lambda x: x.source.event_id == "3", events))
         #
-        # events = list(Event.select().where(Event.calendar_id == calendar2.id, Event.source.is_null(False)))
+        # events = list(Event.select().where(Event.calendar_id == calendar1_2.id, Event.source.is_null(False)))
         # assert len(events) == 1
         # assert next(filter(lambda x: x.source.event_id == "1", events))
         #
@@ -116,22 +116,22 @@ def test_daily_sync(db, user, account1, calendar1: Calendar, account2, calendar2
         # iteration = [0]
         # insert_iteration = [0, 0, 0]
         # sync_user_calendars_by_date(db)
-        # events = list(Event.select().where(Event.calendar_id == calendar1.id, Event.source.is_null(False)))
+        # events = list(Event.select().where(Event.calendar_id == calendar1_1.id, Event.source.is_null(False)))
         # assert len(events) == 2
-        # events = list(Event.select().where(Event.calendar_id == calendar2.id, Event.source.is_null(False)))
+        # events = list(Event.select().where(Event.calendar_id == calendar1_2.id, Event.source.is_null(False)))
         # assert len(events) == 1
         # events = list(Event.select().where(Event.calendar_id == calendar3.id, Event.source.is_null(False)))
         # assert len(events) == 3
 
 
-def test_sync_user_calendars_by_date_multiple_users(db, user, account1, calendar1: Calendar, account2,
-                                                    calendar2: Calendar):
+def test_sync_user_calendars_by_date_multiple_users(db, user, account1_1, calendar1_1: Calendar, account1_2,
+                                                    calendar1_2: Calendar):
     user2 = User(email="tes@t.io", is_admin=True, tos=datetime.datetime.now()).save_new()
-    account2_1 = CalendarAccount(user=user2, key="wat", credentials={}).save_new()
-    c2_1 = Calendar(account=account2_1, platform_id="platform2_1", name="name2_1").save_new()
-    c2_2 = Calendar(account=account2_1, platform_id="platform2_2", name="name2_2").save_new()
+    account1_2_1 = CalendarAccount(user=user2, key="wat", credentials={}).save_new()
+    c2_1 = Calendar(account=account1_2_1, platform_id="platform2_1", name="name2_1").save_new()
+    c2_2 = Calendar(account=account1_2_1, platform_id="platform2_2", name="name2_2").save_new()
     SyncRule(source=c2_1, destination=c2_2, private=True).save_new()
-    SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
+    SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
 
     with (
         patch("calensync.awslambda.daily_sync.load_calendars") as load_calendars,
@@ -145,15 +145,15 @@ def test_sync_user_calendars_by_date_multiple_users(db, user, account1, calendar
 
 class TestUpdateWatches:
     @staticmethod
-    def test_normal_case(db, calendar1: Calendar, calendar2: Calendar, calendar2_1: Calendar):
-        calendar1.expiration = utcnow() + datetime.timedelta(hours=38)
-        calendar1.save()
+    def test_normal_case(db, calendar1_1: Calendar, calendar1_2: Calendar, calendar1_1_2: Calendar):
+        calendar1_1.expiration = utcnow() + datetime.timedelta(hours=38)
+        calendar1_1.save()
 
-        calendar2.expiration = utcnow() + datetime.timedelta(hours=35)
-        calendar2.save()
+        calendar1_2.expiration = utcnow() + datetime.timedelta(hours=35)
+        calendar1_2.save()
 
-        SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
-        SyncRule(source=calendar2, destination=calendar1, private=True).save_new()
+        SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+        SyncRule(source=calendar1_2, destination=calendar1_1, private=True).save_new()
 
 
         with (
@@ -165,15 +165,15 @@ class TestUpdateWatches:
             assert delete_watch.call_count == 1
 
     @staticmethod
-    def test_create_fail_twice(db, calendar1: Calendar, calendar2: Calendar):
-        calendar1.expiration = utcnow() + datetime.timedelta(hours=38)
-        calendar1.save()
+    def test_create_fail_twice(db, calendar1_1: Calendar, calendar1_2: Calendar):
+        calendar1_1.expiration = utcnow() + datetime.timedelta(hours=38)
+        calendar1_1.save()
 
-        calendar2.expiration = utcnow() + datetime.timedelta(hours=35)
-        calendar2.save()
+        calendar1_2.expiration = utcnow() + datetime.timedelta(hours=35)
+        calendar1_2.save()
 
-        SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
-        SyncRule(source=calendar2, destination=calendar1, private=True).save_new()
+        SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+        SyncRule(source=calendar1_2, destination=calendar1_1, private=True).save_new()
 
         with (
             patch("calensync.gwrapper.GoogleCalendarWrapper.create_watch") as create_watch,
@@ -194,15 +194,15 @@ class TestUpdateWatches:
             assert sleep.call_count == 2
 
     @staticmethod
-    def test_create_fail_delete(db, calendar1: Calendar, calendar2: Calendar):
-        calendar1.expiration = utcnow() + datetime.timedelta(hours=38)
-        calendar1.save()
+    def test_create_fail_delete(db, calendar1_1: Calendar, calendar1_2: Calendar):
+        calendar1_1.expiration = utcnow() + datetime.timedelta(hours=38)
+        calendar1_1.save()
 
-        calendar2.expiration = utcnow() + datetime.timedelta(hours=35)
-        calendar2.save()
+        calendar1_2.expiration = utcnow() + datetime.timedelta(hours=35)
+        calendar1_2.save()
 
-        SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
-        SyncRule(source=calendar2, destination=calendar1, private=True).save_new()
+        SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+        SyncRule(source=calendar1_2, destination=calendar1_1, private=True).save_new()
 
         with (
             patch("calensync.gwrapper.GoogleCalendarWrapper.create_watch") as create_watch,
