@@ -1,19 +1,19 @@
 import datetime
-from typing import Optional, Tuple
+from typing import Tuple
 
 import peewee
 
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
-from calensync.database.model import Calendar, CalendarAccount, User, SyncRule
-from calensync.dataclass import PostSyncRuleBody
+from calensync.database.model import Calendar, User, SyncRule
 from calensync.gwrapper import GoogleCalendarWrapper, source_event_tuple
 from calensync.log import get_logger
-from calensync.utils import is_local, utcnow
+from calensync.utils import utcnow
 
 logger = get_logger(__file__)
 
 
-def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_calendar_uuid: str) ->Tuple[Calendar, Calendar]:
+def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_calendar_uuid: str) -> Tuple[
+    Calendar, Calendar]:
     if source_calendar_uuid == destination_calendar_uuid:
         raise ApiError("Source and destination cannot be the same", code=400)
 
