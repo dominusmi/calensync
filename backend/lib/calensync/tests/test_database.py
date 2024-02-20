@@ -31,22 +31,22 @@ def test_multiple_accounts():
         assert account is not None
 
 
-def test_unique_user_account_fails(db, user, account1):
-    account2 = CalendarAccount(user=user, key=account1.key, credentials={})
+def test_unique_user_account_fails(db, user, account1_1):
+    account1_2 = CalendarAccount(user=user, key=account1_1.key, credentials={})
     with pytest.raises(peewee.IntegrityError):
-        account2.save()
+        account1_2.save()
 
 
-def test_unique_user_account_succeeds(db, user, account1):
-    account2 = CalendarAccount(user=user, key=account1.key, credentials={})
+def test_unique_user_account_succeeds(db, user, account1_1):
+    account1_2 = CalendarAccount(user=user, key=account1_1.key, credentials={})
     user2 = User(email="test2@test.com").save_new()
-    account2.user = user2
-    account2.save()
+    account1_2.user = user2
+    account1_2.save()
 
 
-def test_is_read_only(db, user, account1, calendar1):
-    assert not calendar1.is_read_only
-    calendar1.platform_id = "whatever@group.v.calendar.google.com"
-    calendar1.save()
-    calendar = calendar1.refresh()
+def test_is_read_only(db, user, account1_1, calendar1_1):
+    assert not calendar1_1.is_read_only
+    calendar1_1.platform_id = "whatever@group.v.calendar.google.com"
+    calendar1_1.save()
+    calendar = calendar1_1.refresh()
     assert calendar.is_read_only

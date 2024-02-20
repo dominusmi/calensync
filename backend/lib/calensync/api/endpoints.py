@@ -161,8 +161,9 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
             if len(state_user_db.emails) > 0:
                 # this means multiple users with at least one email
                 logger.error(f"Users with multiple emails: {email_db.user} and {state_db.user}")
-                msg = encode_query_message(f"This email is already associated. If you believe an error occured, let us know "
-                                           f"by email (support@calensync.live) or with the feedback form.")
+                msg = encode_query_message(
+                    f"This email is already associated. If you believe an error occured, let us know "
+                    f"by email (support@calensync.live) or with the feedback form.")
                 return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
             else:
                 # This means the state_db user can be thought as temporary (since it has no emails attached)
@@ -503,13 +504,13 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
 
-def delete_sync_rule(user: User, sync_id: str):
+def delete_sync_rule(user: User, sync_uuid: str):
     sync_rules = list(
         SyncRule.select(SyncRule.id, SyncRule.source, Calendar)
         .join(Calendar, on=(SyncRule.destination_id == Calendar.id))
         .join(CalendarAccount)
         .join(User)
-        .where(SyncRule.uuid == sync_id, User.id == user.id)
+        .where(SyncRule.uuid == sync_uuid, User.id == user.id)
     )
 
     if len(sync_rules) == 0:
@@ -556,3 +557,16 @@ def get_sync_rules(user: User):
         .where(CalendarAccount.user_id == user.id)
         .dicts()
     )
+
+
+def reset_user(caller: User, user_uuid: str):
+    if not caller.is_admin:
+        raise ApiError("Forbidden", 403)
+
+    user = User.get_or_none(uuid=user_uuid)
+    if user is None:
+        return
+
+    sync_rules = get_sync_rules(user)
+    for rule in sync_rules:
+        delete_sync_rule(user, rule["uuid"])
