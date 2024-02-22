@@ -1,7 +1,9 @@
 import json
 
 import boto3
+import jwt
 
+from calensync.api.common import ApiError
 from calensync.database.model import db, MODELS
 
 
@@ -62,3 +64,18 @@ def reset_db():
         model.drop_table(cascade=True)
     for model in reversed(MODELS):
         model.create_table()
+
+
+def verify_appsmith(appsmith, boto3_session) -> bool:
+    if appsmith:
+        try:
+            # Decode the token
+            secretsmanager = boto3_session.client("secretsmanager")
+            secret = secretsmanager.get_secret_value(
+                SecretId=f'appsmith-jwt-key',
+            )
+            configs = json.loads(secret["SecretString"])
+            jwt.decode(appsmith, configs['key'], algorithms=["HS256"])
+            return True
+        except Exception:
+            raise ApiError("Invalid signature", 403)

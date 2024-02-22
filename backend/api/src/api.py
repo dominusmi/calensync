@@ -2,7 +2,6 @@ from typing import Annotated, Union, Dict
 
 from fastapi import FastAPI, Request, Query, Body, Cookie, Header
 from mangum import Mangum
-from starlette.responses import JSONResponse
 
 from calensync import sqs
 from calensync.api import endpoints
@@ -237,14 +236,11 @@ def get__unsubscribe(user_id: str):
 
 @app.get('/user/{user_id}/reset')
 @format_response
-def reset__user(user_uuid: str, session_id: str = Header(None), authorization: Annotated[Union[str, None], Cookie()] = None):
+def reset__user(user_uuid: str, x_appsmith_signature: str = Annotated[Union[str, None], Header()]):
+    if x_appsmith_signature is None:
+        raise ApiError("Invalid signature", 403)
     with DatabaseSession(os.environ["ENV"]) as db:
-        auth = session_id if session_id is not None else authorization
-        if auth is None:
-            raise ApiError("Forbidden", 403)
-
-        caller = verify_session(auth)
-        reset_user(caller, user_uuid)
+        reset_user(user_uuid, x_appsmith_signature, boto3.Session())
 
 
 from fastapi.middleware.cors import CORSMiddleware

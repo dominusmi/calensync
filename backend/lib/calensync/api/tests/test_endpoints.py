@@ -2,7 +2,11 @@ import os
 from typing import List
 from unittest.mock import patch
 
+import boto3
+import jwt
+import moto
 import starlette.responses
+from moto import mock_aws
 
 from calensync.api import endpoints
 from calensync.api.common import ApiError
@@ -349,9 +353,21 @@ class TestGetOauthToken:
 
 class TestResetUser:
     @staticmethod
+    def create_token_secret_and_signature():
+        session = boto3.Session(profile_name="test")
+        client = session.client('secretsmanager')
+        response = client.create_secret(
+            Name='appsmith-jwt-key',
+            Description='',
+            SecretString='{"key":"my-key"}'
+        )
+        return jwt.encode({}, "my-key", algorithm="HS256")
+
+    @staticmethod
     def test_valid(user, account1_1, calendar1_1, calendar1_2, user2, calendar1_1_2, calendar1_2_2):
         with (
             patch("calensync.api.endpoints.delete_sync_rule") as delete_sync_rule,
+            mock_aws()
         ):
             user.is_admin = True
             user.save()
@@ -367,7 +383,9 @@ class TestResetUser:
             sr1 = SyncRule(source=calendar2_1, destination=calendar2_2, private=True).save_new()
             sr2 = SyncRule(source=calendar2_2, destination=calendar2_1, private=True).save_new()
 
-            reset_user(user, str(user2.uuid))
+            signature = TestResetUser.create_token_secret_and_signature()
+
+            reset_user(str(user2.uuid), signature, boto3.Session(profile_name="test"))
             assert delete_sync_rule.call_count == 2
             assert delete_sync_rule.call_args_list[0].args[1] == sr1.uuid
             assert delete_sync_rule.call_args_list[1].args[1] == sr2.uuid
@@ -376,6 +394,9 @@ class TestResetUser:
     def test_not_admin(user, user2):
         with (
             patch("calensync.api.endpoints.delete_sync_rule") as delete_sync_rule,
+            mock_aws()
         ):
+            _ = TestResetUser.create_token_secret_and_signature()
+            signature = jwt.encode({}, "wrong-key", algorithm="HS256")
             with pytest.raises(ApiError):
-                reset_user(user, str(user2.uuid))
+                reset_user(str(user2.uuid), signature, boto3.Session(profile_name="test"))
