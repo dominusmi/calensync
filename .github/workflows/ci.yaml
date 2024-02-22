@@ -94,6 +94,8 @@ jobs:
 
       - name: Install and build frontend
         working-directory: frontend
+        env:
+         PUPPETEER_SKIP_DOWNLOAD: true
         run: |
           npm install
           npm run build:blog
