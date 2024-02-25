@@ -70,7 +70,7 @@
     "@types/uuid": "^9.0.7",
     "dotenv": "^16.3.1",
     "dotenv-cli": "^7.3.0",
-    "react-snap": "github:dominusmi/react-snap#update-puppeteer"
+    "react-snap-dominusmi": "^1.23.1"
   },
   "browserslist": {
     "production": [
