@@ -1,6 +1,5 @@
 import { BlogLanguageWrapper, BlogProperties, RouteWrapper } from "reactyll";
 import { ExtraProperties } from "../components/BlogTemplate";
-import { blogs } from "../_blog/routes";
 
 export function sortBlogsByDate(blogs: RouteWrapper<ExtraProperties>): BlogLanguageWrapper<ExtraProperties>[] {
     // Convert the blogs object to an array of entries

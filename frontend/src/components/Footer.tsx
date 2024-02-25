@@ -1,7 +1,7 @@
 import React from 'react';
 import { PUBLIC_URL } from '../utils/const';
 import { useTranslation } from 'react-i18next';
-import { blogRoutes, blogs } from '../_blog/routes';
+import { blogs } from '../_blog/routes';
 import { getBlogByLanguage } from '../utils/blog';
 
 const Footer: React.FC<{ onlyRequired?: boolean }> = ({ onlyRequired = false }) => {
