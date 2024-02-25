@@ -563,6 +563,7 @@ def reset_user(user_uuid: str, x_appsmith_signature: str, boto3_session):
 
     user = User.get_or_none(uuid=user_uuid)
     if user is None:
+        logger.info("Cannot reset null user, returning")
         return
 
     sync_rules = get_sync_rules(user)
