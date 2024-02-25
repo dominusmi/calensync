@@ -234,9 +234,9 @@ def get__unsubscribe(user_id: str):
         return unsubscribe(user_id)
 
 
-@app.get('/user/{user_id}/reset')
+@app.get('/user/{user_uuid}/reset')
 @format_response
-def reset__user(user_uuid: str, x_appsmith_signature: str = Annotated[Union[str, None], Header()]):
+def reset__user(user_uuid: str, x_appsmith_signature: Annotated[Union[str, None], Header()] = None):
     if x_appsmith_signature is None:
         raise ApiError("Invalid signature", 403)
     with DatabaseSession(os.environ["ENV"]) as db:
@@ -275,4 +275,4 @@ if __name__ == "__main__":
     dir = Path().expanduser().resolve().parent
     env_path = dir.joinpath("../.env").resolve()
     reload_dir = dir.joinpath("../").resolve()
-    uvicorn.run(app, host="127.0.0.1", port=8000, env_file=str(env_path), reload_dirs=[str(reload_dir)])
+    uvicorn.run(app, host="0.0.0.0", port=8000, env_file=str(env_path), reload_dirs=[str(reload_dir)])
