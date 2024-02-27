@@ -12,17 +12,18 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
             stack: error.stack,
             componentStack: errorInfo.componentStack,
         });
-
-        if (ENV === "development" || ENV === "production") {
-            fetch(`${API}/console-error`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: body,
-            });
-        }else {
-            console.log("Would've sent error", body)
+        if (window.location.host.includes("calensync")) {
+            if (ENV === "development" || ENV === "production") {
+                fetch(`${API}/console-error`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: body,
+                });
+            } else {
+                console.log("Would've sent error", body)
+            }
         }
     }
 

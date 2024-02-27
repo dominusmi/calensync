@@ -17,7 +17,7 @@ import calensync.sqs
 from calensync.api.common import ApiError, RedirectResponse, encode_query_message
 from calensync.api.service import verify_valid_sync_rule, run_initial_sync
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
-from calensync.database.utils import DatabaseSession
+from calensync.database.utils import DatabaseSession, verify_appsmith
 from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty, PostSyncRuleEvent
 from calensync.log import get_logger
 import calensync.paddle as paddle
@@ -70,7 +70,6 @@ def get_frontend_env():
 
 def verify_session(session_id: Optional[str]) -> User:
     """ Returns the claimed email """
-
     if session_id is None:
         raise ApiError("Credentials missing", 404)
 
@@ -559,12 +558,12 @@ def get_sync_rules(user: User):
     )
 
 
-def reset_user(caller: User, user_uuid: str):
-    if not caller.is_admin:
-        raise ApiError("Forbidden", 403)
+def reset_user(user_uuid: str, x_appsmith_signature: str, boto3_session):
+    verify_appsmith(x_appsmith_signature, boto3_session)
 
     user = User.get_or_none(uuid=user_uuid)
     if user is None:
+        logger.info("Cannot reset null user, returning")
         return
 
     sync_rules = get_sync_rules(user)
