@@ -354,7 +354,7 @@ class TestGetOauthToken:
 class TestResetUser:
     @staticmethod
     def create_token_secret_and_signature():
-        session = boto3.Session(profile_name="test")
+        session = boto3.Session(aws_secret_access_key="1234", aws_access_key_id="1234")
         client = session.client('secretsmanager')
         response = client.create_secret(
             Name='appsmith-jwt-key',
@@ -384,8 +384,7 @@ class TestResetUser:
             sr2 = SyncRule(source=calendar2_2, destination=calendar2_1, private=True).save_new()
 
             signature = TestResetUser.create_token_secret_and_signature()
-
-            reset_user(str(user2.uuid), signature, boto3.Session(profile_name="test"))
+            reset_user(str(user2.uuid), signature, boto3.Session(aws_secret_access_key="1234", aws_access_key_id="1234"))
             assert delete_sync_rule.call_count == 2
             assert delete_sync_rule.call_args_list[0].args[1] == sr1.uuid
             assert delete_sync_rule.call_args_list[1].args[1] == sr2.uuid
@@ -399,4 +398,4 @@ class TestResetUser:
             _ = TestResetUser.create_token_secret_and_signature()
             signature = jwt.encode({}, "wrong-key", algorithm="HS256")
             with pytest.raises(ApiError):
-                reset_user(str(user2.uuid), signature, boto3.Session(profile_name="test"))
+                reset_user(str(user2.uuid), signature, boto3.Session(aws_secret_access_key="1234", aws_access_key_id="1234"))
