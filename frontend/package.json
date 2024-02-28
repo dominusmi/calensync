@@ -51,8 +51,7 @@
     "puppeteerArgs": [
       "--no-sandbox",
       "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--single-process"
+      "--disable-dev-shm-usage"
     ],
     "sitemapPath": "sitemap.xml",
     "timeout": 60000
@@ -71,7 +70,7 @@
     "@types/uuid": "^9.0.7",
     "dotenv": "^16.3.1",
     "dotenv-cli": "^7.3.0",
-    "react-snap-dominusmi": "github:dominusmi/react-snap#patch-error-to-string"
+    "react-snap-dominusmi": "^1.23.2"
   },
   "browserslist": {
     "production": [
