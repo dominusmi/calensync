@@ -35,24 +35,23 @@ def user(db):
 
 
 @fixture
-def account1(db, user):
+def account1_1(db, user):
     return CalendarAccount(user=user, key="test1", credentials={}).save_new()
 
 
 @fixture
-def calendar1(db, account1):
-    return Calendar(account=account1, platform_id="platform1", name="name1", active=False).save_new()
+def calendar1_1(db, account1_1):
+    return Calendar(account=account1_1, platform_id="platform1", name="name1", active=False).save_new()
 
 
 @fixture
-def account2(db, user):
+def account1_2(db, user):
     return CalendarAccount(user=user, key="test2", credentials={}).save_new()
 
 
 @fixture
-def calendar2(db, account2):
-    return Calendar(account=account2, platform_id="platform2", name="name2", active=False).save_new()
-
+def calendar1_2(db, account1_2):
+    return Calendar(account=account1_2, platform_id="platform2", name="name2", active=False).save_new()
 
 
 @fixture
@@ -61,23 +60,23 @@ def user2(db):
 
 
 @fixture
-def account2_1(db, user):
+def account1_1_2(db, user):
     return CalendarAccount(user=user, key="test2_1", credentials={}).save_new()
 
 
 @fixture
-def calendar2_1(db, account1):
-    return Calendar(account=account1, platform_id="platform2_1", name="name1", active=False).save_new()
+def calendar1_1_2(db, account1_1):
+    return Calendar(account=account1_1, platform_id="platform2_1", name="name1", active=False).save_new()
 
 
 @fixture
-def account2_2(db, user):
+def account1_1_3(db, user):
     return CalendarAccount(user=user, key="test2_2", credentials={}).save_new()
 
 
 @fixture
-def calendar2_2(db, account2):
-    return Calendar(account=account2, platform_id="platform2_2", name="name2", active=False).save_new()
+def calendar1_2_2(db, account1_2):
+    return Calendar(account=account1_2, platform_id="platform2_2", name="name2", active=False).save_new()
 
 
 def uuid4():

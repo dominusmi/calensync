@@ -6,7 +6,7 @@ import starlette.responses
 
 from calensync.api import endpoints
 from calensync.api.common import ApiError
-from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env
+from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env, reset_user
 from calensync.api.service import received_webhook
 from calensync.calendar import EventsModificationHandler
 from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB
@@ -21,25 +21,25 @@ os.environ["ENV"] = "test"
 
 class TestWebhook:
     @staticmethod
-    def test_no_recent_insertion(db, user: User, calendar1: Calendar):
-        calendar1.last_inserted = utcnow() - datetime.timedelta(seconds=187)
-        calendar1.save()
+    def test_no_recent_insertion(db, user: User, calendar1_1: Calendar):
+        calendar1_1.last_inserted = utcnow() - datetime.timedelta(seconds=187)
+        calendar1_1.save()
         with patch("calensync.gwrapper.GoogleCalendarWrapper.solve_update_in_calendar") as mocked:
-            received_webhook(str(calendar1.channel_id), "", "resource1", str(calendar1.token), db)
+            received_webhook(str(calendar1_1.channel_id), "", "resource1", str(calendar1_1.token), db)
             mocked.assert_called_once()
-            c = calendar1.refresh()
+            c = calendar1_1.refresh()
             assert (utcnow() - c.last_received.replace(tzinfo=datetime.timezone.utc)).seconds < 5
 
     @staticmethod
-    def test_with_recent_insertion(db, user, calendar1):
+    def test_with_recent_insertion(db, user, calendar1_1):
         new_inserted_dt = utcnow() - datetime.timedelta(seconds=1)
-        calendar1.last_inserted = new_inserted_dt
-        calendar1.save()
+        calendar1_1.last_inserted = new_inserted_dt
+        calendar1_1.save()
         with patch("calensync.gwrapper.GoogleCalendarWrapper.solve_update_in_calendar") as mocked:
             with pytest.raises(ApiError):
-                received_webhook(str(calendar1.channel_id), "", "resource1", str(calendar1.token), db)
+                received_webhook(str(calendar1_1.channel_id), "", "resource1", str(calendar1_1.token), db)
             mocked.assert_not_called()
-            c = calendar1.refresh()
+            c = calendar1_1.refresh()
             # last received should be updated, but not last inserted no
             assert (utcnow() - c.last_received.replace(tzinfo=datetime.timezone.utc)).seconds < 5
             assert c.last_inserted.replace(tzinfo=datetime.timezone.utc) == new_inserted_dt
@@ -47,18 +47,18 @@ class TestWebhook:
 
 class TestProcessCalendar:
     @staticmethod
-    def test_process_calendar(db, user, calendar1, calendar2):
+    def test_process_calendar(db, user, calendar1_1, calendar1_2):
         now = utcnow()
         three_minutes_ago = now - datetime.timedelta(seconds=180)
-        calendar1.active = True
-        calendar1.last_inserted = three_minutes_ago
-        calendar1.last_processed = three_minutes_ago
-        calendar1.save()
+        calendar1_1.active = True
+        calendar1_1.last_inserted = three_minutes_ago
+        calendar1_1.last_processed = three_minutes_ago
+        calendar1_1.save()
 
         user2 = User(email="test@test.com").save_new()
-        account21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
-        calendar21 = Calendar(account=account21, platform_id="platform_id21", name="name21", active=True,
-                              last_processed=three_minutes_ago, last_inserted=three_minutes_ago).save_new()
+        account1_21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
+        calendar1_21 = Calendar(account=account1_21, platform_id="platform_id21", name="name21", active=True,
+                                last_processed=three_minutes_ago, last_inserted=three_minutes_ago).save_new()
 
         with patch("calensync.gwrapper.GoogleCalendarWrapper.solve_update_in_calendar") as mocked:
             process_calendars()
@@ -67,13 +67,13 @@ class TestProcessCalendar:
 
 class TestDeleteSyncRule:
     @staticmethod
-    def test_normal_case(user, calendar1, calendar2):
+    def test_normal_case(user, calendar1_1, calendar1_2):
         with (
             patch("calensync.api.endpoints.GoogleCalendarWrapper") as gwrapper,
             patch("calensync.gwrapper.delete_event") as delete_event
         ):
-            rule = SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
-            rule2 = SyncRule(source=calendar2, destination=calendar1, private=True).save_new()
+            rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+            rule2 = SyncRule(source=calendar1_2, destination=calendar1_1, private=True).save_new()
 
             added_events: List[GoogleEvent] = []
 
@@ -107,16 +107,15 @@ class TestDeleteSyncRule:
             assert gwrapper.return_value.delete_watch.call_count == 1
 
     @staticmethod
-    def test_delete_watch_with_other_source(user, account1, calendar1, calendar2):
+    def test_delete_watch_with_other_source(user, account1_1, calendar1_1, calendar1_2):
         with (
             patch("calensync.api.endpoints.GoogleCalendarWrapper") as gwrapper,
             patch("calensync.gwrapper.delete_event") as delete_event
         ):
+            rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
 
-            rule = SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
-
-            calendar3 = Calendar(account=account1, platform_id="platform3", name="name3", active=False).save_new()
-            rule2 = SyncRule(source=calendar1, destination=calendar3, private=False).save_new()
+            calendar3 = Calendar(account=account1_1, platform_id="platform3", name="name3", active=False).save_new()
+            rule2 = SyncRule(source=calendar1_1, destination=calendar3, private=False).save_new()
 
             delete_sync_rule(user, str(rule.uuid))
 
@@ -125,9 +124,9 @@ class TestDeleteSyncRule:
             assert SyncRule.get_or_none(id=rule2.id) is not None
 
     @staticmethod
-    def test_user_doesnt_have_permission(user, calendar1, calendar2):
+    def test_user_doesnt_have_permission(user, calendar1_1, calendar1_2):
         with patch("calensync.gwrapper.GoogleCalendarWrapper") as gwrapper:
-            rule = SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
+            rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
 
             new_user = User(email="test2@test.com").save_new()
             with pytest.raises(ApiError):
@@ -136,18 +135,18 @@ class TestDeleteSyncRule:
 
 class TestGetSyncRules:
     @staticmethod
-    def test_get_rules(user, calendar1, calendar2):
-        SyncRule(source=calendar1, destination=calendar2, private=True).save_new()
-        SyncRule(source=calendar2, destination=calendar1, private=True).save_new()
+    def test_get_rules(user, calendar1_1, calendar1_2):
+        SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+        SyncRule(source=calendar1_2, destination=calendar1_1, private=True).save_new()
 
         # add rules of other user
         user2 = User(email="test@test.com").save_new()
-        account21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
-        calendar21 = Calendar(account=account21, platform_id="platform_id21", name="name21", active=True,
-                              last_processed=utcnow(), last_inserted=utcnow()).save_new()
-        calendar22 = Calendar(account=account21, platform_id="platform_id22", name="name22", active=True,
-                              last_processed=utcnow(), last_inserted=utcnow()).save_new()
-        SyncRule(source=calendar21, destination=calendar22, private=True).save_new()
+        account1_21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
+        calendar1_21 = Calendar(account=account1_21, platform_id="platform_id21", name="name21", active=True,
+                                last_processed=utcnow(), last_inserted=utcnow()).save_new()
+        calendar1_22 = Calendar(account=account1_21, platform_id="platform_id22", name="name22", active=True,
+                                last_processed=utcnow(), last_inserted=utcnow()).save_new()
+        SyncRule(source=calendar1_21, destination=calendar1_22, private=True).save_new()
 
         # should not be able to fetch them
         rules = endpoints.get_sync_rules(user)
@@ -346,3 +345,37 @@ class TestGetOauthToken:
             EmailDB(email=email, user=user).save_new()
             response = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
             assert "Max-Age=-1" not in response.headers.get("set-cookie", "")
+
+
+class TestResetUser:
+    @staticmethod
+    def test_valid(user, account1_1, calendar1_1, calendar1_2, user2, calendar1_1_2, calendar1_2_2):
+        with (
+            patch("calensync.api.endpoints.delete_sync_rule") as delete_sync_rule,
+        ):
+            user.is_admin = True
+            user.save()
+
+            SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+            SyncRule(source=calendar1_1_2, destination=calendar1_2_2, private=True).save_new()
+            SyncRule(source=calendar1_2_2, destination=calendar1_1_2, private=True).save_new()
+
+            account2_1 = CalendarAccount(user=user2, key="test3", credentials={}).save_new()
+            calendar2_1 = Calendar(account=account2_1, platform_id="platform2_1", name="name1", active=False).save_new()
+            calendar2_2 = Calendar(account=account2_1, platform_id="platform2_2", name="name1", active=False).save_new()
+
+            sr1 = SyncRule(source=calendar2_1, destination=calendar2_2, private=True).save_new()
+            sr2 = SyncRule(source=calendar2_2, destination=calendar2_1, private=True).save_new()
+
+            reset_user(user, str(user2.uuid))
+            assert delete_sync_rule.call_count == 2
+            assert delete_sync_rule.call_args_list[0].args[1] == sr1.uuid
+            assert delete_sync_rule.call_args_list[1].args[1] == sr2.uuid
+
+    @staticmethod
+    def test_not_admin(user, user2):
+        with (
+            patch("calensync.api.endpoints.delete_sync_rule") as delete_sync_rule,
+        ):
+            with pytest.raises(ApiError):
+                reset_user(user, str(user2.uuid))

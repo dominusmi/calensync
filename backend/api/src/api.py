@@ -1,7 +1,8 @@
 from typing import Annotated, Union, Dict
 
-from fastapi import FastAPI, Request, Query, Body, Cookie
+from fastapi import FastAPI, Request, Query, Body, Cookie, Header
 from mangum import Mangum
+from starlette.responses import JSONResponse
 
 from calensync import sqs
 from calensync.api import endpoints
@@ -221,6 +222,29 @@ def get__unsubscribe(user_id: str):
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         return unsubscribe(user_id)
+
+
+@app.get('/user/{user_id}/unsubscribe')
+@format_response
+def get__unsubscribe(user_id: str):
+    """
+    Should return profile information, right now only checks
+    the session
+    """
+    with DatabaseSession(os.environ["ENV"]) as db:
+        return unsubscribe(user_id)
+
+
+@app.get('/user/{user_id}/reset')
+@format_response
+def reset__user(user_uuid: str, session_id: str = Header(None), authorization: Annotated[Union[str, None], Cookie()] = None):
+    with DatabaseSession(os.environ["ENV"]) as db:
+        auth = session_id if session_id is not None else authorization
+        if auth is None:
+            raise ApiError("Forbidden", 403)
+
+        caller = verify_session(auth)
+        reset_user(caller, user_uuid)
 
 
 from fastapi.middleware.cors import CORSMiddleware
