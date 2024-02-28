@@ -56,7 +56,6 @@
     ],
     "sitemapPath": "sitemap.xml",
     "timeout": 60000,
-    "concurrency": 1,
     "skipThirdPartyRequests": true
   },
   "blogger": {
