@@ -54,7 +54,8 @@
       "--disable-dev-shm-usage",
       "--single-process"
     ],
-    "sitemapPath": "sitemap.xml"
+    "sitemapPath": "sitemap.xml",
+    "timeout": 60000
   },
   "blogger": {
     "template": "src/components/BlogTemplate.tsx"
