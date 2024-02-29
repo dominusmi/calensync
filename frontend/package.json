@@ -55,7 +55,8 @@
       "--single-process"
     ],
     "sitemapPath": "sitemap.xml",
-    "timeout": 60000
+    "timeout": 60000,
+    "skipThirdPartyRequests": true
   },
   "blogger": {
     "template": "src/components/BlogTemplate.tsx"
@@ -71,7 +72,7 @@
     "@types/uuid": "^9.0.7",
     "dotenv": "^16.3.1",
     "dotenv-cli": "^7.3.0",
-    "react-snap-dominusmi": "^1.23.1"
+    "react-snap-dominusmi": "^1.23.2"
   },
   "browserslist": {
     "production": [
