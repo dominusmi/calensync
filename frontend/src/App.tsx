@@ -18,6 +18,7 @@ import { SUPPORTED_LANGUAGES } from "./utils/common";
 import React from "react";
 import { blogRoutes } from "./_blog/routes";
 import Blog from "./pages/Blog";
+import PageNotFound from "./pages/page404";
 
 const Login = React.lazy(() => import("./pages/Login"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -68,6 +69,7 @@ function App() {
           {blogRoutes.map(([url, Component]) => {
             return <Route path={`/:lang?${url}`} element={<Component />} />
           })}
+          <Route path="*" element={<PageNotFound />}></Route>
           {/* <Route path="/:lang?/blog/sync-multiple-google-calendars" element={<HowToSynchronizeCalendars />}></Route> */}
           {/* <Route path="/:lang?/blog/avoid-calendly-conflicts" element={<HowToAvoidCalendlyConflicts />}></Route> */}
           {/* <Route path="/:lang?/blog/sync-all-google-calendars-into-one" element={<SynchronizeAllCalendarsIntoOne />}></Route> */}

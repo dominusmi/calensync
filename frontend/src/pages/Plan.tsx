@@ -88,9 +88,14 @@ const Plan: React.FC = () => {
   }
 
   const setupPaddle = async () => {
-    const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN, eventCallback: paddleCallback });
-    if (paddleInstance) {
-      setPaddle(paddleInstance);
+    try {
+      const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN, eventCallback: paddleCallback });
+      if (paddleInstance) {
+        setPaddle(paddleInstance);
+      }
+    }catch(e){
+      createToast("Failed to initialize Paddle.js", MessageKind.Error);
+      setIsLoading(false);
     }
   }
 
@@ -127,13 +132,13 @@ const Plan: React.FC = () => {
       }
     } else {
       setIsLoading(true);
-      if(user!.transaction_id !== null){
+      if (user!.transaction_id !== null) {
         let iteration = 0;
         createToast("Transaction confirmed, verifying your subscription", MessageKind.Info);
-        while(iteration < 3){
+        while (iteration < 3) {
           await verifyTransactionId(user!.transaction_id);
           let updatedUser = await getLoggedUser() as User;
-          if(updatedUser.subscription_id !== null){
+          if (updatedUser.subscription_id !== null) {
             setUser(updatedUser);
             return
           }
@@ -144,7 +149,7 @@ const Plan: React.FC = () => {
         setIsLoading(false);
         createToast("We were unable to confirm your subscription, but the transaction is confirmed. Please check this page again later", MessageKind.Error);
       }
-      else{
+      else {
         setShowPricing(true);
       }
     }
@@ -153,7 +158,7 @@ const Plan: React.FC = () => {
 
   useEffect(() => {
     getPricingOrSubscription()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
