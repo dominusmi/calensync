@@ -56,7 +56,8 @@
     ],
     "sitemapPath": "sitemap.xml",
     "timeout": 60000,
-    "skipThirdPartyRequests": true
+    "skipThirdPartyRequests": true,
+    "concurrency": 1
   },
   "blogger": {
     "template": "src/components/BlogTemplate.tsx"
