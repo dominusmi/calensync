@@ -1,7 +1,9 @@
 {
-    "title_sync_calendars": "Sync your Google Calendars",
-    "sign_up": "Sign up",
-    "free_trial": "7 days free trial, no credit-card or commitment, give us a try!",
+    "common": {
+        "title_sync_calendars": "Sync your Google Calendars",
+        "sign_up": "Sign up",
+        "free_trial": "7 days free trial, no credit-card or commitment, give us a try!"
+    },
     "home": {
         "meta": {
             "description": "Calensync allows you to seamlessly synchronize multiple Google calendars easily while keeping your events safe.",

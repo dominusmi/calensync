@@ -1,11 +1,9 @@
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
-import Container from 'react-bootstrap/Container';
 import { optimisticIsConnected, logout, getLocalSession } from '../utils/session';
 import { PUBLIC_URL } from '../utils/const';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import LoadingOverlay from './LoadingOverlay';
+import { Container, Nav, Navbar } from 'react-bootstrap';
 
 const NavBar: React.FC<{ verify_session?: boolean }> = ({ verify_session = true }) => {
   const { t } = useTranslation();

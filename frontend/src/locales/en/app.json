@@ -1,9 +1,12 @@
 {
-    "internal-server-error": "Internal server error",
-    "accept-tos": "<p className=\"mt-2 mb-0 small\">By clicking this button, you acknowledge <br />you have read and accepted the <br /><a className='text-break' href='/tos'>Terms of Service</a> and the <a href='/privacy'>Privacy Policy</a></p>",
-    "save": "Save",
-    "cancel": "Cancel",
+    "common": {
+        "internal-server-error": "Internal server error",
+        "save": "Save",
+        "cancel": "Cancel",
+        "accept-tos": "<p className=\"mt-2 mb-0 small\">By clicking this button, you acknowledge <br />you have read and accepted the <br /><a className='text-break' href='/tos'>Terms of Service</a> and the <a href='/privacy'>Privacy Policy</a></p>"
+    },
     "dashboard": {
+
         "error": {
             "fetching-account": "Error fetching accounts data",
             "loading-rules": "Couldn't load sync rules",

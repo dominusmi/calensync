@@ -76,7 +76,7 @@ const Dashboard: React.FC = () => {
   
       if (!response.ok) {
         const error = await response.json();
-        createToast(error.message || t("internal-server-error"), MessageKind.Error);
+        createToast(error.message || t("common.internal-server-error"), MessageKind.Error);
   
         throw new Error(`${t('dashboard.error.fetching-account')}: ${error.message}`);
       }
