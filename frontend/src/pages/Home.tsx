@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import React, { useEffect, useState } from 'react';
 import { ENV, PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
