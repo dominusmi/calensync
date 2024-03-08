@@ -71,7 +71,7 @@ const LoginCard: React.FC = () => {
                 {!isLogin &&
                     <div>
                         <div className="my-2 text-center">
-                            <h3>{t("sign_up")}</h3>
+                            <h3>{t("common.sign_up")}</h3>
                             <p className="text-muted">Sign up and get started in 30 seconds!</p>
                         </div>
                         <div className="row text-center">

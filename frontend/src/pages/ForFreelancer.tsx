@@ -3,9 +3,9 @@ import { ENV, PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
 import { PaddlePricing } from '../components/PaddlePricing';
 import { Paddle, initializePaddle } from '@paddle/paddle-js';
-import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
 import { Accordion } from 'react-bootstrap';
+import { Head } from 'vite-react-ssg';
 
 const ForFreelancer: React.FC = () => {
     const { t } = useTranslation();
@@ -33,11 +33,10 @@ const ForFreelancer: React.FC = () => {
 
     return (
         <Layout verifySession={false}>
-            <Helmet>
+            <Head>
                 <meta charSet="utf-8" />
                 <title>{t('title_sync_calendars')}</title>
-                <link rel="canonical" href={`https://calensync.live${window.location.pathname.replace(/\/$/, '')}`} />
-                <link rel="canonical" href={`https://calensync.live${window.location.pathname.replace(/\/$/, '')}`} />
+                <link rel="canonical" href="%CANONICAL%" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr/for-freelancer`} hrefLang="fr" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en/for-freelancer`} hrefLang="en" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it/for-freelancer`} hrefLang="it" />
@@ -45,7 +44,7 @@ const ForFreelancer: React.FC = () => {
                 <meta name="description" content={t("for_freelancers.meta.description")} />
                 <meta name="og:title" content={t("for_freelancers.meta.og_title")} />
                 <meta name="og:description" content={t("for_freelancers.meta.description")} />
-            </Helmet>
+            </Head>
             <div className='hero'>
                 <div className="container col-xxl-8 py-5">
                     <div className="row flex-lg-row-reverse align-items-center g-4 py-5 justify-content-center">
@@ -60,7 +59,7 @@ const ForFreelancer: React.FC = () => {
                             <div className="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
                                 <button type="button" className="btn btn-primary btn-lg px-4 me-md-2" onClick={signup}>{t("home.hero.cta")}</button>
                             </div>
-                            <p className='mt-1 small'>{t("free_trial")}</p>
+                            <p className='mt-1 small'>{t("common.free_trial")}</p>
                         </div>
                     </div>
                 </div>
