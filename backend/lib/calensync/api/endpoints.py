@@ -303,6 +303,7 @@ def prepare_google_sso_oauth(tos: int, db: peewee.Database, boto3_session):
     authorization_url, state = flow.authorization_url(
         access_type='offline')
 
+    logger.info("Opening db connection")
     with db.atomic():
         logger.info("Saving state in database")
         oauth_state = OAuthState(state=state, kind=OAuthKind.GOOGLE_SSO, session_id=uuid.uuid4())
