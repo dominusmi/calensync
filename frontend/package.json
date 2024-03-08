@@ -53,11 +53,13 @@
     "puppeteerArgs": [
       "--no-sandbox",
       "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage"
+      "--disable-dev-shm-usage",
+      "--single-process"
     ],
     "sitemapPath": "sitemap.xml",
     "timeout": 60000,
-    "skipThirdPartyRequests": true
+    "skipThirdPartyRequests": true,
+    "concurrency": 1
   },
   "blogger": {
     "template": "src/components/BlogTemplate.tsx"

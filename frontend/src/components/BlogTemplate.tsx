@@ -14,7 +14,7 @@ export interface ExtraProperties {
     publishDate: string
 }
 
-const content: BlogPage<ExtraProperties> = JSON.parse(atob(`%REPLACE%`));
+const content: BlogPage<ExtraProperties> = JSON.parse(decodeURIComponent(atob(`%REPLACE%`)));
 
 
 const BlogTemplate: React.FC = () => {
