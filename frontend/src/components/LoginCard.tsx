@@ -14,7 +14,7 @@ const loginCardStyle: React.CSSProperties = {
 };
 
 const LoginCard: React.FC = () => {
-    const { t } = useTranslation(['app']);
+    const { t } = useTranslation(['app', 'common']);
     const [isLoading, setLoading] = useState(false);
     const [isLogin, setIsLogin] = useState(false);
 
