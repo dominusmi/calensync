@@ -299,15 +299,18 @@ def prepare_google_sso_oauth(tos: int, db: peewee.Database, boto3_session):
     logger.info(f"Scopes: {scopes}")
     flow.redirect_uri = f'{get_host_env()}/oauth2'
 
+    logger.info("Getting authorization")
     authorization_url, state = flow.authorization_url(
         access_type='offline')
 
     with db.atomic():
+        logger.info("Saving state in database")
         oauth_state = OAuthState(state=state, kind=OAuthKind.GOOGLE_SSO, session_id=uuid.uuid4())
         if tos:
             oauth_state.tos = True
         oauth_state.save()
 
+    logger.info("Preparing response")
     response = starlette.responses.JSONResponse(content={"url": authorization_url})
     response.set_cookie("authorization", oauth_state.session_id, secure=True, httponly=True, max_age=3600,
                         domain="127.0.0.1:8080")
