@@ -41,7 +41,7 @@ const Home: React.FC = () => {
         <Layout verifySession={false} onlyRequired={false}>
             <Head>
                 <meta charSet="utf-8" />
-                <title>{t('title_sync_calendars')}</title>
+                <title>{t('common.title_sync_calendars')}</title>
                 <link rel="canonical" href="%CANONICAL%" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr`} hrefLang="fr" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en`} hrefLang="en" />

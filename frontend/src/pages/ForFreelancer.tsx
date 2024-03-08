@@ -35,7 +35,7 @@ const ForFreelancer: React.FC = () => {
         <Layout verifySession={false}>
             <Head>
                 <meta charSet="utf-8" />
-                <title>{t('title_sync_calendars')}</title>
+                <title>{t('common.title_sync_calendars')}</title>
                 <link rel="canonical" href="%CANONICAL%" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr/for-freelancer`} hrefLang="fr" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en/for-freelancer`} hrefLang="en" />
