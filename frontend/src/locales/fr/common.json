@@ -1,7 +1,9 @@
 {
-    "title_sync_calendars": "Synchronisez vos agendas Google",
-    "sign_up": "S'inscrire",
-    "free_trial": "Essai gratuit de 7 jours, sans engagements!",
+    "common":{
+        "title_sync_calendars": "Synchronisez vos agendas Google",
+        "sign_up": "S'inscrire",
+        "free_trial": "Essai gratuit de 7 jours, sans engagements!"
+    },
     "home": {
         "meta": {
             "description": "Calensync vous permet de synchroniser facilement plusieurs agendas Google tout en préservant la confidentialité vos données.",
