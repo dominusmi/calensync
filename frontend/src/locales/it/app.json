@@ -1,9 +1,11 @@
 {
-    "internal-server-error": "Errore server",
-    "accept-tos": "<p className=\"mt-2 mb-0 small\">Cliccando su questo pulsante, confermi <br />di aver letto e accettato le <br /><a className='text-break' href='/tos'>Condizioni di Servizio</a> e l'<a href='/privacy'>Informativa sulla Privacy</a></p>",
-    "save": "Salva",
-    "cancel": "Annulla",
-    "login": "Login",
+    "common":{
+        "internal-server-error": "Errore server",
+        "accept-tos": "<p className=\"mt-2 mb-0 small\">Cliccando su questo pulsante, confermi <br />di aver letto e accettato le <br /><a className='text-break' href='/tos'>Condizioni di Servizio</a> e l'<a href='/privacy'>Informativa sulla Privacy</a></p>",
+        "save": "Salva",
+        "cancel": "Annulla",
+        "login": "Login"
+    },
     "dashboard": {
         "error": {
             "fetching-account": "Errore durante il recupero dei dati dell'account",
