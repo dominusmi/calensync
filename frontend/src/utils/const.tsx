@@ -8,7 +8,6 @@ if(import.meta.env.VITE_PUBLIC_URL != null){
     url = ENV === "development" ? '/dev' : '';
 }
 export const PUBLIC_URL = url;
-console.log(PUBLIC_URL);
 export const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN!;
 export const PADDLE_PRICING = import.meta.env.VITE_PADDLE_PRICING;
 

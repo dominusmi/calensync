@@ -20,7 +20,6 @@ const Home: React.FC = () => {
     }
 
     async function setupPaddle() {
-        // if (!window.origin.includes("localhost")) {
         try {
             const paddleInstance = await initializePaddle({ environment: ENV === "production" ? "production" : "sandbox", token: PADDLE_CLIENT_TOKEN });
             if (paddleInstance) {
@@ -30,7 +29,6 @@ const Home: React.FC = () => {
         } catch (e) {
             console.log(`Failed to initialize paddle: ${e}`)
         }
-        // }
     }
 
     useEffect(() => {

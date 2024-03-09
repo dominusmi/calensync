@@ -4,6 +4,7 @@ const NavBar = lazy(() => import('./Navbar'))
 import Toast, { createToast } from './Toast';
 import { MessageKind, consumeMessages } from '../utils/common';
 import axios from 'axios';
+import ErrorBoundary from './ErrorBoundary';
 
 interface LayoutProps {
     children: ReactNode;
@@ -11,7 +12,7 @@ interface LayoutProps {
     onlyRequired?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyRequired = false}) => {
+const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyRequired = false }) => {
     const [toastReady, setToastReady] = useState(false);
     const handleToastReady = () => {
         setToastReady(true);

@@ -1,9 +1,11 @@
 import { Paddle } from "@paddle/paddle-js";
-import { LineItem, Price } from "@paddle/paddle-js/types/price-preview/price-preview";
+import { LineItem } from "@paddle/paddle-js/types/price-preview/price-preview";
 import { useEffect, useState } from "react";
 import { TailSpin } from "react-loader-spinner";
 import { PADDLE_PRICING } from "../utils/const";
 import { useTranslation } from "react-i18next";
+import { Price } from "@paddle/paddle-js/types/shared/shared";
+import React from "react";
 
 
 export const PaddlePricing: React.FC<{ paddle: Paddle | null, isHome: boolean, clickedBuy?: (price: Price) => void, isReady?: () => void }> = ({ isHome, clickedBuy, paddle, isReady }) => {

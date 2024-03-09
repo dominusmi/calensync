@@ -32,6 +32,7 @@ const GoogleDisclosure = React.lazy(() => import("./pages/GoogleDisclosure"));
 const ForFreelancer = React.lazy(() => import("./pages/ForFreelancer"));
 import { blogRoutes } from "./_blog/routes";
 import Blog from "./pages/Blog";
+import ErrorBoundary from './components/ErrorBoundary';
 
 i18next
   .use(initReactI18next)
@@ -72,7 +73,7 @@ const staticPaths: RouteRecord[] = [
 let routes: RouteRecord[] = staticPaths.map(
   route => ["/", "/en/", "/fr/", "/it/"].map(
     (language) => (
-      {path: language.concat(route.path!), Component: route.Component}
+      {path: language.concat(route.path!), Component: route.Component, ErrorBoundary: ErrorBoundary}
       )
     )
   ).flat()
@@ -80,7 +81,7 @@ let routes: RouteRecord[] = staticPaths.map(
 routes = routes.concat(
   blogRoutes.map(
     ([url, Component]) => (
-      {path: `${url}`, Component: Component} as RouteRecord)
+      {path: `${url}`, Component: Component, ErrorBoundary: ErrorBoundary} as RouteRecord)
     )
   );
 
