@@ -11,4 +11,5 @@ export const PUBLIC_URL = url;
 export const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN!;
 export const PADDLE_PRICING = import.meta.env.VITE_PADDLE_PRICING;
 
+console.log(import.meta.env)
 export default API
