@@ -4,7 +4,6 @@ const NavBar = lazy(() => import('./Navbar'))
 import Toast, { createToast } from './Toast';
 import { MessageKind, consumeMessages } from '../utils/common';
 import axios from 'axios';
-import ErrorBoundary from './ErrorBoundary';
 
 interface LayoutProps {
     children: ReactNode;
