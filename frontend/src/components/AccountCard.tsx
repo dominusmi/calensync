@@ -22,7 +22,7 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const refreshCalendars = async () => {
         setIsLoading(true);
-        try { 
+        try {
             const response = await fetch(
                 `${API}/accounts/${account.uuid}/calendars/refresh`,
                 {
@@ -30,28 +30,33 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
                     method: 'POST'
                 }
             )
-            if(response.ok){
+            if (response.ok) {
                 window.location.reload()
             }
-        }finally{
+        } finally {
             setIsLoading(false);
         }
     }
 
     return (
         <div className="container-sm card my-1 my-sm-2 py-3 shadow-sm rounded border-0 template account-row">
-            { isLoading && 
-                <LoadingOverlay/>
+            {isLoading &&
+                <LoadingOverlay />
             }
             <div className="row mx-xs-0 mx-sm-2">
                 <Accordion>
                     <Accordion.Item eventKey="0">
                         <Accordion.Header>
-                            <div className="row my-2">
-                                <div className="col-12">
-                                    <h6 key={`${account.uuid}-title`} className="mb-1 email-value">{account.key}<span className='text-muted small'>'s Google calendars</span></h6>
-                                </div>
+                            <div className="d-flex justify-content-between align-items-center my-2">
+                                <h6 key={`${account.uuid}-title`} className="mb-1 email-value">
+                                    {account.key}<span className='text-muted small'> 's Google calendars</span>
+                                </h6>
+                                <button className='btn btn-primary ms-4' onClick={refreshCalendars}>
+                                    {t("dashboard.refresh-calendars")}
+                                </button>
                             </div>
+
+
                         </Accordion.Header>
                         <Accordion.Body>
                             <>
@@ -63,7 +68,6 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
                                         }
                                     </div>
                                 ))}
-                                <button className='btn btn-primary mt-2' onClick={refreshCalendars}>{t("refresh-calendars")}</button>
                             </>
 
                         </Accordion.Body>
