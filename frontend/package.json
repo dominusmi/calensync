@@ -31,7 +31,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "vite",
+    "start": "vite --host 127.0.0.1 --port 8080",
     "build": "vite-react-ssg build",
     "dev": "vite-react-ssg dev",
     "serve": "vite preview",
