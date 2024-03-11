@@ -1,8 +1,10 @@
 {
-    "internal-server-error": "Erreur interne du serveur",
-    "accept-tos": "<p className=\"mt-2 mb-0 small\">En cliquant sur ce bouton, vous reconnaissez <br />avoir lu et accepté les <br /><a className='text-break' href='/tos'>Conditions d'utilisation</a> et la <a href='/privacy'>Politique de confidentialité</a></p>",
-    "save": "Enregistrer",
-    "cancel": "Annuler",
+    "common":{
+        "internal-server-error": "Erreur interne du serveur",
+        "accept-tos": "<p className=\"mt-2 mb-0 small\">En cliquant sur ce bouton, vous reconnaissez <br />avoir lu et accepté les <br /><a className='text-break' href='/tos'>Conditions d'utilisation</a> et la <a href='/privacy'>Politique de confidentialité</a></p>",
+        "save": "Enregistrer",
+        "cancel": "Annuler"
+    },
     "dashboard": {
         "error": {
             "fetching-account": "Erreur lors de la récupération des données du compte",

@@ -1,4 +1,5 @@
-const fs = require('fs');
+// const fs = require('fs');
+import fs from 'fs';
 
 function generateSitemapXML(host, languages, paths, extraPaths) {
   // host must not contain the trailing "/"

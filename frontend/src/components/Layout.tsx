@@ -1,6 +1,6 @@
-import React, { ReactNode, useEffect, useState } from 'react';
-import Footer from './Footer';
-import NavBar from './Navbar';
+import React, { ReactNode, lazy, useEffect, useState } from 'react';
+const Footer = lazy(() => import('./Footer'))
+const NavBar = lazy(() => import('./Navbar'))
 import Toast, { createToast } from './Toast';
 import { MessageKind, consumeMessages } from '../utils/common';
 import axios from 'axios';
@@ -11,9 +11,8 @@ interface LayoutProps {
     onlyRequired?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyRequired = false}) => {
+const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyRequired = false }) => {
     const [toastReady, setToastReady] = useState(false);
-
     const handleToastReady = () => {
         setToastReady(true);
     };

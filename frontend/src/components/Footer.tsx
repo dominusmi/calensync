@@ -1,9 +1,11 @@
 import React from 'react';
 import { PUBLIC_URL } from '../utils/const';
 import { useTranslation } from 'react-i18next';
+import { blogs } from '../_blog/routes';
+import { getBlogByLanguage } from '../utils/blog';
 
 const Footer: React.FC<{ onlyRequired?: boolean }> = ({ onlyRequired = false }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
 
   return (
@@ -32,25 +34,17 @@ const Footer: React.FC<{ onlyRequired?: boolean }> = ({ onlyRequired = false }) 
             <p>Calensync © 2023</p>
           </div>
         </div>
-        {!onlyRequired &&
           <div className="col-12 col-sm-6 col-xxl-4">
-            <div className="row">
-              <a href={`${PUBLIC_URL}/home`}>{t("footer.home")}</a>
-            </div>
-            <div className="row">
-              <a href={`${PUBLIC_URL}/login`}>{t("footer.login")}</a>
-            </div>
             <div className="row">
               <a href={`${PUBLIC_URL}/blog`}>{t("footer.blog")}</a>
             </div>
             <div className="row">
-              <a href={`${PUBLIC_URL}/dashboard`}>{t("footer.dashboard")}</a>
-            </div>
-            <div className="row">
               <a href={`${PUBLIC_URL}/for-freelancers`}>{t("footer.for_freelancers")}</a>
             </div>
+            <div className="row">
+              <a href={`${PUBLIC_URL}${getBlogByLanguage(blogs['calensync-vs-notion'], i18n.resolvedLanguage).url}`}>Calensync vs Notion</a>
+            </div>
           </div>
-        }
       </div>
     </footer>
   );

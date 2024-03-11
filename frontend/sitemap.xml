@@ -1,300 +1,318 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://127.0.0.1:8080/</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/" />
+    <loc>https://calensync.live/</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/" />
+    <loc>https://calensync.live/en/</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/" />
+    <loc>https://calensync.live/fr/</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/fr/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/" />
+    <loc>https://calensync.live/it/</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/it/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/dashboard</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/dashboard" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/dashboard" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/dashboard" />
+    <loc>https://calensync.live/dashboard</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/dashboard" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/dashboard" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/dashboard" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/dashboard" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/dashboard</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/dashboard" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/dashboard" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/dashboard" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/dashboard" />
+    <loc>https://calensync.live/en/dashboard</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/dashboard" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/dashboard" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/dashboard" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/dashboard</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/dashboard" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/dashboard" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/dashboard" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/dashboard" />
+    <loc>https://calensync.live/fr/dashboard</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/fr/dashboard" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/dashboard" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/dashboard" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/dashboard</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/dashboard" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/dashboard" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/dashboard" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/dashboard" />
+    <loc>https://calensync.live/it/dashboard</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/it/dashboard" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/dashboard" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/dashboard" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/login</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/login" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/login" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/login" />
+    <loc>https://calensync.live/login</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/login" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/login" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/login" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/login" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/login</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/login" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/login" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/login" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/login" />
+    <loc>https://calensync.live/en/login</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/login" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/login" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/login" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/login</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/login" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/login" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/login" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/login" />
+    <loc>https://calensync.live/fr/login</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/fr/login" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/login" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/login" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/login</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/login" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/login" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/login" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/login" />
+    <loc>https://calensync.live/it/login</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/it/login" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/login" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/login" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/plan</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/plan" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/plan" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/plan" />
+    <loc>https://calensync.live/plan</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/plan" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/plan" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/plan" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/plan" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/plan</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/plan" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/plan" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/plan" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/plan" />
+    <loc>https://calensync.live/en/plan</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/plan" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/plan" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/plan" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/plan</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/plan" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/plan" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/plan" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/plan" />
+    <loc>https://calensync.live/fr/plan</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/fr/plan" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/plan" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/plan" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/plan</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/plan" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/plan" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/plan" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/plan" />
+    <loc>https://calensync.live/it/plan</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/it/plan" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/plan" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/plan" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/tos</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/tos" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/tos" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/tos" />
+    <loc>https://calensync.live/tos</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/tos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/tos" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/tos" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/tos" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/tos</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/tos" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/tos" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/tos" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/tos" />
+    <loc>https://calensync.live/en/tos</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/tos" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/tos" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/tos" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/tos</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/tos" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/tos" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/tos" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/tos" />
+    <loc>https://calensync.live/fr/tos</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/fr/tos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/tos" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/tos" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/tos</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/tos" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/tos" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/tos" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/tos" />
+    <loc>https://calensync.live/it/tos</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/it/tos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/tos" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/tos" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/privacy</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/privacy" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/privacy" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/privacy" />
+    <loc>https://calensync.live/privacy</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/privacy" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/privacy</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/privacy" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/privacy" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/privacy" />
+    <loc>https://calensync.live/en/privacy</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/privacy" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/privacy" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/privacy</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/privacy" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/privacy" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/privacy" />
+    <loc>https://calensync.live/fr/privacy</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/fr/privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/privacy" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/privacy</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/privacy" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/privacy" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/privacy" />
+    <loc>https://calensync.live/it/privacy</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/it/privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/privacy" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/google-privacy</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/google-privacy" />
+    <loc>https://calensync.live/google-privacy</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/google-privacy" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/google-privacy</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/google-privacy" />
+    <loc>https://calensync.live/en/google-privacy</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/google-privacy" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/google-privacy</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/google-privacy" />
+    <loc>https://calensync.live/fr/google-privacy</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/fr/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/google-privacy" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/google-privacy</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/google-privacy" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/google-privacy" />
+    <loc>https://calensync.live/it/google-privacy</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/it/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/google-privacy" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/google-privacy" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/for-freelancers</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/for-freelancers" />
+    <loc>https://calensync.live/for-freelancers</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/for-freelancers" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/for-freelancers</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/for-freelancers" />
+    <loc>https://calensync.live/en/for-freelancers</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/for-freelancers" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/for-freelancers</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/for-freelancers" />
+    <loc>https://calensync.live/fr/for-freelancers</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/fr/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/for-freelancers" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/for-freelancers</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/for-freelancers" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/for-freelancers" />
+    <loc>https://calensync.live/it/for-freelancers</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/it/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/for-freelancers" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/for-freelancers" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/blog/sync-multiple-google-calendars</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/blog/sync-multiple-google-calendars" />
+    <loc>https://calensync.live/blog</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/blog" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/blog" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/blog" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/blog/sync-multiple-google-calendars</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/blog/sync-multiple-google-calendars" />
+    <loc>https://calensync.live/en/blog</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/blog" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/blog" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/blog/sync-multiple-google-calendars</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/blog/sync-multiple-google-calendars" />
+    <loc>https://calensync.live/fr/blog</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/fr/blog" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/blog" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/it/blog" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/blog/sync-multiple-google-calendars</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/blog/sync-multiple-google-calendars" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/blog/sync-multiple-google-calendars" />
+    <loc>https://calensync.live/it/blog</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/it/blog" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/en/blog" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/fr/blog" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/blog/avoid-calendly-conflicts</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/blog/avoid-calendly-conflicts" />
+    <loc>https://calensync.live/blog/avoid-calendly-conflicts</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/avoid-calendly-conflicts" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/eviter-les-conflits-calendly" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/come-evitare-conflitti-di-calendly" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/blog/avoid-calendly-conflicts</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/blog/avoid-calendly-conflicts" />
+    <loc>https://calensync.live/blog/eviter-les-conflits-calendly</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/eviter-les-conflits-calendly" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/avoid-calendly-conflicts" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/come-evitare-conflitti-di-calendly" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/blog/avoid-calendly-conflicts</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/blog/avoid-calendly-conflicts" />
+    <loc>https://calensync.live/blog/come-evitare-conflitti-di-calendly</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/come-evitare-conflitti-di-calendly" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/avoid-calendly-conflicts" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/eviter-les-conflits-calendly" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/blog/avoid-calendly-conflicts</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/blog/avoid-calendly-conflicts" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/blog/avoid-calendly-conflicts" />
+    <loc>https://calensync.live/blog/creating-a-shared-calendar</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/creating-a-shared-calendar" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/creare-un-calendario-condiviso" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/creer-un-agenda-partagé" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/blog/sync-all-google-calendars-into-one</loc>
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/blog/sync-all-google-calendars-into-one" />
+    <loc>https://calensync.live/blog/creare-un-calendario-condiviso</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/creare-un-calendario-condiviso" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/creating-a-shared-calendar" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/creer-un-agenda-partagé" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/en/blog/sync-all-google-calendars-into-one</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/blog/sync-all-google-calendars-into-one" />
+    <loc>https://calensync.live/blog/creer-un-agenda-partagé</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/creer-un-agenda-partagé" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/creating-a-shared-calendar" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/creare-un-calendario-condiviso" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/fr/blog/sync-all-google-calendars-into-one</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="/it" href="http://127.0.0.1:8080/it/blog/sync-all-google-calendars-into-one" />
+    <loc>https://calensync.live/blog/sync-multiple-google-calendars</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/sync-multiple-google-calendars" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/synchroniser-plusieurs-agendas-google" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/come-sincronizzare-calendar-google" />
   </url>
   <url>
-    <loc>http://127.0.0.1:8080/it/blog/sync-all-google-calendars-into-one</loc>
-    <xhtml:link rel="canonical" href="http://127.0.0.1:8080/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="http://127.0.0.1:8080/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="/en" href="http://127.0.0.1:8080/en/blog/sync-all-google-calendars-into-one" />
-    <xhtml:link rel="alternate" hreflang="/fr" href="http://127.0.0.1:8080/fr/blog/sync-all-google-calendars-into-one" />
+    <loc>https://calensync.live/blog/synchroniser-plusieurs-agendas-google</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/synchroniser-plusieurs-agendas-google" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/sync-multiple-google-calendars" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/come-sincronizzare-calendar-google" />
+  </url>
+  <url>
+    <loc>https://calensync.live/blog/come-sincronizzare-calendar-google</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/come-sincronizzare-calendar-google" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/sync-multiple-google-calendars" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/synchroniser-plusieurs-agendas-google" />
+  </url>
+  <url>
+    <loc>https://calensync.live/blog/what-is-notion-calendar</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/what-is-notion-calendar" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/agenda-notion-et-nous" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/il-notion-calendar" />
+  </url>
+  <url>
+    <loc>https://calensync.live/blog/agenda-notion-et-nous</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/agenda-notion-et-nous" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/what-is-notion-calendar" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/il-notion-calendar" />
+  </url>
+  <url>
+    <loc>https://calensync.live/blog/il-notion-calendar</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/il-notion-calendar" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/what-is-notion-calendar" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/agenda-notion-et-nous" />
+  </url>
+  <url>
+    <loc>https://calensync.live/blog/sync-all-google-calendars-into-one</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/sync-all-google-calendars-into-one" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/synchroniser-tous-vos-calendriers-google-en-un-seul" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/sincronizza-tutti-i-tuoi-calendari-google-in-uno" />
+  </url>
+  <url>
+    <loc>https://calensync.live/blog/synchroniser-tous-vos-calendriers-google-en-un-seul</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/synchroniser-tous-vos-calendriers-google-en-un-seul" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/sync-all-google-calendars-into-one" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://calensync.live/blog/sincronizza-tutti-i-tuoi-calendari-google-in-uno" />
+  </url>
+  <url>
+    <loc>https://calensync.live/blog/sincronizza-tutti-i-tuoi-calendari-google-in-uno</loc>
+    <xhtml:link rel="canonical" href="https://calensync.live/blog/sincronizza-tutti-i-tuoi-calendari-google-in-uno" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://calensync.live/blog/sync-all-google-calendars-into-one" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://calensync.live/blog/synchroniser-tous-vos-calendriers-google-en-un-seul" />
   </url>
 </urlset>

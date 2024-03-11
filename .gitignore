@@ -22,3 +22,5 @@ build
 /sql/*
 .DS_Store
 frontend/src/_blog/
+/appsmith
+/frontend/dist

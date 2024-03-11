@@ -1,7 +1,9 @@
 {
-  "title_sync_calendars": "Sincronizza i tuoi calendari Google",
-  "sign_up": "Registrati",
-  "free_trial": "Prova gratuita di 7 giorni, perché non provare?",
+  "common": {
+    "title_sync_calendars": "Sincronizza i tuoi calendari Google",
+    "sign_up": "Registrati",
+    "free_trial": "Prova gratuita di 7 giorni, perché non provare?"
+  },
   "home": {
     "meta": {
       "description": "Calensync ti consente di sincronizzare facilmente calendari Google, mantenendo la tua privacy intatta.",

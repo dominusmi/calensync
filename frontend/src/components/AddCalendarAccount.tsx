@@ -61,7 +61,7 @@ const AddCalendarAccount: React.FC<{ isConnected: boolean, glowing: boolean }> =
                     </button>
                 </div>
                 {!isConnected &&
-                    <div className='mx-auto mt-1 small' dangerouslySetInnerHTML={{ __html: t("accept-tos") }}>
+                    <div className='mx-auto mt-1 small' dangerouslySetInnerHTML={{ __html: t("common.accept-tos") }}>
                     </div>
                 }
             </div>

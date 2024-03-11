@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
-import { Helmet } from 'react-helmet';
 import { useTranslation } from 'react-i18next';
 import Layout from '../components/Layout';
 import { PUBLIC_URL } from '../utils/const';
 import { BlogPage } from 'reactyll';
 import MarkDown from 'react-markdown'
 import rehypeRaw from 'rehype-raw';
+import { Head } from 'vite-react-ssg';
 
 export interface ExtraProperties {
     date: string
@@ -14,7 +14,7 @@ export interface ExtraProperties {
     publishDate: string
 }
 
-const content: BlogPage<ExtraProperties> = JSON.parse(atob(`%REPLACE%`));
+const content: BlogPage<ExtraProperties> = JSON.parse(decodeURIComponent(atob(`%REPLACE%`)));
 
 
 const BlogTemplate: React.FC = () => {
@@ -43,18 +43,18 @@ const BlogTemplate: React.FC = () => {
 
     return (
         <Layout verifySession={false}>
-            <Helmet>
+            <Head>
                 <meta charSet="utf-8" />
                 <title>{ts("title")}</title>
                 <link rel="canonical" href={`https://calensync.live${PUBLIC_URL}${content.properties.language === "en" ? "" : `/${content.properties.language}`}${content.properties.url}`} />
                 {content.languages.map(([language, url]) => (
-                    <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/${language}${url}`} hrefLang={language} />
+                    <link rel="alternate" key={language} href={`https://calensync.live${PUBLIC_URL}/${language}${url}`} hrefLang={language} />
                 ))}
                 <meta name="description" content={content.properties.description} />
                 <meta name="og:title" content={content.properties.title} />
                 <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}${content.properties.url}`} />
                 <meta name="og:description" content={content.properties.description} />
-            </Helmet>
+            </Head>
             <div className="container mt-4 d-flex m-auto d-flex justify-content-center" id="blog-wrapper">
                 <article className='col-lg-8 col-sm-11 col-12'>
                     <header className="mb-4 mt-4">
@@ -79,7 +79,7 @@ const BlogTemplate: React.FC = () => {
                                 },
                                 strong(props) {
                                     const { children } = props
-                                    return <b className='bold'>{children}</b>
+                                    return <div className='fw-bold'>{children}</div>
                                 },
                                 h2(props) {
                                     const { children} = props

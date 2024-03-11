@@ -1,22 +1,22 @@
 import React from 'react';
 import { PUBLIC_URL } from '../utils/const';
 import Layout from '../components/Layout';
-import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
 import { BlogProperties, RouteWrapper, getBlogForLanguage } from 'reactyll';
 import { blogs } from '../_blog/routes';
 import { ExtraProperties } from '../components/BlogTemplate';
 import { sortBlogsByDate } from '../utils/blog';
+import { Head } from 'vite-react-ssg';
 
 const Blog: React.FC = () => {
     const { t, i18n } = useTranslation();
 
     return (
         <Layout verifySession={false} onlyRequired={false}>
-            <Helmet>
+            <Head>
                 <meta charSet="utf-8" />
                 <title>{t('blog.title')}</title>
-                <link rel="canonical" href={`https://calensync.live${window.location.pathname.replace(/\/$/, '')}`} />
+                <link rel="canonical" href="%CANONICAL%" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/fr/blog`} hrefLang="fr" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/en/blog`} hrefLang="en" />
                 <link rel="alternate" href={`https://calensync.live${PUBLIC_URL}/it/blog`} hrefLang="it" />
@@ -25,7 +25,7 @@ const Blog: React.FC = () => {
                 <meta name="og:title" content={t("blog.meta.og_title")} />
                 <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}`} />
                 <meta name="og:description" content={t("blog.meta.description")} />
-            </Helmet>
+            </Head>
             <div className='container col-xxl-8 gy-4'>
                 <div className="row g-lg-4 mt-4 mt-lg-3 mb-lg-3 pt-lg-3 pb-lg-2 row-cols-1 row-cols-lg-2">
                     <div className="feature col py-2">
