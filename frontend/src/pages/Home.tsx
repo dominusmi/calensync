@@ -184,8 +184,8 @@ const Home: React.FC = () => {
                         </a>
                     </div>
                 ))}
-                {[getBlogForLanguage(blogs["avoid-calendaly-conflicts"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
-                    <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto' key="avoid-calendaly-conflicts">
+                {[getBlogForLanguage(blogs["migrating-to-vite"], i18n.language, "en") as BlogProperties & ExtraProperties].map((blog) => (
+                    <div className='col-xxl-8 col-12 px-4 card mt-4 pt-4 pb-2 mx-auto' key="migrating-to-vite">
                         <a className='block-link' href={`${PUBLIC_URL}${blog.url}`}>
                             <p className='text-muted small p-0 m-0'>Blog</p>
                             <h2>{blog.title}</h2>
