@@ -6,7 +6,6 @@ publishDate: "2024-03-11"
 headline: "Leaving behind old technologies, and embracing performance and stability with Vite"
 description: "Out story migrating to Vite + React from CRA, how it benefited us, and how it may benefit you."
  - -
-# Embracing Change for Stability: Our Transition to React + Vite at Calensync
 
 In the fast-paced world of technology, staying agile 
 and adaptive to new advancements is not just an 
@@ -89,7 +88,6 @@ publishDate: "2024-03-11"
 headline: "Délaisser les anciennes technologies pour gagner en performance et stabilité avec Vite"
 description: "Notre parcours de migration vers Vite + React depuis CRA, ses avantages pour nous et potentiellement pour vous."
  - -
-# Un Changement pour Plus de Stabilité : Notre Passage à React + Vite chez Calensync
 
 Dans le monde technologique en perpétuelle évolution, rester 
 agile et réceptif aux nouveautés n'est pas qu'une option, c'est 
@@ -151,14 +149,13 @@ Ensemble, facilitons la gestion d'événements de manière plus efficace
 que jamais.
  - - -
 title: "Migrazione a React + Vite da CRA"
-url: "/blog/migrating-to-vite-from-cra"
+url: "/blog/migrazione-a-vite-da-cra"
 language: "it"
 date: Marzo 2024
 publishDate: "2024-03-11"
 headline: "Abbandono delle vecchie tecnologie per migliorare la performance e stabilità con Vite"
 description: "Il nostro percorso di migrazione a Vite + React da CRA, i benefici ottenuti e come potrebbero giovare anche a te."
  - -
-# Un Cambiamento per Maggiore Stabilità: La Nostra Transizione a React + Vite
 
 Nel dinamico mondo della tecnologia, rimanere agili ed aperti 
 alle nuove tecnologie non è solo una scelta, ma una necessità. 
