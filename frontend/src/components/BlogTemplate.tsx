@@ -54,6 +54,7 @@ const BlogTemplate: React.FC = () => {
                 <meta name="og:title" content={content.properties.title} />
                 <meta name="og:url" content={`https://calensync.live${PUBLIC_URL}${content.properties.url}`} />
                 <meta name="og:description" content={content.properties.description} />
+                <meta name="publish_date" property="og:publish_date" content={content.properties.publishDate}></meta>
             </Head>
             <div className="container mt-4 d-flex m-auto d-flex justify-content-center" id="blog-wrapper">
                 <article className='col-lg-8 col-sm-11 col-12'>
