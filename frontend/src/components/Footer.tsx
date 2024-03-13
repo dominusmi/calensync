@@ -43,6 +43,8 @@ const Footer: React.FC<{ onlyRequired?: boolean }> = ({ onlyRequired = false }) 
             </div>
             <div className="row">
               <a href={`${PUBLIC_URL}${getBlogByLanguage(blogs['calensync-vs-notion'], i18n.resolvedLanguage).url}`}>Calensync vs Notion</a>
+              <a href={`${PUBLIC_URL}${getBlogByLanguage(blogs['calensync-vs-onecal'], i18n.resolvedLanguage).url}`}>Calensync vs OneCal</a>
+              <a href={`${PUBLIC_URL}${getBlogByLanguage(blogs['calensync-vs-syncthemcalendars'], i18n.resolvedLanguage).url}`}>Calensync vs SyncThemCalendars</a>
             </div>
           </div>
       </div>
