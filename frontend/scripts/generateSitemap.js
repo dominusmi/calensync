@@ -69,7 +69,7 @@ try {
   const content = fs.readFileSync("src/_blog/routes.tsx").toString();
   const routes = JSON.parse(content.split("\n").at(-1).split("= ")[1]);
   const host = process.argv.at(2) ?? "http://127.0.0.1:8080"
-  const resultXML = generateSitemapXML(host, languages, paths, routes);
+  const resultXML = generateSitemapXML(host, [''], paths, routes);
   fs.writeFileSync('sitemap.xml', resultXML);
 } catch (error) {
   console.error("Error parsing the array argument:", error.message);
