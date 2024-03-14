@@ -73,6 +73,10 @@ class MockedServiceEvents:
         if description:
             event.description = description
 
+    @staticmethod
+    def list_next(*args):
+        return None
+
 
 class MockedService:
     _events_service: MockedServiceEvents
