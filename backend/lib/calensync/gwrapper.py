@@ -94,13 +94,18 @@ def get_events(service, google_id: str, start_date: datetime.datetime, end_date:
         private_extended_properties = {}
     privateExtendedProperty = [f"{k}={v}" for k, v in private_extended_properties.items()]
     # "UCT" is not a spelling mistake, it's the same as UTC
-    response = service.events().list(
+    events_service = service.events()
+    request = events_service.list(
         calendarId=google_id, timeMin=start_date_str, timeMax=end_date_str, timeZone="UCT",
         privateExtendedProperty=privateExtendedProperty,
         **kwargs
-    ).execute()
-    logger.info(f"{google_id}: {response.get('items',[])}")
-    events = GoogleEvent.parse_event_list_response(response)
+    )
+    events = []
+    while request is not None:
+        response = request.execute()
+        logger.info(f"{google_id}: {response.get('items',[])}")
+        events.extend(GoogleEvent.parse_event_list_response(response))
+        request = events_service.list_next(request, response)
     return events
 
 
