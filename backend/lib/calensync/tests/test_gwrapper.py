@@ -1,12 +1,8 @@
-import json
 import os
 from unittest.mock import patch, MagicMock
-from typing import List
-
-import pytest
 
 from calensync.database.model import SyncRule
-from calensync.dataclass import GoogleEvent, GoogleDatetime, EventStatus
+from calensync.dataclass import GoogleDatetime, EventStatus
 from calensync.gwrapper import GoogleCalendarWrapper
 from calensync.tests.fixtures import *
 from calensync.tests.mock_service import MockedService
