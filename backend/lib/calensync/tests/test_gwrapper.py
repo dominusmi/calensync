@@ -23,10 +23,53 @@ def test_google_wrapper_class(db, calendar1_1, events_fixture):
     event_instances = Mock()
     event_instances.execute = lambda: {"items": []}
     service = MagicMock()
-    service.events.return_value.list.return_value.execute.return_value = events_fixture
 
+    service.events.return_value.list.return_value.execute.return_value = events_fixture
+    service.events.return_value.list_next.return_value = None
     wrapper = GoogleCalendarWrapper(calendar_db=calendar1_1, service=service)
     events = wrapper.get_events()
+    assert len(events) > 1
+
+
+def test_get_events_pagination(db, calendar1_1, events_fixture):
+    number_of_events_in_fixture = len(events_fixture["items"])
+    event_instances = Mock()
+    event_instances.execute = lambda: {"items": []}
+    service = MagicMock()
+    runs = [0]
+
+    def pagination_events(runs):
+        if runs[0] < 2:
+            items = events_fixture["items"]
+            for i, item in enumerate(items):
+                item["id"] = f"{i}-{runs[0]}"
+            events_fixture["items"] = items
+            return events_fixture
+        else:
+            events_fixture["items"] = []
+            return events_fixture
+
+    def pagination_next(runs):
+        if runs[0] < 2:
+            runs[0] += 1
+            mock = MagicMock()
+            mock.execute.side_effect = lambda *a, **k: pagination_events(runs)
+            return mock
+        else:
+            return None
+
+    service.events.return_value.list.return_value.execute.side_effect = lambda *a, **k: pagination_events(runs)
+    service.events.return_value.list_next.side_effect = lambda *a: pagination_next(runs)
+    wrapper = GoogleCalendarWrapper(calendar_db=calendar1_1, service=service)
+    events = wrapper.get_events()
+
+    assert len(events) == 2*number_of_events_in_fixture
+    ids = set([])
+    for i in range(number_of_events_in_fixture):
+        for j in range(2):
+            ids.add(f"{i}-{j}")
+
+    assert {e.id for e in events} == ids
     assert len(events) > 1
 
 
