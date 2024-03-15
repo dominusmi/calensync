@@ -4,7 +4,7 @@ from typing import Tuple
 import peewee
 
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
-from calensync.database.model import Calendar, User, SyncRule
+from calensync.database.model import Calendar, User, SyncRule, EmailDB, CalendarAccount, Session
 from calensync.gwrapper import GoogleCalendarWrapper, source_event_tuple
 from calensync.log import get_logger
 from calensync.utils import utcnow
@@ -103,3 +103,26 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str, 
         # you may ask why do we do this? I don't know.
         # I think there might have been some "race condition" but I can't remember
         raise ApiError(message="Service unavailable", code=503)
+
+
+def merge_users(user1: User, user2: User, db) -> Tuple[User,User]:
+    main_user = user1 if user1.id < user2.id else user2
+    other_user = user1 if user1.id > user2.id else user2
+
+    with db.atomic():
+        emails = list(EmailDB.select().where(EmailDB.user == other_user))
+        for email in emails:
+            email.user = main_user
+            email.save()
+
+        accounts = list(CalendarAccount.select().where(CalendarAccount.user == other_user))
+        for account in accounts:
+            account.user = main_user
+            account.save()
+
+        sessions = list(Session.select().where(Session.user == other_user))
+        for session in sessions:
+            session.user = main_user
+            session.save()
+
+    return main_user, other_user
