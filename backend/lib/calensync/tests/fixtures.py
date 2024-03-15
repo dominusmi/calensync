@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from _pytest.fixtures import fixture
 
-from calensync.database.model import User, CalendarAccount, Calendar
+from calensync.database.model import User, CalendarAccount, Calendar, EmailDB
 from calensync.database.utils import reset_db, DatabaseSession
 from calensync.dataclass import GoogleEvent
 
@@ -31,12 +31,17 @@ def db():
 
 @fixture
 def user(db):
-    return User(email="test1@test.com").save_new()
+    return User().save_new()
 
 
 @fixture
-def account1_1(db, user):
-    return CalendarAccount(user=user, key="test1", credentials={}).save_new()
+def email1_1(user):
+    return EmailDB(user=user, email="test1@test.com").save_new()
+
+
+@fixture
+def account1_1(db, user, email1_1):
+    return CalendarAccount(user=user, key=email1_1.email, credentials={}).save_new()
 
 
 @fixture
