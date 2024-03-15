@@ -5,8 +5,9 @@ from unittest.mock import patch
 import starlette.responses
 
 from calensync.api import endpoints
-from calensync.api.common import ApiError
-from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env, reset_user
+from calensync.api.common import ApiError, RedirectResponse
+from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env, reset_user, \
+    handle_add_calendar
 from calensync.api.service import received_webhook
 from calensync.calendar import EventsModificationHandler
 from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB
@@ -264,7 +265,7 @@ class TestGetOauthToken:
             assert isinstance(authorization, str)
 
     @staticmethod
-    def test_email_already_associated(db, user, user2):
+    def test_email_already_associated(db, user, user2, email1_1):
         """
         Basically a temporary state used with a know email
         """
@@ -278,16 +279,13 @@ class TestGetOauthToken:
         ):
             get_google_calendars.return_value = [GoogleCalendar(kind="123", id="321")]
 
-            email = "test@testing.com"
-            EmailDB(email=email, user=user).save_new()
-            EmailDB(email="random", user=user2)
             state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.ADD_GOOGLE_ACCOUNT, user=user2).save_new()
-            get_google_email.return_value = email
-            credentials_to_dict.return_value = {"email": email}
+            get_google_email.return_value = email1_1.email
+            credentials_to_dict.return_value = {"email": email1_1.email}
 
             result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
             assert "error_msg" not in result.location
-            assert User.get_or_none(id=state_db.user_id) is None
+            assert User.get_or_none(id=user2.id) is None
 
     @staticmethod
     def test_email_already_associated_but_not_state(db, user, user2):
@@ -311,7 +309,7 @@ class TestGetOauthToken:
             credentials_to_dict.return_value = {"email": email}
 
             result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
-            assert "error_msg" in result.location
+            assert User.get_or_none(id=user2.id) is None
 
     @staticmethod
     def test_add_account_user_did_not_give_permissions(db, user, user2):
@@ -379,3 +377,58 @@ class TestResetUser:
         ):
             with pytest.raises(ApiError):
                 reset_user(user, str(user2.uuid))
+
+
+class TestHandleAddCalendar():
+    @staticmethod
+    def test_state_exists_email_not(db, user, account1_1, email1_1):
+        with (
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            state_db = OAuthState(user=user, state="", kind=OAuthKind.ADD_GOOGLE_ACCOUNT).save_new()
+            handle_add_calendar(state_db, "random@email.com", {}, db)
+
+        emails = list(EmailDB.select().where(EmailDB.user == user))
+        assert len(emails) == 2
+        assert "random@email.com" in {email.email for email in emails}
+
+        accounts = list(CalendarAccount.select().where(CalendarAccount.user == user))
+        assert len(accounts) == 2
+        assert "random@email.com" in {acc.key for acc in accounts}
+
+    @staticmethod
+    def test_state_and_email_user_not_the_same(db, user, email1_1, account1_1):
+        with (
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            other_user = User().save_new()
+            other_user_email1 = EmailDB(email="test2", user=other_user).save_new()
+            other_user_email2 = EmailDB(email="test3", user=other_user).save_new()
+            other_user_account1 = CalendarAccount(user=other_user, key="test2", credentials={}).save_new()
+            other_user_account2 = CalendarAccount(user=other_user, key="test3", credentials={}).save_new()
+
+            state_db = OAuthState(user=other_user, state="", kind=OAuthKind.ADD_GOOGLE_ACCOUNT).save_new()
+            handle_add_calendar(state_db, email1_1.email, {}, db)
+
+            emails = list(EmailDB.select().where(EmailDB.user == user))
+            assert len(emails) == 3
+            assert other_user_email1.email in {email.email for email in emails}
+            assert other_user_email2.email in {email.email for email in emails}
+
+            accounts = list(CalendarAccount.select().where(CalendarAccount.user == user))
+            assert len(accounts) == 3
+            assert other_user_account1.key in {acc.key for acc in accounts}
+            assert other_user_account2.key in {acc.key for acc in accounts}
+
+            assert User.get_or_none(id=other_user.id) is None
+
+    @staticmethod
+    def test_state_user_and_email_dont_exist(db, user):
+        with (
+            patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
+        ):
+            state_db = OAuthState(user=None, state="", kind=OAuthKind.ADD_GOOGLE_ACCOUNT).save_new()
+            with pytest.raises(RedirectResponse):
+                handle_add_calendar(state_db, "testing@email.com", {}, db)
+
+

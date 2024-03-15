@@ -15,7 +15,7 @@ import starlette.responses
 from calensync import dataclass
 import calensync.sqs
 from calensync.api.common import ApiError, RedirectResponse, encode_query_message
-from calensync.api.service import verify_valid_sync_rule, run_initial_sync
+from calensync.api.service import verify_valid_sync_rule, run_initial_sync, merge_users
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
 from calensync.database.utils import DatabaseSession
 from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty, PostSyncRuleEvent
@@ -136,19 +136,37 @@ def handle_signin_signup(state_db: OAuthState, email: str):
 
 
 def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict, db):
+    """
+    This function create the CalendarAccount object for a new email, as well as calling refresh_calendars.
+    There are a couple of tricky cases:
+    The normal case is the following: the state db is connected to a user, and we simply add
+    the email to that user and be done. However, there are other possible cases, notably someone
+    adding an account that was already added previously. In this case, we need to merge the two accounts together
+
+
+    :param state_db: database model for the Google OAuth State
+    :param email: email connected to the Google account which made the OAuth request
+    :param credentials_dict: credentials for calendar permissions related to this email
+    """
     email_db = prefetch_get_or_none(
         EmailDB.select().where(EmailDB.email == email),
         User.select()
     )
 
-    delete_state_user = False
-    user = state_db.user
+    other_user = None
+    delete_secondary_user = False
+    main_user = None
+    if state_db.user is not None:
+        main_user = state_db.user
+    if email_db is not None:
+        main_user = email_db.user
+
     if email_db is None:
         if state_db.user is None:
             # this should not be possible
             logger.error("CODEREF #12497")
             msg = encode_query_message(f"You do not appear to have an account, please signup")
-            return RedirectResponse(location=f"{get_frontend_env()}/login?error_msg={msg}")
+            raise RedirectResponse(location=f"{get_frontend_env()}/login?error_msg={msg}")
         else:
             EmailDB(email=email, user=state_db.user).save()
 
@@ -160,21 +178,28 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
             )
             if len(state_user_db.emails) > 0:
                 # this means multiple users with at least one email
-                logger.error(f"Users with multiple emails: {email_db.user} and {state_db.user}")
-                msg = encode_query_message(
-                    f"This email is already associated. If you believe an error occured, let us know "
-                    f"by email (support@calensync.live) or with the feedback form.")
-                return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
+                # logger.error(f"Users with multiple emails: {email_db.user} and {state_db.user}")
+                # msg = encode_query_message(
+                #     f"This email is already associated. If you believe an error occured, let us know "
+                #     f"by email (support@calensync.live) or with the feedback form.")
+                # return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
+                # We need to merge the two users
+                main_user, other_user = merge_users(email_db.user, state_db.user, db)
             else:
-                # This means the state_db user can be thought as temporary (since it has no emails attached)
-                # therefore we use the email user for the rest of the process
-                user = email_db.user
-                delete_state_user = True
+                other_user = state_db.user
+            delete_secondary_user = True
+            # else:
+            #     This means the state_db user can be thought as temporary (since it has no emails attached)
+            # therefore we use the email user for the rest of the process
+            # user = email_db.user
+            # delete_state_user = True
+        else:
+            main_user = email_db.user
 
     account_added = False
     account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
     if account is None:
-        account = CalendarAccount(credentials=credentials_dict, user=user, key=email)
+        account = CalendarAccount(credentials=credentials_dict, user=main_user, key=email)
         account.save()
         account_added = True
 
@@ -183,12 +208,12 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
         account.save()
 
     state_db.delete_instance()
-    if delete_state_user:
-        state_db.user.delete_instance()
+    if delete_secondary_user and other_user is not None:
+        other_user.delete_instance()
 
-    refresh_calendars(user, account.uuid, db)
+    refresh_calendars(main_user, account.uuid, db)
 
-    Session(session_id=state_db.session_id, user=user).save_new()
+    Session(session_id=state_db.session_id, user=main_user).save_new()
 
     redirect = f"{get_frontend_env()}/dashboard"
     if account_added:
