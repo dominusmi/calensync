@@ -155,12 +155,11 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
 
     other_user = None
     delete_secondary_user = False
+    main_user = None
     if state_db.user is not None:
         main_user = state_db.user
-    elif email_db is not None:
+    if email_db is not None:
         main_user = email_db.user
-    else:
-        main_user = None
 
     if email_db is None:
         if state_db.user is None:
@@ -186,12 +185,14 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
                 # return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}")
                 # We need to merge the two users
                 main_user, other_user = merge_users(email_db.user, state_db.user, db)
-                delete_secondary_user = True
+            else:
+                other_user = state_db.user
+            delete_secondary_user = True
             # else:
             #     This means the state_db user can be thought as temporary (since it has no emails attached)
-                # therefore we use the email user for the rest of the process
-                # user = email_db.user
-                # delete_state_user = True
+            # therefore we use the email user for the rest of the process
+            # user = email_db.user
+            # delete_state_user = True
         else:
             main_user = email_db.user
 

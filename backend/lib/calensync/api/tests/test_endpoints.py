@@ -265,7 +265,7 @@ class TestGetOauthToken:
             assert isinstance(authorization, str)
 
     @staticmethod
-    def test_email_already_associated(db, user, user2):
+    def test_email_already_associated(db, user, user2, email1_1):
         """
         Basically a temporary state used with a know email
         """
@@ -279,16 +279,13 @@ class TestGetOauthToken:
         ):
             get_google_calendars.return_value = [GoogleCalendar(kind="123", id="321")]
 
-            email = "test@testing.com"
-            EmailDB(email=email, user=user).save_new()
-            EmailDB(email="random", user=user2)
             state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.ADD_GOOGLE_ACCOUNT, user=user2).save_new()
-            get_google_email.return_value = email
-            credentials_to_dict.return_value = {"email": email}
+            get_google_email.return_value = email1_1.email
+            credentials_to_dict.return_value = {"email": email1_1.email}
 
             result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
             assert "error_msg" not in result.location
-            assert User.get_or_none(id=state_db.user_id) is None
+            assert User.get_or_none(id=user2.id) is None
 
     @staticmethod
     def test_email_already_associated_but_not_state(db, user, user2):
@@ -312,7 +309,7 @@ class TestGetOauthToken:
             credentials_to_dict.return_value = {"email": email}
 
             result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
-            assert "error_msg" in result.location
+            assert User.get_or_none(id=user2.id) is None
 
     @staticmethod
     def test_add_account_user_did_not_give_permissions(db, user, user2):
