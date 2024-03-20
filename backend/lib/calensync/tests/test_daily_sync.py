@@ -242,6 +242,10 @@ class TestTrialEmail:
             assert len(messages[0].destinations['BccAddresses']) == 0
             assert messages[0].destinations['ToAddresses'][0] == email1_1.email
 
+            user = user.refresh()
+            assert user.last_email_sent is not None
+            assert user.last_email_sent > datetime.datetime.now() - datetime.timedelta(minutes=1)
+
     @staticmethod
     def test_get_trial_users_with_dates_between_only_return_oldest(db, user, email1_1, user2, account1_1, calendar1_1, calendar1_2):
         user.date_created = datetime.datetime.now() - datetime.timedelta(days=7, hours=4)
@@ -257,3 +261,19 @@ class TestTrialEmail:
 
         emails = list(get_trial_users_with_dates_between(start, end))
         assert len(emails) == 1
+
+    @staticmethod
+    def test_get_trial_users_with_dates_between_last_email_send_is_yesterday(db, user, email1_1, user2, account1_1, calendar1_1, calendar1_2):
+        user.date_created = datetime.datetime.now() - datetime.timedelta(days=7, hours=4)
+        user.last_email_sent = datetime.datetime.now() - datetime.timedelta(days=1)
+        user.save()
+
+        SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+        EmailDB(email="test2@test.com", user=user).save_new()
+        EmailDB(email="other@test.com", user=user2).save_new()
+
+        start = datetime.datetime.now() - datetime.timedelta(days=8, hours=4)
+        end = datetime.datetime.now() - datetime.timedelta(days=7)
+
+        emails = list(get_trial_users_with_dates_between(start, end))
+        assert len(emails) == 0

@@ -83,6 +83,7 @@ class User(UUIDBaseModel):
     transaction_id = CharField(null=True, default=None)
     subscription_id = CharField(null=True, default=None)
     marketing = peewee.BooleanField(default=True)
+    last_email_sent = peewee.DateTimeField(default=None, null=True)
     # deprecated
     email = CharField(null=True, default=None)
 

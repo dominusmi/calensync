@@ -68,7 +68,7 @@ def send_trial_ending_email(session, email: str):
                 </body>
                 </html>
                 """
-    send_email(session, sender, recipient, aws_region, subject, body_html)
+    return send_email(session, sender, recipient, aws_region, subject, body_html)
 
 
 def send_account_to_be_deleted_email(session, email: str):
@@ -87,4 +87,4 @@ def send_account_to_be_deleted_email(session, email: str):
             </body>
             </html>
             """
-    send_email(session, sender, recipient, aws_region, subject, body_html)
+    return send_email(session, sender, recipient, aws_region, subject, body_html)
