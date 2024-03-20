@@ -8,7 +8,7 @@ from moto.core import DEFAULT_ACCOUNT_ID
 from moto.ses import ses_backends
 
 from calensync.awslambda.daily_sync import sync_user_calendars_by_date, update_watches, \
-    get_users_query_with_active_sync_rules, send_trial_finishing_email
+    get_users_query_with_active_sync_rules, send_trial_finishing_email, get_trial_users_with_dates_between
 from calensync.database.model import SyncRule
 from calensync.dataclass import GoogleDatetime, AbstractGoogleDate, EventStatus
 from calensync.tests.fixtures import *
@@ -241,3 +241,19 @@ class TestTrialEmail:
             assert len(messages[0].destinations['CcAddresses']) == 0
             assert len(messages[0].destinations['BccAddresses']) == 0
             assert messages[0].destinations['ToAddresses'][0] == email1_1.email
+
+    @staticmethod
+    def test_get_trial_users_with_dates_between_only_return_oldest(db, user, email1_1, user2, account1_1, calendar1_1, calendar1_2):
+        user.date_created = datetime.datetime.now() - datetime.timedelta(days=7, hours=4)
+        user.save()
+
+        SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+        EmailDB(email="test2@test.com", user=user).save_new()
+
+        EmailDB(email="other@test.com", user=user2).save_new()
+
+        start = datetime.datetime.now() - datetime.timedelta(days=8, hours=4)
+        end = datetime.datetime.now() - datetime.timedelta(days=7)
+
+        emails = list(get_trial_users_with_dates_between(start, end))
+        assert len(emails) == 1

@@ -124,7 +124,27 @@ def get_trial_users_with_dates_between(start: datetime.datetime, end: datetime.d
                 .having(peewee.fn.COUNT(SyncRule.id) > 0)
                 )
 
-    query = EmailDB.select(EmailDB.email).where(EmailDB.user << user_ids)
+    # Get oldest email for user
+    EmailAlias = EmailDB.alias()
+
+    subquery = (
+        EmailAlias
+        .select(
+            EmailAlias.user,
+            peewee.fn.MIN(EmailAlias.date_created).alias('min_created'))
+        .group_by(EmailAlias.user)
+        .alias('email_min_subquery'))
+
+    query = (
+        EmailDB
+        .select(EmailDB).distinct()
+        .join(User)
+        .switch(EmailDB)
+        .join(subquery, on=(
+                (EmailDB.date_created == subquery.c.min_created) &
+                (EmailDB.user == subquery.c.user_id)))
+        .where(EmailDB.user << user_ids)
+    )
 
     return query
 
