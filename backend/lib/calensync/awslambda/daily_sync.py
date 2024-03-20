@@ -2,10 +2,12 @@ import datetime
 import time
 from typing import Iterable, List
 
+import boto3
 import peewee
 
-from calensync.database.model import User, Calendar, CalendarAccount, SyncRule
-from calensync.gwrapper import GoogleCalendarWrapper, service_from_account, delete_google_watch
+from calensync.database.model import User, Calendar, CalendarAccount, SyncRule, EmailDB
+from calensync.email import send_trial_ending_email, send_account_to_be_deleted_email
+from calensync.gwrapper import GoogleCalendarWrapper, service_from_account
 from calensync.log import get_logger
 from calensync.utils import utcnow
 
@@ -107,3 +109,58 @@ def update_watches(db: peewee.Database):
                 time.sleep(1)
             finally:
                 iteration += 1
+
+
+def get_trial_users_with_dates_between(start: datetime.datetime, end: datetime.datetime):
+    # Main query
+    user_ids = (User
+                .select(User.id).distinct()
+                .join(CalendarAccount)
+                .join(Calendar)
+                .join(SyncRule, on=(SyncRule.source == Calendar.id))
+                .where((User.date_created.between(start, end)) &
+                       (User.subscription_id.is_null(True)))
+                .group_by(User.id)
+                .having(peewee.fn.COUNT(SyncRule.id) > 0)
+                )
+
+    # Get oldest email for user
+    EmailAlias = EmailDB.alias()
+
+    subquery = (
+        EmailAlias
+        .select(
+            EmailAlias.user,
+            peewee.fn.MIN(EmailAlias.date_created).alias('min_created'))
+        .group_by(EmailAlias.user)
+        .alias('email_min_subquery'))
+
+    query = (
+        EmailDB
+        .select(EmailDB).distinct()
+        .join(User)
+        .switch(EmailDB)
+        .join(subquery, on=(
+                (EmailDB.date_created == subquery.c.min_created) &
+                (EmailDB.user == subquery.c.user_id)))
+        .where(EmailDB.user << user_ids)
+    )
+
+    return query
+
+
+def send_trial_finishing_email(session: boto3.Session, db: peewee.Database):
+    # just finishing trial
+    one_week_ago_beginning = datetime.datetime.now() - datetime.timedelta(days=7)
+    one_week_ago_end = datetime.datetime.now() - datetime.timedelta(days=8)
+
+    query = get_trial_users_with_dates_between(one_week_ago_end, one_week_ago_beginning)
+    for email_db in query:
+        send_trial_ending_email(session, email_db.email)
+
+    two_weeks_ago_beginning = datetime.datetime.now() - datetime.timedelta(days=14)
+    two_weeks_ago_end = datetime.datetime.now() - datetime.timedelta(days=15)
+
+    query = get_trial_users_with_dates_between(two_weeks_ago_end, two_weeks_ago_beginning)
+    for email_db in query:
+        send_account_to_be_deleted_email(session, email_db.email)

@@ -1,4 +1,7 @@
+import boto3
+
 from calensync.awslambda import daily_sync
+from calensync.awslambda.daily_sync import send_trial_finishing_email
 from calensync.database.utils import DatabaseSession
 from calensync.log import get_logger
 from calensync.utils import get_env
@@ -14,4 +17,8 @@ def handler(event, context):
     with DatabaseSession(get_env()) as db:
         daily_sync.sync_user_calendars_by_date(db)
         daily_sync.update_watches(db)
+
+        # send emails to people who are finishing their trial
+        session = boto3.Session()
+        send_trial_finishing_email(session, db)
 
