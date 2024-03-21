@@ -120,7 +120,8 @@ def get_trial_users_with_dates_between(start: datetime.datetime, end: datetime.d
                 .join(Calendar)
                 .join(SyncRule, on=(SyncRule.source == Calendar.id))
                 .where((User.date_created.between(start, end)) &
-                       (User.subscription_id.is_null(True)))
+                       (User.subscription_id.is_null(True)) &
+                       (User.last_email_sent.is_null(True) | User.last_email_sent.between(start, end)))
                 .group_by(User.id)
                 .having(peewee.fn.COUNT(SyncRule.id) > 0)
                 )
@@ -157,11 +158,15 @@ def send_trial_finishing_email(session: boto3.Session, db: peewee.Database):
 
     query = get_trial_users_with_dates_between(one_week_ago_end, one_week_ago_beginning)
     for email_db in query:
-        send_trial_ending_email(session, email_db.email)
+        if send_trial_ending_email(session, email_db.email):
+            email_db.user.last_email_sent = utcnow()
+            email_db.user.save()
 
     two_weeks_ago_beginning = datetime.datetime.now() - datetime.timedelta(days=14)
     two_weeks_ago_end = datetime.datetime.now() - datetime.timedelta(days=15)
 
     query = get_trial_users_with_dates_between(two_weeks_ago_end, two_weeks_ago_beginning)
     for email_db in query:
-        send_account_to_be_deleted_email(session, email_db.email)
+        if send_account_to_be_deleted_email(session, email_db.email):
+            email_db.user.last_email_sent = utcnow()
+            email_db.user.save()
