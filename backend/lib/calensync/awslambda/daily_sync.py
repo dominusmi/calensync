@@ -1,5 +1,6 @@
 import datetime
 import time
+import traceback
 from typing import Iterable, List
 
 import boto3
@@ -69,7 +70,7 @@ def sync_user_calendars_by_date(db):
             calendars = load_calendars(user.accounts, start_date, end_date)
             execute_update(calendars, db)
         except Exception as e:
-            logger.error(f"Error occured while updating calendar {user.uuid}: {e}")
+            logger.error(f"Error occured while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
             time.sleep(1)
 
 
