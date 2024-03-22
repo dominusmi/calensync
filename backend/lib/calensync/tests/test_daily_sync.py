@@ -277,3 +277,19 @@ class TestTrialEmail:
 
         emails = list(get_trial_users_with_dates_between(start, end))
         assert len(emails) == 0
+
+    @staticmethod
+    def test_get_trial_users_with_dates_between_last_email_sent_old(db, user, email1_1, user2, account1_1, calendar1_1, calendar1_2):
+        user.date_created = datetime.datetime.now() - datetime.timedelta(days=7, hours=4)
+        user.last_email_sent = datetime.datetime.now() - datetime.timedelta(days=20)
+        user.save()
+
+        SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+        EmailDB(email="test2@test.com", user=user).save_new()
+        EmailDB(email="other@test.com", user=user2).save_new()
+
+        start = datetime.datetime.now() - datetime.timedelta(days=8, hours=4)
+        end = datetime.datetime.now() - datetime.timedelta(days=7)
+
+        emails = list(get_trial_users_with_dates_between(start, end))
+        assert len(emails) == 1
