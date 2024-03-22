@@ -119,9 +119,12 @@ def get_trial_users_with_dates_between(start: datetime.datetime, end: datetime.d
                 .join(CalendarAccount)
                 .join(Calendar)
                 .join(SyncRule, on=(SyncRule.source == Calendar.id))
-                .where((User.date_created.between(start, end)) &
-                       (User.subscription_id.is_null(True)) &
-                       (User.last_email_sent.is_null(True) | User.last_email_sent.between(start, end)))
+                .where(
+                    User.date_created.between(start, end),
+                    User.subscription_id.is_null(True),
+                    # If there were no previous email, or the previous email was sent earlier
+                    (User.last_email_sent.is_null(True)) | (User.last_email_sent < start)
+                )
                 .group_by(User.id)
                 .having(peewee.fn.COUNT(SyncRule.id) > 0)
                 )
