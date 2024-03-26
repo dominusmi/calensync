@@ -68,6 +68,8 @@ def send_trial_ending_email(session, email: str):
                 </body>
                 </html>
                 """
+
+    logger.info(f"Sending trial ending email to {email}")
     return send_email(session, sender, recipient, aws_region, subject, body_html)
 
 

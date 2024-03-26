@@ -106,7 +106,7 @@ def update_watches(db: peewee.Database):
                 break
 
             except Exception as e:
-                logger.error(f"Error occured while updating calendar {calendar_db.uuid}: {e}")
+                logger.error(f"Error occured while updating calendar {calendar_db.uuid}: {e}\n\n{traceback.format_exc()}")
                 time.sleep(1)
             finally:
                 iteration += 1

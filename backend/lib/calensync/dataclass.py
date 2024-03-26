@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import traceback
 from enum import Enum, IntEnum
 from typing import Dict, List, Optional, Union
 
@@ -113,7 +114,7 @@ class GoogleEvent(BaseModel):
     status: EventStatus
     recurrence: Optional[List[str]] = None
     description: Optional[str] = None
-    summary: str
+    summary: str = None
 
     @staticmethod
     def parse_event_list_response(response: Dict) -> List[GoogleEvent]:
@@ -122,7 +123,7 @@ class GoogleEvent(BaseModel):
             try:
                 events.append(GoogleEvent.parse_obj(item))
             except pydantic.ValidationError:
-                logger.error(f"Couldn't parse item with id {item.get('id')}")
+                logger.error(f"Couldn't parse item with id {item.get('id')}: {traceback.format_exc()}")
         return events
 
     @property
