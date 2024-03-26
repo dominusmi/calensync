@@ -160,7 +160,6 @@ class TestUpdateWatches:
         SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
         SyncRule(source=calendar1_2, destination=calendar1_1, private=True).save_new()
 
-
         with (
             patch("calensync.gwrapper.GoogleCalendarWrapper.create_watch") as create_watch,
             patch("calensync.gwrapper.GoogleCalendarWrapper.delete_watch") as delete_watch,
@@ -247,7 +246,8 @@ class TestTrialEmail:
             assert user.last_email_sent > datetime.datetime.now() - datetime.timedelta(minutes=1)
 
     @staticmethod
-    def test_get_trial_users_with_dates_between_only_return_oldest(db, user, email1_1, user2, account1_1, calendar1_1, calendar1_2):
+    def test_get_trial_users_with_dates_between_only_return_oldest(db, user, email1_1, user2, account1_1, calendar1_1,
+                                                                   calendar1_2):
         user.date_created = datetime.datetime.now() - datetime.timedelta(days=7, hours=4)
         user.save()
 
@@ -262,7 +262,8 @@ class TestTrialEmail:
         assert len(emails) == 1
 
     @staticmethod
-    def test_get_trial_users_with_dates_between_last_email_send_is_yesterday(db, user, email1_1, user2, account1_1, calendar1_1, calendar1_2):
+    def test_get_trial_users_with_dates_between_last_email_send_is_yesterday(db, user, email1_1, user2, account1_1,
+                                                                             calendar1_1, calendar1_2):
         user.date_created = datetime.datetime.now() - datetime.timedelta(days=7, hours=4)
         user.last_email_sent = datetime.datetime.now() - datetime.timedelta(days=1)
         user.save()
@@ -277,7 +278,8 @@ class TestTrialEmail:
         assert len(emails) == 0
 
     @staticmethod
-    def test_get_trial_users_with_dates_between_last_email_sent_old(db, user, email1_1, user2, account1_1, calendar1_1, calendar1_2):
+    def test_get_trial_users_with_dates_between_last_email_sent_old(db, user, email1_1, user2, account1_1, calendar1_1,
+                                                                    calendar1_2):
         user.date_created = datetime.datetime.now() - datetime.timedelta(days=7, hours=4)
         user.last_email_sent = datetime.datetime.now() - datetime.timedelta(days=20)
         user.save()
@@ -290,3 +292,20 @@ class TestTrialEmail:
 
         emails = list(get_trial_users_with_create_before_date(start))
         assert len(emails) == 1
+
+    @staticmethod
+    def test_user_doesnt_have_sync_rules(db, user, email1_1, user2, account1_1, calendar1_1, calendar1_2):
+        user.date_created = datetime.datetime.now() - datetime.timedelta(days=7, hours=4)
+        user.save()
+
+        with mock_aws():
+            session = boto3.Session(aws_access_key_id="1", aws_secret_access_key="1", region_name="eu-north-1")
+            session.client("ses").verify_email_identity(EmailAddress="no-reply@calensync.live")
+            ses_backend = ses_backends[DEFAULT_ACCOUNT_ID]["eu-north-1"]
+            send_trial_finishing_email(session, db)
+            messages = ses_backend.sent_messages
+
+            assert len(messages) == 0
+
+            user = user.refresh()
+            assert user.last_email_sent is None
