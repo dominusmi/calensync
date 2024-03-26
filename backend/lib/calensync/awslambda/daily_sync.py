@@ -112,7 +112,7 @@ def update_watches(db: peewee.Database):
                 iteration += 1
 
 
-def get_trial_users_with_dates_between(start: datetime.datetime, end: datetime.datetime):
+def get_trial_users_with_create_before_date(start: datetime.datetime):
     # Main query
     user_ids = (User
                 .select(User.id).distinct()
@@ -120,7 +120,7 @@ def get_trial_users_with_dates_between(start: datetime.datetime, end: datetime.d
                 .join(Calendar)
                 .join(SyncRule, on=(SyncRule.source == Calendar.id))
                 .where(
-                    User.date_created.between(start, end),
+                    User.date_created < start,
                     User.subscription_id.is_null(True),
                     # If there were no previous email, or the previous email was sent earlier
                     (User.last_email_sent.is_null(True)) | (User.last_email_sent < start)
@@ -156,19 +156,17 @@ def get_trial_users_with_dates_between(start: datetime.datetime, end: datetime.d
 
 def send_trial_finishing_email(session: boto3.Session, db: peewee.Database):
     # just finishing trial
-    one_week_ago_beginning = datetime.datetime.now() - datetime.timedelta(days=7)
-    one_week_ago_end = datetime.datetime.now() - datetime.timedelta(days=8)
+    one_week_ago_end = datetime.datetime.now() - datetime.timedelta(days=7)
 
-    query = get_trial_users_with_dates_between(one_week_ago_end, one_week_ago_beginning)
+    query = get_trial_users_with_create_before_date(one_week_ago_end)
     for email_db in query:
         if send_trial_ending_email(session, email_db.email):
             email_db.user.last_email_sent = utcnow()
             email_db.user.save()
 
-    two_weeks_ago_beginning = datetime.datetime.now() - datetime.timedelta(days=14)
-    two_weeks_ago_end = datetime.datetime.now() - datetime.timedelta(days=15)
+    two_weeks_ago_end = datetime.datetime.now() - datetime.timedelta(days=14)
 
-    query = get_trial_users_with_dates_between(two_weeks_ago_end, two_weeks_ago_beginning)
+    query = get_trial_users_with_create_before_date(two_weeks_ago_end)
     for email_db in query:
         if send_account_to_be_deleted_email(session, email_db.email):
             email_db.user.last_email_sent = utcnow()

@@ -8,7 +8,7 @@ from moto.core import DEFAULT_ACCOUNT_ID
 from moto.ses import ses_backends
 
 from calensync.awslambda.daily_sync import sync_user_calendars_by_date, update_watches, \
-    get_users_query_with_active_sync_rules, send_trial_finishing_email, get_trial_users_with_dates_between
+    get_users_query_with_active_sync_rules, send_trial_finishing_email, get_trial_users_with_create_before_date
 from calensync.database.model import SyncRule
 from calensync.dataclass import GoogleDatetime, AbstractGoogleDate, EventStatus
 from calensync.tests.fixtures import *
@@ -256,10 +256,9 @@ class TestTrialEmail:
 
         EmailDB(email="other@test.com", user=user2).save_new()
 
-        start = datetime.datetime.now() - datetime.timedelta(days=8, hours=4)
-        end = datetime.datetime.now() - datetime.timedelta(days=7)
+        start = datetime.datetime.now() - datetime.timedelta(days=7)
 
-        emails = list(get_trial_users_with_dates_between(start, end))
+        emails = list(get_trial_users_with_create_before_date(start))
         assert len(emails) == 1
 
     @staticmethod
@@ -272,10 +271,9 @@ class TestTrialEmail:
         EmailDB(email="test2@test.com", user=user).save_new()
         EmailDB(email="other@test.com", user=user2).save_new()
 
-        start = datetime.datetime.now() - datetime.timedelta(days=8, hours=4)
-        end = datetime.datetime.now() - datetime.timedelta(days=7)
+        start = datetime.datetime.now() - datetime.timedelta(days=7)
 
-        emails = list(get_trial_users_with_dates_between(start, end))
+        emails = list(get_trial_users_with_create_before_date(start))
         assert len(emails) == 0
 
     @staticmethod
@@ -288,8 +286,7 @@ class TestTrialEmail:
         EmailDB(email="test2@test.com", user=user).save_new()
         EmailDB(email="other@test.com", user=user2).save_new()
 
-        start = datetime.datetime.now() - datetime.timedelta(days=8, hours=4)
-        end = datetime.datetime.now() - datetime.timedelta(days=7)
+        start = datetime.datetime.now() - datetime.timedelta(days=7)
 
-        emails = list(get_trial_users_with_dates_between(start, end))
+        emails = list(get_trial_users_with_create_before_date(start))
         assert len(emails) == 1
