@@ -21,6 +21,7 @@ def handler(event, context):
         # send emails to people who are finishing their trial
         session = boto3.Session()
         try:
+            logger.info("Starting send trial emails")
             send_trial_finishing_email(session, db)
         except Exception as e:
             logger.error(f"Something happened to email sending: {e}")
