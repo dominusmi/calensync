@@ -163,7 +163,7 @@ def send_trial_finishing_email(session: boto3.Session, db: peewee.Database):
     query = get_trial_users_with_create_before_date(one_week_ago_end)
     for email_db in query:
         send_to_emails.add(email_db.id)
-        logger.info(f"Sending to email {email_db.uuid}")
+        logger.info(f"Sending to email {email_db.id}")
         if send_trial_ending_email(session, email_db.email):
             email_db.user.last_email_sent = utcnow()
             email_db.user.save()
@@ -174,7 +174,7 @@ def send_trial_finishing_email(session: boto3.Session, db: peewee.Database):
     for email_db in query:
         if email_db.id in send_to_emails:
             continue
-        logger.info(f"Sending to email {email_db.uuid}")
+        logger.info(f"Sending to email {email_db.id}")
         if send_account_to_be_deleted_email(session, email_db.email):
             email_db.user.last_email_sent = utcnow()
             email_db.user.save()
