@@ -157,17 +157,24 @@ def get_trial_users_with_create_before_date(start: datetime.datetime):
 def send_trial_finishing_email(session: boto3.Session, db: peewee.Database):
     # just finishing trial
     one_week_ago_end = datetime.datetime.now() - datetime.timedelta(days=7)
+    send_to_emails = set([])
 
+    logger.info("Getting users that have just passed the trial time")
     query = get_trial_users_with_create_before_date(one_week_ago_end)
     for email_db in query:
+        send_to_emails.add(email_db.id)
+        logger.info(f"Sending to email {email_db.id}")
         if send_trial_ending_email(session, email_db.email):
             email_db.user.last_email_sent = utcnow()
             email_db.user.save()
 
+    logger.info("Getting users that have already been warned")
     two_weeks_ago_end = datetime.datetime.now() - datetime.timedelta(days=14)
-
     query = get_trial_users_with_create_before_date(two_weeks_ago_end)
     for email_db in query:
+        if email_db.id in send_to_emails:
+            continue
+        logger.info(f"Sending to email {email_db.id}")
         if send_account_to_be_deleted_email(session, email_db.email):
             email_db.user.last_email_sent = utcnow()
             email_db.user.save()
