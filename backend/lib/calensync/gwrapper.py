@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import os
+import traceback
 from typing import List, Dict, Any, Optional
 
 import google.oauth2.credentials
@@ -355,12 +356,24 @@ class GoogleCalendarWrapper:
                 logger.info(f"Found event to delete")
                 for rule in sync_rules:
                     c = GoogleCalendarWrapper(rule.destination)
-                    fetched_events = c.get_events(
-                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
-                    )
-                    c.events_handler.delete(fetched_events)
-                    c.delete_events()
-                    counter_event_changed += 1
+                    if "_" in event.id:
+                        # handle recurrence, see explanation below
+                        event_id = event.id.split("_")[0]
+                        fetched_events = c.get_events(
+                            private_extended_properties=EventExtendedProperty.for_source_id(event_id).to_google_dict()
+                        )
+                        if fetched_events:
+                            fetched_events[0].id = f'{fetched_events[0].id}_{event.id.split("_")[1]}'
+                            c.events_handler.delete([fetched_events[0]])
+                            c.delete_events()
+                            counter_event_changed += 1
+                    else:
+                        fetched_events = c.get_events(
+                            private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                        )
+                        c.events_handler.delete(fetched_events)
+                        c.delete_events()
+                        counter_event_changed += 1
 
             elif event.status == EventStatus.confirmed:
                 # This means it's an updated events. Therefore, all the user-associated calendars
@@ -381,6 +394,29 @@ class GoogleCalendarWrapper:
                         c.events_handler.update([(event, to_update) for to_update in c.events])
                         c.update_events()
                         counter_event_changed += 1
+
+                    if "_" in event.id:
+                        # For recurring events, the way Google handles it if you only modify one instance is that it
+                        # creates a new event with id {original id}_{original start datetime}
+                        # the issue is that, we receive this new id, and think that it's a new event.
+                        # Instead, what would need to be done is verify if the original event instance still exists
+                        # in our calendar, if yes delete and if no then ignore. Here, we take the simpler approach of
+                        # always trying to delete
+                        logger.info("Single instance of recurring changed - try to delete original")
+                        try:
+                            original_recurrence = c.get_events(
+                                private_extended_properties=EventExtendedProperty.for_source_id(
+                                    event.id.split("_")[0]).to_google_dict()
+                            )
+                            if original_recurrence:
+                                recurrence_template = original_recurrence[0]
+                                # construct new id
+                                recurrence_template.id = f"{recurrence_template.id}_{event.id.split('_')[1]}"
+                                c.events_handler.delete([recurrence_template])
+                                c.delete_events()
+                        except Exception as e:
+                            logger.error(f"Failed to delete original recurrence: {e}\n{traceback.format_exc()}")
+
             else:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
         return counter_event_changed
