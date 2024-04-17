@@ -338,17 +338,20 @@ class GoogleCalendarWrapper:
             # new event, we don't need to check anything more
             logger.info(f"Potential new event")
 
-            for rule in sync_rules:
-                c = GoogleCalendarWrapper(rule.destination)
-                c.get_events(
-                    private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
-                )
-                if len(c.events) > 0:
-                    continue
-
-                c.events_handler.add([source_event_tuple(event, str(sync_rules[0].source.uuid))])
-                c.insert_events(private=rule.private)
-                counter_event_changed += 1
+            if len(sync_rules) > 0:
+                # sync_rules[0] because all the sources are the same
+                # (given that it's dependent on the calendar of the event)
+                source_calendar_uuid = str(sync_rules[0].source.uuid)
+                for rule in sync_rules:
+                    c = GoogleCalendarWrapper(rule.destination)
+                    c.get_events(
+                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                    )
+                    if len(c.events) > 0:
+                        continue
+                    c.events_handler.add([source_event_tuple(event, source_calendar_uuid)])
+                    c.insert_events(private=rule.private)
+                    counter_event_changed += 1
         else:
             # check status
             if event.status == EventStatus.cancelled:
