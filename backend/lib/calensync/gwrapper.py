@@ -361,9 +361,15 @@ class GoogleCalendarWrapper:
                     c = GoogleCalendarWrapper(rule.destination)
                     if "_" in event.id:
                         # handle recurrence, see explanation below
-                        event_id = event.id.split("_")[0]
+                        original_id, datetime_str = event.id.split("_")
+                        try:
+                            datetime.datetime.strptime(datetime_str, "%Y%m%dT%H%M%S%z")
+                        except:
+                            logger.info(f"Skipping pseudo-recurrent id: {event.id}")
+                            continue
+
                         fetched_events = c.get_events(
-                            private_extended_properties=EventExtendedProperty.for_source_id(event_id).to_google_dict()
+                            private_extended_properties=EventExtendedProperty.for_source_id(original_id).to_google_dict()
                         )
                         if fetched_events:
                             fetched_events[0].id = f'{fetched_events[0].id}_{event.id.split("_")[1]}'
@@ -406,15 +412,20 @@ class GoogleCalendarWrapper:
                         # in our calendar, if yes delete and if no then ignore. Here, we take the simpler approach of
                         # always trying to delete
                         logger.info("Single instance of recurring changed - try to delete original")
+                        original_id, datetime_str = event.id.split("_")
+                        try:
+                            datetime.datetime.strptime(datetime_str, "%Y%m%dT%H%M%S%z")
+                        except:
+                            logger.info(f"Skipping pseudo-recurrent id: {event.id}")
+                            continue
                         try:
                             original_recurrence = c.get_events(
-                                private_extended_properties=EventExtendedProperty.for_source_id(
-                                    event.id.split("_")[0]).to_google_dict()
+                                private_extended_properties=EventExtendedProperty.for_source_id(original_id).to_google_dict()
                             )
                             if original_recurrence:
                                 recurrence_template = original_recurrence[0]
                                 # construct new id
-                                recurrence_template.id = f"{recurrence_template.id}_{event.id.split('_')[1]}"
+                                recurrence_template.id = f"{recurrence_template.id}_{datetime_str}"
                                 c.events_handler.delete([recurrence_template])
                                 c.delete_events()
                         except Exception as e:
