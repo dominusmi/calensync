@@ -61,7 +61,7 @@ def update_event(service, calendar_id: str, event_id: str, start: GoogleDatetime
         "end": end.to_google_dict(),
         **kwargs
     }
-    logger.info(f"Updating event {event_id}: {body}")
+    logger.debug(f"Updating event {event_id}: {body}")
     service.events().patch(calendarId=calendar_id, eventId=event_id, body=body).execute()
 
 
@@ -104,7 +104,7 @@ def get_events(service, google_id: str, start_date: datetime.datetime, end_date:
     events = []
     while request is not None:
         response = request.execute()
-        logger.info(f"{google_id}: {response.get('items',[])}")
+        logger.debug(f"{google_id}: {response.get('items',[])}")
         events.extend(GoogleEvent.parse_event_list_response(response))
         request = events_service.list_next(request, response)
     return events
@@ -170,6 +170,7 @@ class GoogleCalendarWrapper:
             self._service = service
 
         self.events_handler = EventsModificationHandler()
+        self.events = []
 
     @property
     def service(self):
@@ -315,7 +316,7 @@ class GoogleCalendarWrapper:
         events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
                                  showDeleted=True, maxResults=200)
 
-        logger.info(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
+        logger.debug(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
         return [event for event in events if event.source_id is None]
 
     @staticmethod
@@ -435,7 +436,7 @@ class GoogleCalendarWrapper:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
         return counter_event_changed
 
-    def solve_update_in_calendar(self) -> int:
+    def solve_update_in_calendar(self, include_preloaded_events: bool = False) -> int:
         """ Called when we receive a webhook event saying the calendar requires an update """
         sync_rules = list(get_sync_rules_from_source(self.calendar_db))
         counter_event_changed = 0
@@ -445,6 +446,8 @@ class GoogleCalendarWrapper:
             return 0
 
         events = self.get_updated_events()
+        if include_preloaded_events:
+            events.extend(self.events)
 
         logger.info(f"Updated events: {[e.id for e in events]}")
         if not events:
