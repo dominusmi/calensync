@@ -2,6 +2,7 @@ import base64
 import datetime
 import json
 import os
+import traceback
 import uuid
 from typing import Optional, List
 
@@ -547,14 +548,17 @@ def delete_sync_rule(user: User, sync_uuid: str):
     sync_rule: SyncRule = sync_rules[0]
 
     destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
-    events = destination_wrapper.get_events(
-        private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
-        start_date=datetime.datetime.now(),
-        end_date=datetime.datetime.now() + datetime.timedelta(days=35),
-        showDeleted=False
-    )
-    destination_wrapper.events_handler.delete(events)
-    destination_wrapper.delete_events()
+    try:
+        events = destination_wrapper.get_events(
+            private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
+            start_date=datetime.datetime.now(),
+            end_date=datetime.datetime.now() + datetime.timedelta(days=35),
+            showDeleted=False
+        )
+        destination_wrapper.events_handler.delete(events)
+        destination_wrapper.delete_events()
+    except Exception as e:
+        logger.error(f"Failed to delete events for sync rule {sync_rule}: {e}\n\n{traceback.format_exc()}")
 
     # check if calendar has other rule sync rules, otherwise delete watch
     other_rules_same_source = list(
@@ -591,7 +595,6 @@ def get_sync_rules(user: User):
 def reset_user(caller: User, user_uuid: str):
     if not caller.is_admin:
         raise ApiError("Forbidden", 403)
-
     user = User.get_or_none(uuid=user_uuid)
     if user is None:
         return

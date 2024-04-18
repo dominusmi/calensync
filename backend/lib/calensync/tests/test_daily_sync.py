@@ -140,12 +140,12 @@ def test_sync_user_calendars_by_date_multiple_users(db, user, account1_1, calend
 
     with (
         patch("calensync.awslambda.daily_sync.load_calendars") as load_calendars,
-        patch("calensync.awslambda.daily_sync.execute_update") as execute_update
+        patch("calensync.awslambda.daily_sync.GoogleCalendarWrapper") as wrapper
     ):
         load_calendars.return_value = []
         sync_user_calendars_by_date(db)
         assert load_calendars.call_count == 2
-        assert execute_update.call_count == 2
+        assert wrapper.call_count == 0
 
 
 class TestUpdateWatches:
@@ -243,7 +243,7 @@ class TestTrialEmail:
 
             user = user.refresh()
             assert user.last_email_sent is not None
-            assert user.last_email_sent > datetime.datetime.now() - datetime.timedelta(minutes=1)
+            assert user.last_email_sent.replace(tzinfo=datetime.timezone.utc) > utcnow() - datetime.timedelta(minutes=1)
 
     @staticmethod
     def test_get_trial_users_with_dates_between_only_return_oldest(db, user, email1_1, user2, account1_1, calendar1_1,

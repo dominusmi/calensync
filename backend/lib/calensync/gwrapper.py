@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import os
+import traceback
 from typing import List, Dict, Any, Optional
 
 import google.oauth2.credentials
@@ -60,7 +61,7 @@ def update_event(service, calendar_id: str, event_id: str, start: GoogleDatetime
         "end": end.to_google_dict(),
         **kwargs
     }
-    logger.info(f"Updating event {event_id}: {body}")
+    logger.debug(f"Updating event {event_id}: {body}")
     service.events().patch(calendarId=calendar_id, eventId=event_id, body=body).execute()
 
 
@@ -103,7 +104,7 @@ def get_events(service, google_id: str, start_date: datetime.datetime, end_date:
     events = []
     while request is not None:
         response = request.execute()
-        logger.info(f"{google_id}: {response.get('items',[])}")
+        logger.debug(f"{google_id}: {response.get('items',[])}")
         events.extend(GoogleEvent.parse_event_list_response(response))
         request = events_service.list_next(request, response)
     return events
@@ -169,6 +170,7 @@ class GoogleCalendarWrapper:
             self._service = service
 
         self.events_handler = EventsModificationHandler()
+        self.events = []
 
     @property
     def service(self):
@@ -308,13 +310,13 @@ class GoogleCalendarWrapper:
 
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
-        updated_min = datetime.datetime.now() - datetime.timedelta(days=3)
-        start_date = utcnow()
+        updated_min = datetime.datetime.now() - datetime.timedelta(days=1)
+        start_date = utcnow() - datetime.timedelta(days=30)
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
         events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
                                  showDeleted=True, maxResults=200)
 
-        logger.info(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
+        logger.debug(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
         return [event for event in events if event.source_id is None]
 
     @staticmethod
@@ -337,17 +339,20 @@ class GoogleCalendarWrapper:
             # new event, we don't need to check anything more
             logger.info(f"Potential new event")
 
-            for rule in sync_rules:
-                c = GoogleCalendarWrapper(rule.destination)
-                c.get_events(
-                    private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
-                )
-                if len(c.events) > 0:
-                    continue
-
-                c.events_handler.add([source_event_tuple(event, str(sync_rules[0].source.uuid))])
-                c.insert_events(private=rule.private)
-                counter_event_changed += 1
+            if len(sync_rules) > 0:
+                # sync_rules[0] because all the sources are the same
+                # (given that it's dependent on the calendar of the event)
+                source_calendar_uuid = str(sync_rules[0].source.uuid)
+                for rule in sync_rules:
+                    c = GoogleCalendarWrapper(rule.destination)
+                    c.get_events(
+                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                    )
+                    if len(c.events) > 0:
+                        continue
+                    c.events_handler.add([source_event_tuple(event, source_calendar_uuid)])
+                    c.insert_events(private=rule.private)
+                    counter_event_changed += 1
         else:
             # check status
             if event.status == EventStatus.cancelled:
@@ -355,12 +360,30 @@ class GoogleCalendarWrapper:
                 logger.info(f"Found event to delete")
                 for rule in sync_rules:
                     c = GoogleCalendarWrapper(rule.destination)
-                    fetched_events = c.get_events(
-                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
-                    )
-                    c.events_handler.delete(fetched_events)
-                    c.delete_events()
-                    counter_event_changed += 1
+                    if "_" in event.id:
+                        # handle recurrence, see explanation below
+                        original_id, datetime_str = event.id.split("_")
+                        try:
+                            datetime.datetime.strptime(datetime_str, "%Y%m%dT%H%M%S%z")
+                        except:
+                            logger.info(f"Skipping pseudo-recurrent id: {event.id}")
+                            continue
+
+                        fetched_events = c.get_events(
+                            private_extended_properties=EventExtendedProperty.for_source_id(original_id).to_google_dict()
+                        )
+                        if fetched_events:
+                            fetched_events[0].id = f'{fetched_events[0].id}_{event.id.split("_")[1]}'
+                            c.events_handler.delete([fetched_events[0]])
+                            c.delete_events()
+                            counter_event_changed += 1
+                    else:
+                        fetched_events = c.get_events(
+                            private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                        )
+                        c.events_handler.delete(fetched_events)
+                        c.delete_events()
+                        counter_event_changed += 1
 
             elif event.status == EventStatus.confirmed:
                 # This means it's an updated events. Therefore, all the user-associated calendars
@@ -381,11 +404,39 @@ class GoogleCalendarWrapper:
                         c.events_handler.update([(event, to_update) for to_update in c.events])
                         c.update_events()
                         counter_event_changed += 1
+
+                    if "_" in event.id:
+                        # For recurring events, the way Google handles it if you only modify one instance is that it
+                        # creates a new event with id {original id}_{original start datetime}
+                        # the issue is that, we receive this new id, and think that it's a new event.
+                        # Instead, what would need to be done is verify if the original event instance still exists
+                        # in our calendar, if yes delete and if no then ignore. Here, we take the simpler approach of
+                        # always trying to delete
+                        logger.info("Single instance of recurring changed - try to delete original")
+                        original_id, datetime_str = event.id.split("_")
+                        try:
+                            datetime.datetime.strptime(datetime_str, "%Y%m%dT%H%M%S%z")
+                        except:
+                            logger.info(f"Skipping pseudo-recurrent id: {event.id}")
+                            continue
+                        try:
+                            original_recurrence = c.get_events(
+                                private_extended_properties=EventExtendedProperty.for_source_id(original_id).to_google_dict()
+                            )
+                            if original_recurrence:
+                                recurrence_template = original_recurrence[0]
+                                # construct new id
+                                recurrence_template.id = f"{recurrence_template.id}_{datetime_str}"
+                                c.events_handler.delete([recurrence_template])
+                                c.delete_events()
+                        except Exception as e:
+                            logger.error(f"Failed to delete original recurrence: {e}\n{traceback.format_exc()}")
+
             else:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
         return counter_event_changed
 
-    def solve_update_in_calendar(self) -> int:
+    def solve_update_in_calendar(self, include_preloaded_events: bool = False) -> int:
         """ Called when we receive a webhook event saying the calendar requires an update """
         sync_rules = list(get_sync_rules_from_source(self.calendar_db))
         counter_event_changed = 0
@@ -395,6 +446,8 @@ class GoogleCalendarWrapper:
             return 0
 
         events = self.get_updated_events()
+        if include_preloaded_events:
+            events.extend(self.events)
 
         logger.info(f"Updated events: {[e.id for e in events]}")
         if not events:

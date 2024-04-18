@@ -6,6 +6,7 @@ from typing import Iterable, List
 import boto3
 import peewee
 
+from calensync.api.common import number_of_days_to_sync_in_advance
 from calensync.database.model import User, Calendar, CalendarAccount, SyncRule, EmailDB
 from calensync.email import send_trial_ending_email, send_account_to_be_deleted_email
 from calensync.gwrapper import GoogleCalendarWrapper, service_from_account
@@ -15,7 +16,8 @@ from calensync.utils import utcnow
 logger = get_logger("daily_sync.main")
 
 
-def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetime, end_date: datetime.datetime):
+def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetime, end_date: datetime.datetime
+                   ) -> list[GoogleCalendarWrapper]:
     calendars = []
     for account in accounts:
         for calendar in account.calendars:
@@ -24,7 +26,10 @@ def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetim
             calendars.append(GoogleCalendarWrapper(calendar, service=service))
 
     for cal in calendars:
-        cal.get_events(start_date, end_date)
+        try:
+            cal.get_events(start_date, end_date)
+        except Exception as e:
+            logger.info(f"Skipping calendar {calendar.uuid} due to {e}")
 
     return calendars
 
@@ -53,9 +58,33 @@ def get_users_query_with_active_sync_rules():
     return query
 
 
+def hard_sync(db):
+    """ Only to be used to fix user calendars having issues """
+    # users_query = get_users_query_with_active_sync_rules()
+    users_query = list(User.select().where(User.id == 217))
+    start: datetime.datetime = datetime.datetime.today()
+    start_date = datetime.datetime.fromtimestamp(start.timestamp())
+    start_date = start_date.replace(hour=0, minute=0, second=0)
+    end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
+
+    # because the dates are exclusive in the Google API, this will fetch from 00:00:00 of day, to 23:59:59
+    start_date = start_date - datetime.timedelta(seconds=1)
+    logger.info(f"Start/end date: {start_date.isoformat()} -> {end_date.isoformat()}")
+
+    for user in users_query:
+        try:
+            logger.info(f"Syncing {user.uuid}")
+            calendar_wrappers = load_calendars(user.accounts, start_date, end_date)
+            for wrapper in calendar_wrappers:
+                wrapper.solve_update_in_calendar(include_preloaded_events=True)
+        except Exception as e:
+            logger.error(f"Error occured while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
+            time.sleep(1)
+
+
 def sync_user_calendars_by_date(db):
     users_query = get_users_query_with_active_sync_rules()
-    start: datetime.datetime = (datetime.datetime.today() + datetime.timedelta(days=30))
+    start: datetime.datetime = datetime.datetime.today() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
     start_date = datetime.datetime.fromtimestamp(start.timestamp())
     start_date = start_date.replace(hour=0, minute=0, second=0)
     end_date = start_date + datetime.timedelta(hours=24)
@@ -67,8 +96,9 @@ def sync_user_calendars_by_date(db):
     for user in users_query:
         try:
             logger.info(f"Syncing {user.uuid}")
-            calendars = load_calendars(user.accounts, start_date, end_date)
-            execute_update(calendars, db)
+            calendar_wrappers = load_calendars(user.accounts, start_date, end_date)
+            for wrapper in calendar_wrappers:
+                wrapper.solve_update_in_calendar()
         except Exception as e:
             logger.error(f"Error occured while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
             time.sleep(1)
@@ -106,7 +136,8 @@ def update_watches(db: peewee.Database):
                 break
 
             except Exception as e:
-                logger.error(f"Error occured while updating calendar {calendar_db.uuid}: {e}\n\n{traceback.format_exc()}")
+                logger.error(
+                    f"Error occured while updating calendar {calendar_db.uuid}: {e}\n\n{traceback.format_exc()}")
                 time.sleep(1)
             finally:
                 iteration += 1
@@ -120,11 +151,11 @@ def get_trial_users_with_create_before_date(start: datetime.datetime):
                 .join(Calendar)
                 .join(SyncRule, on=(SyncRule.source == Calendar.id))
                 .where(
-                    User.date_created < start,
-                    User.subscription_id.is_null(True),
-                    # If there were no previous email, or the previous email was sent earlier
-                    (User.last_email_sent.is_null(True)) | (User.last_email_sent < start)
-                )
+        User.date_created < start,
+        User.subscription_id.is_null(True),
+        # If there were no previous email, or the previous email was sent earlier
+        (User.last_email_sent.is_null(True)) | (User.last_email_sent < start)
+    )
                 .group_by(User.id)
                 .having(peewee.fn.COUNT(SyncRule.id) > 0)
                 )
@@ -157,17 +188,24 @@ def get_trial_users_with_create_before_date(start: datetime.datetime):
 def send_trial_finishing_email(session: boto3.Session, db: peewee.Database):
     # just finishing trial
     one_week_ago_end = datetime.datetime.now() - datetime.timedelta(days=7)
+    send_to_emails = set([])
 
+    logger.info("Getting users that have just passed the trial time")
     query = get_trial_users_with_create_before_date(one_week_ago_end)
     for email_db in query:
+        send_to_emails.add(email_db.id)
+        logger.info(f"Sending to email {email_db.id}")
         if send_trial_ending_email(session, email_db.email):
             email_db.user.last_email_sent = utcnow()
             email_db.user.save()
 
+    logger.info("Getting users that have already been warned")
     two_weeks_ago_end = datetime.datetime.now() - datetime.timedelta(days=14)
-
     query = get_trial_users_with_create_before_date(two_weeks_ago_end)
     for email_db in query:
+        if email_db.id in send_to_emails:
+            continue
+        logger.info(f"Sending to email {email_db.id}")
         if send_account_to_be_deleted_email(session, email_db.email):
             email_db.user.last_email_sent = utcnow()
             email_db.user.save()

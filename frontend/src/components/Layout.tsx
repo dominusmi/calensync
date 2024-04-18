@@ -21,7 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyReq
         try {
             await axios.post(
                 `https://api.hook2email.com/hook/4b262ccb-a724-4bf7-b362-092b7407dba0/send`,
-                { error: JSON.stringify(ev) },
+                { error: JSON.stringify(ev, ["message", "arguments", "type", "name"]) },
                 {
                     headers: {
                         'Content-Type': 'application/json',
