@@ -104,17 +104,18 @@ class ExtendedProperties(BaseModel):
 
 
 class GoogleEvent(BaseModel):
-    extendedProperties: ExtendedProperties = ExtendedProperties()
-    htmlLink: str
-    start: Union[GoogleDatetime, GoogleDate]
-    end: Union[GoogleDatetime, GoogleDate]
     id: str
+    status: EventStatus
+    extendedProperties: ExtendedProperties = ExtendedProperties()
+    start: Optional[Union[GoogleDatetime, GoogleDate]] = None
+    end: Optional[Union[GoogleDatetime, GoogleDate]] = None
+    originalStartTime: Optional[Union[GoogleDatetime, GoogleDate]] = None
     created: Optional[datetime.datetime] = None
     updated: Optional[datetime.datetime] = None
-    status: EventStatus
     recurrence: Optional[List[str]] = None
     description: Optional[str] = None
     summary: str = None
+    htmlLink: Optional[str] = None
 
     @staticmethod
     def parse_event_list_response(response: Dict) -> List[GoogleEvent]:
@@ -123,6 +124,7 @@ class GoogleEvent(BaseModel):
             try:
                 events.append(GoogleEvent.parse_obj(item))
             except pydantic.ValidationError:
+                logger.error(f"{item}")
                 logger.error(f"Couldn't parse item with id {item.get('id')}: {traceback.format_exc()}")
         return events
 
