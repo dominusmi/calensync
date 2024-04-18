@@ -43,7 +43,7 @@
     "deploy-ci:dev": "aws s3 sync dist s3://calensync/frontend/dev",
     "deploy-ci:prod": "aws s3 sync dist s3://calensync/frontend/prod && aws cloudfront create-invalidation --distribution-id E295TYJFC3TR5Y --paths \"/*\"",
     "postbuild:dev": "node scripts/generateSitemap.js https://calensync.live && cp sitemap.xml dist/",
-    "postbuild:prod": "node scripts/generateSitemap.js https://calensync.live && cp sitemap.xml build/",
+    "postbuild:prod": "node scripts/generateSitemap.js https://calensync.live && cp sitemap.xml dist/",
     "sitemap": "node scripts/generateSitemap.js"
   },
   "blogger": {
