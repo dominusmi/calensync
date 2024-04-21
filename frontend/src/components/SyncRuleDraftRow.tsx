@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Accordion } from 'react-bootstrap';
 
 
-const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState: (x: boolean) => void }> = ({ accounts, state, setState }) => {
+const SyncRuleDraftRow: React.FC<{ accounts: Account[], setState: (x: boolean) => void, successCallback: () => void }> = ({ accounts, state, setState, successCallback }) => {
     const { t } = useTranslation(['app']);
 
     const sourceRef = useRef<HTMLSelectElement | null>(null);
@@ -55,15 +55,10 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                 setLoading(false);
                 return
             }
-            refreshPage();
-            await sleep(1000);
+            successCallback();
         } finally {
             setLoading(false);
         }
-    }
-
-    if (!state) {
-        return (<></>)
     }
 
     return (
