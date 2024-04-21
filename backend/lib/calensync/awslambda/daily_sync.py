@@ -8,7 +8,7 @@ import peewee
 
 from calensync.api.common import number_of_days_to_sync_in_advance
 from calensync.database.model import User, Calendar, CalendarAccount, SyncRule, EmailDB
-from calensync.email import send_trial_ending_email, send_account_to_be_deleted_email
+from calensync.libemail import send_trial_ending_email, send_account_to_be_deleted_email
 from calensync.gwrapper import GoogleCalendarWrapper, service_from_account
 from calensync.log import get_logger
 from calensync.utils import utcnow
@@ -32,18 +32,6 @@ def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetim
             logger.info(f"Skipping calendar {calendar.uuid} due to {e}")
 
     return calendars
-
-
-def execute_update(calendars: List[GoogleCalendarWrapper], db):
-    # spooky double loop. Need to save each calendar events in the others
-    for i, cal1 in enumerate(calendars):
-        for cal2 in calendars[i + 1:]:
-            cal1.events_handler.add(cal2.events)
-            cal2.events_handler.add(cal1.events)
-
-    with db.atomic():
-        for cal in calendars:
-            cal.insert_events()
 
 
 def get_users_query_with_active_sync_rules():
