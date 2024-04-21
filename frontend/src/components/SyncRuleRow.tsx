@@ -9,8 +9,9 @@ import { useTranslation } from 'react-i18next';
 export interface SyncRule {
   source: string,
   destination: string,
-  private: boolean,
-  uuid: string
+  uuid: string,
+  summary: string,
+  description: string
 }
 
 const SyncRuleRow: React.FC<{ rule: SyncRule }> = ({ rule}) => {
@@ -55,8 +56,8 @@ const SyncRuleRow: React.FC<{ rule: SyncRule }> = ({ rule}) => {
           <div className='text-wrap'>{t("dashboard.sync.valid.to")} <span className='fw-bold'>{refactorCalendarName(rule.destination)}</span></div>
         </div>
         <div className="me-md-auto mb-4 my-sm-1">
-          <input className='form-check-input' type="checkbox" checked={rule.private} readOnly={true}></input>
-          <label className='ps-1'>{t("dashboard.sync.valid.mark-busy")}</label>
+          <div className='text-wrap'>Title rule: <span className='fw-bold'>{rule.summary}</span> </div>
+          <div className='text-wrap'>Description rule: <span className='fw-bold'>{rule.description}</span> </div>
         </div>
         <div className="ms-md-auto my-sm-1">
           <button type="button" className="btn btn-outline-danger" onClick={()=>setClickedDelete(true)}>

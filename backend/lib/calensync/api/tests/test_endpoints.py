@@ -9,7 +9,7 @@ from calensync.api.common import ApiError, RedirectResponse
 from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env, reset_user, \
     handle_add_calendar
 from calensync.api.service import received_webhook
-from calensync.calendar import EventsModificationHandler
+from calensync.libcalendar import EventsModificationHandler
 from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB
 from calensync.database.model import Session
 from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty, GoogleCalendar

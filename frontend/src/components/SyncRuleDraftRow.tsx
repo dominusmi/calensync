@@ -5,20 +5,22 @@ import { MessageKind, refactorCalendarName, refreshPage, sleep } from '../utils/
 import API from '../utils/const';
 import LoadingOverlay from './LoadingOverlay';
 import { useTranslation } from 'react-i18next';
+import { Accordion } from 'react-bootstrap';
 
-const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState: (x: boolean) => void }> = ({ accounts, state, setState }) => {
-      const { t } = useTranslation(['app']);
+
+const SyncRuleDraftRow: React.FC<{ accounts: Account[], setState: (x: boolean) => void, successCallback: () => void }> = ({ accounts, setState, successCallback }) => {
+    const { t } = useTranslation(['app']);
 
     const sourceRef = useRef<HTMLSelectElement | null>(null);
     const destinationRef = useRef<HTMLSelectElement | null>(null);
-    const busyRef = useRef<HTMLInputElement | null>(null);
+    const [summary, setSummary] = useState("%original%");
+    const [description, setDescription] = useState("%original%");
     const [loading, setLoading] = useState(false);
 
     async function createSyncRule() {
         setLoading(true);
         const source = sourceRef.current?.value;
         const destination = destinationRef.current?.value;
-        const markAsPrivate = busyRef.current?.checked || false;
 
         try {
             if (source == null || destination == null) {
@@ -38,7 +40,8 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                 body: JSON.stringify({
                     source_calendar_id: source,
                     destination_calendar_id: destination,
-                    private: markAsPrivate
+                    summary: summary,
+                    description: description
                 })
             });
 
@@ -52,15 +55,10 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                 setLoading(false);
                 return
             }
-            refreshPage();
-            await sleep(1000);
+            successCallback();
         } finally {
             setLoading(false);
         }
-    }
-
-    if (!state) {
-        return (<></>)
     }
 
     return (
@@ -103,14 +101,29 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], state: boolean, setState
                         </select>
                         <label className='' >{t("dashboard.sync.draft.destination")}</label>
                     </div>
-                    <div className="btn-group pe-lg-2 col-12 col-lg-4 my-lg-0 my-2" role="group" aria-label="Third group">
-                        <div className="me-2 form-check px-4">
-                            <input className="form-check-input" type="checkbox" value="" readOnly={true} ref={busyRef} />
-                            <label className="form-check-label text-start">
-                            {t("dashboard.sync.draft.replace-busy")}
-                            </label>
-                        </div>
-                    </div>
+                    <Accordion className='my-3'>
+                        <Accordion.Item eventKey="0">
+                            <Accordion.Header className='px-0 mx-0'><span className='text-primary'>{t("dashboard.sync.customize-event-template")}</span></Accordion.Header>
+                            <Accordion.Body>
+                                <div>
+                                    <div className="form-group my-3">
+                                        <label>Title template</label>
+                                        <div>
+                                            <input type="text" className="form-control" id="exampleInputEmail1" value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="How to replace the title? use the magic word %original% to use the real event title" />
+                                        </div>
+                                        <small><span dangerouslySetInnerHTML={{"__html": t("dashboard.sync.example-title")}}></span><span className='fw-bold'>{summary.replace("%original%", "Birthday party")}</span></small>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="form-group my-3">
+                                        <label>Description template</label>
+                                        <input type="text" className="form-control" id="exampleInputEmail1" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="How to replace the description? use the magic word %original% to use the real event title" />
+                                        <small><span dangerouslySetInnerHTML={{"__html": t("dashboard.sync.example-description")}}></span> <span className='fw-bold'>{description.replace("%original%", "Let's all meet together for Tom's birthday")}</span></small>
+                                    </div>
+                                </div>
+                            </Accordion.Body>
+                        </Accordion.Item>
+                    </Accordion>
                     <div className="btn-group pe-lg-2 my-2 col-12 col-lg-1 my-lg-0 my-2" role="group" aria-label="Fourth group">
                         <button type="button" className="btn btn-primary" onClick={createSyncRule}>{t("common.save")}</button>
                     </div>

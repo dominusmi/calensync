@@ -523,9 +523,11 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
     Verifies the input and create the SyncRule database entry. Pushes and SQS
     event which will then call run_initial_sync
     """
+    if len(payload.summary) == 0:
+        raise ApiError("Title cannot be empty", 400)
     with db.atomic():
         source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
-        sync_rule = SyncRule(source=source, destination=destination, private=payload.private).save_new()
+        sync_rule = SyncRule(source=source, destination=destination, summary=payload.summary, description=payload.description).save_new()
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
         if is_local():
@@ -580,7 +582,8 @@ def get_sync_rules(user: User):
             Source.platform_id.alias("source_id"),
             Destination.name.alias("destination"),
             Destination.platform_id.alias("destination_id"),
-            SyncRule.private
+            SyncRule.summary,
+            SyncRule.description
         )
         .join(Source, on=(Source.id == SyncRule.source_id))
         .switch(SyncRule)

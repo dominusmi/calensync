@@ -4,6 +4,8 @@ const NavBar = lazy(() => import('./Navbar'))
 import Toast, { createToast } from './Toast';
 import { MessageKind, consumeMessages } from '../utils/common';
 import axios from 'axios';
+import { PlausibleProvider } from '../contexts/PlausibleProvider';
+import { ClientOnly } from 'vite-react-ssg';
 
 interface LayoutProps {
     children: ReactNode;
@@ -58,18 +60,25 @@ const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyReq
     }, [])
 
     return (
-        <div className='bg-light'>
-            <div className='App'>
-                <div className='content justify-content-center'>
-                    <NavBar verify_session={onlyRequired} />
-                    <main className=''>
-                        {children}
-                    </main>
+        <ClientOnly>
+        {() => {
+            return <PlausibleProvider>
+                <div className='bg-light'>
+                    <div className='App'>
+                        <div className='content justify-content-center'>
+                            <NavBar verify_session={onlyRequired} />
+                            <main className=''>
+                                {children}
+                            </main>
+                        </div>
+                        <Toast onReady={handleToastReady} />
+                    </div>
+                    <Footer onlyRequired={onlyRequired} />
                 </div>
-                <Toast onReady={handleToastReady} />
-            </div>
-            <Footer onlyRequired={onlyRequired} />
-        </div>
+            </PlausibleProvider>
+        }}
+        </ClientOnly>
+
     );
 };
 

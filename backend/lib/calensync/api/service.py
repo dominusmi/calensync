@@ -60,8 +60,8 @@ def run_initial_sync(sync_rule_id: int):
     events = source_wrapper.get_events(start_date, end_date)
 
     destination_wrapper = GoogleCalendarWrapper(calendar_db=destination)
-    destination_wrapper.events_handler.add([source_event_tuple(e, str(source.uuid)) for e in events])
-    destination_wrapper.insert_events(private=sync_rule.private)
+    destination_wrapper.events_handler.add([source_event_tuple(e, str(source.uuid)) for e in events], sync_rule)
+    destination_wrapper.insert_events()
 
     if source.expiration is None:
         source_wrapper.create_watch()

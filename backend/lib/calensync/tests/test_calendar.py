@@ -3,7 +3,7 @@ import datetime
 import uuid
 from typing import List
 
-from calensync.calendar import events_to_add, events_to_update, events_to_delete
+from calensync.libcalendar import events_to_add, events_to_update, events_to_delete
 from calensync.dataclass import GoogleEvent, EventStatus, \
     ExtendedProperties
 from calensync.tests.fixtures import events_fixture
