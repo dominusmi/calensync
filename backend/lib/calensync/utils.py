@@ -85,3 +85,7 @@ def prefetch_get_or_none(query, *sub_queries):
         return result[0]
     else:
         return None
+
+
+def format_calendar_text(original, template):
+    return template.replace("%original%", original)
