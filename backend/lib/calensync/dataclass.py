@@ -184,4 +184,5 @@ class PatchCalendarBody(BaseModel):
 class PostSyncRuleBody(BaseModel):
     source_calendar_id: str
     destination_calendar_id: str
-    private: bool
+    summary: str
+    description: str
