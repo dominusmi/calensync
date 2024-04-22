@@ -16,7 +16,7 @@ def send_event(session, content: str):
 def handle_sqs_event(sqs_event: SQSEvent, db):
     if sqs_event.kind == QueueEvent.GOOGLE_WEBHOOK:
         we: GoogleWebhookEvent = GoogleWebhookEvent.parse_obj(sqs_event.data)
-        logger.info(f"Processing {we.token} calendar")
+        logger.info(f"Processing calendar with token {we.token} ")
         received_webhook(we.channel_id, we.state, we.resource_id, we.token, db)
     elif sqs_event.kind == QueueEvent.POST_SYNC_RULE:
         e: PostSyncRuleEvent = PostSyncRuleEvent.parse_obj(sqs_event.data)

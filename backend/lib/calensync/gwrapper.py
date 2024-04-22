@@ -298,7 +298,6 @@ class GoogleCalendarWrapper:
                 with db.atomic():
                     summary = source_event.summary
                     description = source_event.description
-                    logger.info("Description", description)
                     if rule.summary is not None:
                         summary = format_calendar_text(summary, rule.summary)
                     if description is not None:
@@ -312,7 +311,7 @@ class GoogleCalendarWrapper:
                                  summary=summary,
                                  description=description)
             except Exception as e:
-                logger.warn(f"Failed to process event {to_update.id}: {e}")
+                logger.warn(f"Failed to process event {to_update.id}: {e}. {traceback.format_exc()}")
 
     def delete_events(self):
         """
