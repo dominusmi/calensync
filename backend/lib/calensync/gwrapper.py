@@ -336,7 +336,7 @@ class GoogleCalendarWrapper:
 
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
-        updated_min = datetime.datetime.now() - datetime.timedelta(days=1)
+        updated_min = self.calendar_db.last_processed
         start_date = utcnow() - datetime.timedelta(days=30)
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
         events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
@@ -417,10 +417,12 @@ class GoogleCalendarWrapper:
                 # must have a version of this event in the database, which we can find through the source_id
                 # We then update each of this events with the new time
                 logger.info(f"Found confirmed event, updating")
+                is_recurrence_instance = "_" in event.id
+                event_id = event.id if not is_recurrence_instance else event.id.split("_")[0]
                 for rule in sync_rules:
                     c = GoogleCalendarWrapper(rule.destination)
                     c.get_events(
-                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                        private_extended_properties=EventExtendedProperty.for_source_id(event_id).to_google_dict()
                     )
                     if len(c.events) == 0:
                         logger.info(f"In update but need to create event")
@@ -428,39 +430,45 @@ class GoogleCalendarWrapper:
                         c.insert_events()
                         counter_event_changed += 1
                     else:
-                        c.events_handler.update([(event, to_update) for to_update in c.events], rule)
-                        c.update_events()
-                        counter_event_changed += 1
+                        if is_recurrence_instance:
+                            c.events[0].id = f"{c.events[0].id}_{event.id.split('_')[1]}"
+                            c.events_handler.update([(event, to_update) for to_update in [c.events[0]]], rule)
+                            c.update_events()
+                            counter_event_changed += 1
+                        else:
+                            c.events_handler.update([(event, to_update) for to_update in c.events], rule)
+                            c.update_events()
+                            counter_event_changed += 1
 
-                    if "_" in event.id:
-                        # For recurring events, the way Google handles it if you only modify one instance is that it
-                        # creates a new event with id {original id}_{original start datetime}
-                        # the issue is that, we receive this new id, and think that it's a new event.
-                        # Instead, what would need to be done is verify if the original event instance still exists
-                        # in our calendar, if yes delete and if no then ignore. Here, we take the simpler approach of
-                        # always trying to delete
-                        logger.info("Single instance of recurring changed - try to delete original")
-                        original_id, datetime_str = event.id.split("_")
-                        try:
-                            datetime.datetime.strptime(datetime_str, "%Y%m%dT%H%M%S%z")
-                        except:
-                            logger.info(f"Skipping pseudo-recurrent id: {event.id}")
-                            continue
-                        try:
-                            original_recurrence = c.get_events(
-                                private_extended_properties=EventExtendedProperty.for_source_id(
-                                    original_id).to_google_dict()
-                            )
-                            if original_recurrence:
-                                recurrence_template = original_recurrence[0]
-                                # recurrence_template.start.dateTime.replace(day=)
-                                original_datetime_str = event.originalStartTime.dateTime.strftime("%Y%m%dT%H%M%S")+"z"
-                                # construct new id
-                                recurrence_template.id = f"{recurrence_template.id}_{original_datetime_str}"
-                                c.events_handler.delete([recurrence_template])
-                                c.delete_events()
-                        except Exception as e:
-                            logger.error(f"Failed to delete original recurrence: {e}\n{traceback.format_exc()}")
+                    # if "_" in event.id:
+                    #     # For recurring events, the way Google handles it if you only modify one instance is that it
+                    #     # creates a new event with id {original id}_{original start datetime}
+                    #     # the issue is that, we receive this new id, and think that it's a new event.
+                    #     # Instead, what would need to be done is verify if the original event instance still exists
+                    #     # in our calendar, if yes delete and if no then ignore. Here, we take the simpler approach of
+                    #     # always trying to delete
+                    #     logger.info("Single instance of recurring changed - try to delete original")
+                    #     original_id, datetime_str = event.id.split("_")
+                    #     try:
+                    #         datetime.datetime.strptime(datetime_str, "%Y%m%dT%H%M%S%z")
+                    #     except:
+                    #         logger.info(f"Skipping pseudo-recurrent id: {event.id}")
+                    #         continue
+                    #     try:
+                    #         original_recurrence = c.get_events(
+                    #             private_extended_properties=EventExtendedProperty.for_source_id(
+                    #                 original_id).to_google_dict()
+                    #         )
+                    #         if original_recurrence:
+                    #             recurrence_template = original_recurrence[0]
+                    #             # recurrence_template.start.dateTime.replace(day=)
+                    #             original_datetime_str = event.originalStartTime.dateTime.strftime("%Y%m%dT%H%M%S")+"z"
+                    #             # construct new id
+                    #             recurrence_template.id = f"{recurrence_template.id}_{original_datetime_str}"
+                    #             c.events_handler.delete([recurrence_template])
+                    #             c.delete_events()
+                    #     except Exception as e:
+                    #         logger.error(f"Failed to delete original recurrence: {e}\n{traceback.format_exc()}")
 
             else:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
@@ -475,6 +483,7 @@ class GoogleCalendarWrapper:
         if n_sync == 0:
             return 0
 
+        last_processed = datetime.datetime.now()
         events = self.get_updated_events()
         if include_preloaded_events:
             events.extend(self.events)
@@ -490,6 +499,9 @@ class GoogleCalendarWrapper:
             counter_event_changed += self.push_event_to_rules(event, sync_rules)
 
         logger.info(f"Event changed: {counter_event_changed}")
+
+        self.calendar_db.last_processed = last_processed
+        self.calendar_db.save()
         return counter_event_changed
 
     @classmethod
