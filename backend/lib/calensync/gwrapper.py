@@ -305,11 +305,13 @@ class GoogleCalendarWrapper:
                             description = None
                         else:
                             description = format_calendar_text(description, rule.description)
-                    update_event(service=self.service, calendar_id=self.google_id,
+                    update_event(service=self.service,
+                                 calendar_id=self.google_id,
                                  event_id=to_update.id,
                                  start=start, end=end,
                                  summary=summary,
-                                 description=description)
+                                 description=description,
+                                 recurrence=source_event.recurrence)
             except Exception as e:
                 logger.warn(f"Failed to process event {to_update.id}: {e}. {traceback.format_exc()}")
 
@@ -450,8 +452,9 @@ class GoogleCalendarWrapper:
                             )
                             if original_recurrence:
                                 recurrence_template = original_recurrence[0]
+                                original_datetime_str = datetime_to_google_time(recurrence_template.start.dateTime)
                                 # construct new id
-                                recurrence_template.id = f"{recurrence_template.id}_{datetime_str}"
+                                recurrence_template.id = f"{recurrence_template.id}_{original_datetime_str}"
                                 c.events_handler.delete([recurrence_template])
                                 c.delete_events()
                         except Exception as e:
