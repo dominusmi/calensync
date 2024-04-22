@@ -293,8 +293,8 @@ class GoogleCalendarWrapper:
             source_event: GoogleEvent
             to_update: GoogleEvent
             rule: SyncRule
-            start = GoogleDatetime(dateTime=source_event.start.dateTime, timeZone="UCT")
-            end = GoogleDatetime(dateTime=source_event.end.dateTime, timeZone="UCT")
+            start = GoogleDatetime(dateTime=source_event.start.dateTime, timeZone=source_event.start.timeZone)
+            end = GoogleDatetime(dateTime=source_event.end.dateTime, timeZone=source_event.end.timeZone)
             try:
                 with db.atomic():
                     summary = source_event.summary
@@ -453,8 +453,8 @@ class GoogleCalendarWrapper:
                             )
                             if original_recurrence:
                                 recurrence_template = original_recurrence[0]
-                                recurrence_template.start.dateTime.strftime("%Y%m%dT%H%M%S%z")
-                                original_datetime_str = datetime_to_google_time(recurrence_template.start.dateTime)
+                                # recurrence_template.start.dateTime.replace(day=)
+                                original_datetime_str = event.originalStartTime.dateTime.strftime("%Y%m%dT%H%M%S")+"z"
                                 # construct new id
                                 recurrence_template.id = f"{recurrence_template.id}_{original_datetime_str}"
                                 c.events_handler.delete([recurrence_template])
