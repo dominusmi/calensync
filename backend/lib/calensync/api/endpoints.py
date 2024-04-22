@@ -511,12 +511,6 @@ def process_calendars():
         calendar.save()
 
 
-if __name__ == "__main__":
-    os.environ["ENV"] = "local"
-    with DatabaseSession("local") as db:
-        rule = SyncRule.get(uuid='1bf21cd0-112a-4bec-b4e7-7d548dbb1cea')
-        run_initial_sync(rule.id)
-
 
 def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database):
     """
