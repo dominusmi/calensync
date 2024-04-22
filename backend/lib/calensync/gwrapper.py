@@ -265,7 +265,8 @@ class GoogleCalendarWrapper:
         self.calendar_db.save()
 
         while self.events_handler.events_to_add:
-            (event, properties, rule) = self.events_handler.events_to_add.pop()
+            # order of popping is important for recurrence race condition
+            (event, properties, rule) = self.events_handler.events_to_add.pop(0)
             if event.extendedProperties.private.get("source-id") is not None:
                 # never copy an event created by us
                 continue
@@ -345,7 +346,7 @@ class GoogleCalendarWrapper:
         return [event for event in events if event.source_id is None]
 
     @staticmethod
-    def __solve_event_update(event: GoogleEvent, sync_rules: List[SyncRule]) -> int:
+    def push_event_to_rules(event: GoogleEvent, sync_rules: List[SyncRule]) -> int:
         """
         Solves a single event update (by updating all other calendars where this event exists)
         """
@@ -452,6 +453,7 @@ class GoogleCalendarWrapper:
                             )
                             if original_recurrence:
                                 recurrence_template = original_recurrence[0]
+                                recurrence_template.start.dateTime.strftime("%Y%m%dT%H%M%S%z")
                                 original_datetime_str = datetime_to_google_time(recurrence_template.start.dateTime)
                                 # construct new id
                                 recurrence_template.id = f"{recurrence_template.id}_{original_datetime_str}"
@@ -482,8 +484,10 @@ class GoogleCalendarWrapper:
             logger.info(f"No updates found for channel {self.calendar_db.channel_id}")
             return 0
 
+        # sorts them so that even that have a recurrence are handled first
+        events.sort(key=lambda x: x.recurrence is None)
         for event in events:
-            counter_event_changed += self.__solve_event_update(event, sync_rules)
+            counter_event_changed += self.push_event_to_rules(event, sync_rules)
 
         logger.info(f"Event changed: {counter_event_changed}")
         return counter_event_changed
