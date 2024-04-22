@@ -29,7 +29,7 @@ def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetim
         try:
             cal.get_events(start_date, end_date)
         except Exception as e:
-            logger.info(f"Skipping calendar {calendar.uuid} due to {e}")
+            logger.info(f"Skipping calendar {cal.db_id} due to {e}")
 
     return calendars
 
@@ -48,8 +48,8 @@ def get_users_query_with_active_sync_rules():
 
 def hard_sync(db):
     """ Only to be used to fix user calendars having issues """
-    # users_query = get_users_query_with_active_sync_rules()
-    users_query = list(User.select().where(User.id == 217))
+    users_query = get_users_query_with_active_sync_rules()
+    # users_query = list(User.select().where(User.id == 217))
     start: datetime.datetime = datetime.datetime.today()
     start_date = datetime.datetime.fromtimestamp(start.timestamp())
     start_date = start_date.replace(hour=0, minute=0, second=0)
