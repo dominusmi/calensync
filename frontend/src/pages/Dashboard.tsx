@@ -174,7 +174,7 @@ const Dashboard: React.FC = () => {
                     {t("dashboard.no-syncs")}
                   </div>
                 }
-                {rules.length > 0 && rules.map((rule) => <SyncRuleRow key={rule.uuid} rule={rule} />)
+                {rules.length > 0 && rules.map((rule) => <SyncRuleRow key={rule.uuid} rule={rule} onChange={() => fetchSyncRule()} />)
                 }
                 {openDraft &&
                   <SyncRuleDraftRow accounts={accounts} setState={setOpenDraft} successCallback={() => { fetchSyncRule(); setOpenDraft(false) }} />
