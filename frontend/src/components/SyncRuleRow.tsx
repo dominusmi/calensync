@@ -14,7 +14,7 @@ export interface SyncRule {
   description: string
 }
 
-const SyncRuleRow: React.FC<{ rule: SyncRule }> = ({ rule }) => {
+const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule, onChange }) => {
   const { t } = useTranslation(['app']);
 
   const [clickedDelete, setClickedDelete] = useState(false);
@@ -31,7 +31,7 @@ const SyncRuleRow: React.FC<{ rule: SyncRule }> = ({ rule }) => {
         }
       )
       if (response.ok) {
-        refreshPage()
+        onChange();
       } else {
         const data = await response.json();
         if (data.detail) {
@@ -59,7 +59,7 @@ const SyncRuleRow: React.FC<{ rule: SyncRule }> = ({ rule }) => {
           {rule.summary !== "%original%" &&
             <div className='text-wrap'>Custom title template: <span className='fw-bold'>{rule.summary}</span> </div>
           }
-          {(rule.description != null && rule.description.length > 0) &&
+          {(rule.description != null && rule.summary !== "%original%") &&
             <div className='text-wrap'>Custom description template: <span className='fw-bold'>{rule.description}</span> </div>
           }
         </div>
