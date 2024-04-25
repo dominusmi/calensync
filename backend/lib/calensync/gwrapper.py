@@ -12,11 +12,11 @@ from googleapiclient.errors import HttpError
 
 from calensync.api.common import ApiError, number_of_days_to_sync_in_advance
 from calensync.queries.common import get_sync_rules_from_source
-from calensync.calendar import EventsModificationHandler
+from calensync.libcalendar import EventsModificationHandler
 from calensync.database.model import Calendar, CalendarAccount, db, User, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus
 from calensync.log import get_logger
-from calensync.utils import get_api_url, utcnow, datetime_to_google_time
+from calensync.utils import get_api_url, utcnow, datetime_to_google_time, format_calendar_text
 
 logger = get_logger(__file__)
 
@@ -85,7 +85,6 @@ def get_google_calendars(credentials) -> List[GoogleCalendar]:
 
 def get_events(service, google_id: str, start_date: datetime.datetime, end_date: datetime.datetime,
                private_extended_properties: Optional[Dict] = None, **kwargs):
-
     start_date_str = datetime_to_google_time(start_date) if start_date is not None else start_date
     end_date_str = datetime_to_google_time(end_date) if end_date is not None else end_date
     if "updatedMin" in kwargs:
@@ -104,7 +103,7 @@ def get_events(service, google_id: str, start_date: datetime.datetime, end_date:
     events = []
     while request is not None:
         response = request.execute()
-        logger.debug(f"{google_id}: {response.get('items',[])}")
+        logger.debug(f"{google_id}: {response.get('items', [])}")
         events.extend(GoogleEvent.parse_event_list_response(response))
         request = events_service.list_next(request, response)
     return events
@@ -116,7 +115,13 @@ def delete_google_watch(service, resource_id: str, channel_id: str):
         "id": channel_id,
         "resourceId": resource_id,
     }
-    service.channels().stop(body=body).execute()
+    try:
+        service.channels().stop(body=body).execute()
+    except HttpError as e:
+        if e.status_code == 404:
+            logger.warning(f"Did not find channel {channel_id} for {resource_id}, skipping")
+        else:
+            raise e
 
 
 def source_event_tuple(source_event: GoogleEvent, source_calendar_id: str):
@@ -252,7 +257,7 @@ class GoogleCalendarWrapper:
             self.calendar_db.save()
             delete_google_watch(self.service, resource_id, channel_id)
 
-    def insert_events(self, private=True):
+    def insert_events(self):
         if self.calendar_db.is_read_only:
             return
 
@@ -260,35 +265,56 @@ class GoogleCalendarWrapper:
         self.calendar_db.save()
 
         while self.events_handler.events_to_add:
-            (event, properties) = self.events_handler.events_to_add.pop()
+            # order of popping is important for recurrence race condition
+            (event, properties, rule) = self.events_handler.events_to_add.pop(0)
             if event.extendedProperties.private.get("source-id") is not None:
                 # never copy an event created by us
                 continue
 
-            if private:
-                response = insert_event(service=self.service, calendar_id=self.google_id,
-                                        start=event.start, end=event.end, properties=properties, recurrence=event.recurrence)
-            else:
-                response = insert_event(service=self.service, calendar_id=self.google_id,
-                                        start=event.start, end=event.end, properties=properties,
-                                        summary=event.summary, description=event.description, recurrence=event.recurrence)
+            summary = event.summary
+            description = event.description
+            if rule.summary is not None:
+                summary = format_calendar_text(summary, rule.summary)
+            if rule.description is not None and description is not None:
+                description = format_calendar_text(description, rule.description)
+
+            insert_event(
+                service=self.service, calendar_id=self.google_id,
+                start=event.start, end=event.end, properties=properties, recurrence=event.recurrence,
+                summary=summary, description=description
+            )
 
     def update_events(self):
         """ Only used to update start/end datetime"""
         if self.calendar_db.is_read_only:
             return
 
-        for (source_event, to_update) in self.events_handler.events_to_update:
-            start = GoogleDatetime(dateTime=source_event.start.dateTime, timeZone="UCT")
-            end = GoogleDatetime(dateTime=source_event.end.dateTime, timeZone="UCT")
+        for (source_event, to_update, rule) in self.events_handler.events_to_update:
+            source_event: GoogleEvent
+            to_update: GoogleEvent
+            rule: SyncRule
+            start = GoogleDatetime(dateTime=source_event.start.dateTime, timeZone=source_event.start.timeZone)
+            end = GoogleDatetime(dateTime=source_event.end.dateTime, timeZone=source_event.end.timeZone)
             try:
                 with db.atomic():
-                    logger.info(source_event)
-                    update_event(service=self.service, calendar_id=self.google_id, event_id=to_update.id,
-                                 start=start, end=end, summary=source_event.summary,
-                                 description=source_event.description)
+                    summary = source_event.summary
+                    description = source_event.description
+                    if rule.summary is not None:
+                        summary = format_calendar_text(summary, rule.summary)
+                    if description is not None:
+                        if rule.description is None or len(rule.description) == 0:
+                            description = None
+                        else:
+                            description = format_calendar_text(description, rule.description)
+                    update_event(service=self.service,
+                                 calendar_id=self.google_id,
+                                 event_id=to_update.id,
+                                 start=start, end=end,
+                                 summary=summary,
+                                 description=description,
+                                 recurrence=source_event.recurrence)
             except Exception as e:
-                logger.warn(f"Failed to process event {to_update.id}: {e}")
+                logger.warn(f"Failed to process event {to_update.id}: {e}. {traceback.format_exc()}")
 
     def delete_events(self):
         """
@@ -310,7 +336,7 @@ class GoogleCalendarWrapper:
 
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
-        updated_min = datetime.datetime.now() - datetime.timedelta(days=1)
+        updated_min = self.calendar_db.last_processed
         start_date = utcnow() - datetime.timedelta(days=30)
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
         events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
@@ -320,7 +346,7 @@ class GoogleCalendarWrapper:
         return [event for event in events if event.source_id is None]
 
     @staticmethod
-    def __solve_event_update(event: GoogleEvent, sync_rules: List[SyncRule]) -> int:
+    def push_event_to_rules(event: GoogleEvent, sync_rules: List[SyncRule]) -> int:
         """
         Solves a single event update (by updating all other calendars where this event exists)
         """
@@ -350,8 +376,8 @@ class GoogleCalendarWrapper:
                     )
                     if len(c.events) > 0:
                         continue
-                    c.events_handler.add([source_event_tuple(event, source_calendar_uuid)])
-                    c.insert_events(private=rule.private)
+                    c.events_handler.add([source_event_tuple(event, source_calendar_uuid)], rule)
+                    c.insert_events()
                     counter_event_changed += 1
         else:
             # check status
@@ -370,7 +396,8 @@ class GoogleCalendarWrapper:
                             continue
 
                         fetched_events = c.get_events(
-                            private_extended_properties=EventExtendedProperty.for_source_id(original_id).to_google_dict()
+                            private_extended_properties=EventExtendedProperty.for_source_id(
+                                original_id).to_google_dict()
                         )
                         if fetched_events:
                             fetched_events[0].id = f'{fetched_events[0].id}_{event.id.split("_")[1]}'
@@ -390,47 +417,58 @@ class GoogleCalendarWrapper:
                 # must have a version of this event in the database, which we can find through the source_id
                 # We then update each of this events with the new time
                 logger.info(f"Found confirmed event, updating")
+                is_recurrence_instance = "_" in event.id
+                event_id = event.id if not is_recurrence_instance else event.id.split("_")[0]
                 for rule in sync_rules:
                     c = GoogleCalendarWrapper(rule.destination)
                     c.get_events(
-                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                        private_extended_properties=EventExtendedProperty.for_source_id(event_id).to_google_dict()
                     )
                     if len(c.events) == 0:
                         logger.info(f"In update but need to create event")
-                        c.events_handler.add([source_event_tuple(event, str(sync_rules[0].source.uuid))])
-                        c.insert_events(private=rule.private)
+                        c.events_handler.add([source_event_tuple(event, str(sync_rules[0].source.uuid))], rule)
+                        c.insert_events()
                         counter_event_changed += 1
                     else:
-                        c.events_handler.update([(event, to_update) for to_update in c.events])
-                        c.update_events()
-                        counter_event_changed += 1
+                        if is_recurrence_instance:
+                            c.events[0].id = f"{c.events[0].id}_{event.id.split('_')[1]}"
+                            c.events_handler.update([(event, to_update) for to_update in [c.events[0]]], rule)
+                            c.update_events()
+                            counter_event_changed += 1
+                        else:
+                            c.events_handler.update([(event, to_update) for to_update in c.events], rule)
+                            c.update_events()
+                            counter_event_changed += 1
 
-                    if "_" in event.id:
-                        # For recurring events, the way Google handles it if you only modify one instance is that it
-                        # creates a new event with id {original id}_{original start datetime}
-                        # the issue is that, we receive this new id, and think that it's a new event.
-                        # Instead, what would need to be done is verify if the original event instance still exists
-                        # in our calendar, if yes delete and if no then ignore. Here, we take the simpler approach of
-                        # always trying to delete
-                        logger.info("Single instance of recurring changed - try to delete original")
-                        original_id, datetime_str = event.id.split("_")
-                        try:
-                            datetime.datetime.strptime(datetime_str, "%Y%m%dT%H%M%S%z")
-                        except:
-                            logger.info(f"Skipping pseudo-recurrent id: {event.id}")
-                            continue
-                        try:
-                            original_recurrence = c.get_events(
-                                private_extended_properties=EventExtendedProperty.for_source_id(original_id).to_google_dict()
-                            )
-                            if original_recurrence:
-                                recurrence_template = original_recurrence[0]
-                                # construct new id
-                                recurrence_template.id = f"{recurrence_template.id}_{datetime_str}"
-                                c.events_handler.delete([recurrence_template])
-                                c.delete_events()
-                        except Exception as e:
-                            logger.error(f"Failed to delete original recurrence: {e}\n{traceback.format_exc()}")
+                    # if "_" in event.id:
+                    #     # For recurring events, the way Google handles it if you only modify one instance is that it
+                    #     # creates a new event with id {original id}_{original start datetime}
+                    #     # the issue is that, we receive this new id, and think that it's a new event.
+                    #     # Instead, what would need to be done is verify if the original event instance still exists
+                    #     # in our calendar, if yes delete and if no then ignore. Here, we take the simpler approach of
+                    #     # always trying to delete
+                    #     logger.info("Single instance of recurring changed - try to delete original")
+                    #     original_id, datetime_str = event.id.split("_")
+                    #     try:
+                    #         datetime.datetime.strptime(datetime_str, "%Y%m%dT%H%M%S%z")
+                    #     except:
+                    #         logger.info(f"Skipping pseudo-recurrent id: {event.id}")
+                    #         continue
+                    #     try:
+                    #         original_recurrence = c.get_events(
+                    #             private_extended_properties=EventExtendedProperty.for_source_id(
+                    #                 original_id).to_google_dict()
+                    #         )
+                    #         if original_recurrence:
+                    #             recurrence_template = original_recurrence[0]
+                    #             # recurrence_template.start.dateTime.replace(day=)
+                    #             original_datetime_str = event.originalStartTime.dateTime.strftime("%Y%m%dT%H%M%S")+"z"
+                    #             # construct new id
+                    #             recurrence_template.id = f"{recurrence_template.id}_{original_datetime_str}"
+                    #             c.events_handler.delete([recurrence_template])
+                    #             c.delete_events()
+                    #     except Exception as e:
+                    #         logger.error(f"Failed to delete original recurrence: {e}\n{traceback.format_exc()}")
 
             else:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
@@ -445,19 +483,25 @@ class GoogleCalendarWrapper:
         if n_sync == 0:
             return 0
 
+        last_processed = datetime.datetime.now()
         events = self.get_updated_events()
         if include_preloaded_events:
             events.extend(self.events)
 
-        logger.info(f"Updated events: {[e.id for e in events]}")
+        logger.info(f"Found events to update: {[e.id for e in events]}")
         if not events:
             logger.info(f"No updates found for channel {self.calendar_db.channel_id}")
             return 0
 
+        # sorts them so that even that have a recurrence are handled first
+        events.sort(key=lambda x: x.recurrence is None)
         for event in events:
-            counter_event_changed += self.__solve_event_update(event, sync_rules)
+            counter_event_changed += self.push_event_to_rules(event, sync_rules)
 
         logger.info(f"Event changed: {counter_event_changed}")
+
+        self.calendar_db.last_processed = last_processed
+        self.calendar_db.save()
         return counter_event_changed
 
     @classmethod

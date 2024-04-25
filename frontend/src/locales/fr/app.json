@@ -37,7 +37,10 @@
                 "mark-busy": "Marquer les événements comme 'Busy'",
                 "are-you-sure": "Êtes-vous sûr?",
                 "delete-info": "Cela supprimera la règle et également tous les événements synchronisés par cette règle dans vos agendas Google."
-            }
+            },
+            "customize-event-template": "Modifier le titre et la description des événements synchronisés",
+            "example-title": "Un événement avec titre <b className='fw-bold'>\"Birthday party\"</b> sera synchronisé comme ",
+            "example-description": "Un événement avec description <b>\"Let's all meet together for Tom's birthday\"</b> sera synchronisé comme "
         }
     }
 }

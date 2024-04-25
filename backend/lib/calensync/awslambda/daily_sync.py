@@ -8,7 +8,7 @@ import peewee
 
 from calensync.api.common import number_of_days_to_sync_in_advance
 from calensync.database.model import User, Calendar, CalendarAccount, SyncRule, EmailDB
-from calensync.email import send_trial_ending_email, send_account_to_be_deleted_email
+from calensync.libemail import send_trial_ending_email, send_account_to_be_deleted_email
 from calensync.gwrapper import GoogleCalendarWrapper, service_from_account
 from calensync.log import get_logger
 from calensync.utils import utcnow
@@ -29,21 +29,9 @@ def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetim
         try:
             cal.get_events(start_date, end_date)
         except Exception as e:
-            logger.info(f"Skipping calendar {calendar.uuid} due to {e}")
+            logger.info(f"Skipping calendar {cal.db_id} due to {e}")
 
     return calendars
-
-
-def execute_update(calendars: List[GoogleCalendarWrapper], db):
-    # spooky double loop. Need to save each calendar events in the others
-    for i, cal1 in enumerate(calendars):
-        for cal2 in calendars[i + 1:]:
-            cal1.events_handler.add(cal2.events)
-            cal2.events_handler.add(cal1.events)
-
-    with db.atomic():
-        for cal in calendars:
-            cal.insert_events()
 
 
 def get_users_query_with_active_sync_rules():
@@ -60,8 +48,8 @@ def get_users_query_with_active_sync_rules():
 
 def hard_sync(db):
     """ Only to be used to fix user calendars having issues """
-    # users_query = get_users_query_with_active_sync_rules()
-    users_query = list(User.select().where(User.id == 217))
+    users_query = get_users_query_with_active_sync_rules()
+    # users_query = list(User.select().where(User.id == 217))
     start: datetime.datetime = datetime.datetime.today()
     start_date = datetime.datetime.fromtimestamp(start.timestamp())
     start_date = start_date.replace(hour=0, minute=0, second=0)

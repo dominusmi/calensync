@@ -80,15 +80,16 @@ const BlogTemplate: React.FC = () => {
                                 },
                                 strong(props) {
                                     const { children } = props
-                                    return <div className='fw-bold'>{children}</div>
+                                    return <span className='fw-bold'>{children}</span>
                                 },
                                 h2(props) {
                                     const { children} = props
                                     return <h2 className="mt-5 pt-3">{children}</h2>
                                 },
                                 img(props) {
-                                    const { src, alt } = props
-                                    return <img className='container my-2' src={src} alt={alt}></img>
+                                    const { src, alt, style, width } = props
+                                    console.log(style)
+                                    return <img className='d-flex justify-content-center container my-2' src={src} alt={alt} style={style} width={width}></img>
                                 }
                             }}
                         />

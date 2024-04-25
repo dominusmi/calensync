@@ -48,7 +48,7 @@ class GoogleDatetime(AbstractGoogleDate):
     def to_google_dict(self):
         return {
             "dateTime": datetime_to_google_time(self.dateTime),
-            "timeZone": "UCT"
+            "timeZone": self.timeZone or "UCT"
         }
 
     def to_datetime(self) -> datetime.datetime:
@@ -184,4 +184,5 @@ class PatchCalendarBody(BaseModel):
 class PostSyncRuleBody(BaseModel):
     source_calendar_id: str
     destination_calendar_id: str
-    private: bool
+    summary: str
+    description: str

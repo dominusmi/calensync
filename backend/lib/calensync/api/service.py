@@ -55,13 +55,14 @@ def run_initial_sync(sync_rule_id: int):
     source_wrapper = GoogleCalendarWrapper(calendar_db=source)
     start_date = datetime.datetime.now()
 
-    # number of days to sync in the futureÏ
+    # number of days to sync in the future
     end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
     events = source_wrapper.get_events(start_date, end_date)
 
-    destination_wrapper = GoogleCalendarWrapper(calendar_db=destination)
-    destination_wrapper.events_handler.add([source_event_tuple(e, str(source.uuid)) for e in events])
-    destination_wrapper.insert_events(private=sync_rule.private)
+    # sorts them so that even that have a recurrence are handled first
+    events.sort(key=lambda x: x.recurrence is None)
+    for event in events:
+        source_wrapper.push_event_to_rules(event, [sync_rule])
 
     if source.expiration is None:
         source_wrapper.create_watch()
