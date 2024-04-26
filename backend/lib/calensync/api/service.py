@@ -10,7 +10,7 @@ from calensync.database.model import Calendar, User, SyncRule, EmailDB, Calendar
 from calensync.gwrapper import GoogleCalendarWrapper, source_event_tuple
 from calensync.log import get_logger
 from calensync.utils import utcnow
-from dataclass import EventExtendedProperty
+from calensync.dataclass import EventExtendedProperty
 
 logger = get_logger(__file__)
 
