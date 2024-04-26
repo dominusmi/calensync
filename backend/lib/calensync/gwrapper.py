@@ -336,7 +336,7 @@ class GoogleCalendarWrapper:
 
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
-        updated_min = max(self.calendar_db.last_processed, utcnow() - datetime.timedelta(days=3))
+        updated_min = max(self.calendar_db.last_processed.replace(tzinfo=datetime.timezone.utc), utcnow() - datetime.timedelta(days=3))
         start_date = utcnow() - datetime.timedelta(days=30)
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
         events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
@@ -474,7 +474,7 @@ class GoogleCalendarWrapper:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
         return counter_event_changed
 
-    def solve_update_in_calendar(self, include_preloaded_events: bool = False) -> int:
+    def solve_update_in_calendar(self, preloaded_events: list[GoogleEvent] = None) -> int:
         """ Called when we receive a webhook event saying the calendar requires an update """
         sync_rules = list(get_sync_rules_from_source(self.calendar_db))
         counter_event_changed = 0
@@ -485,8 +485,8 @@ class GoogleCalendarWrapper:
 
         last_processed = datetime.datetime.now()
         events = self.get_updated_events()
-        if include_preloaded_events:
-            events.extend(self.events)
+        if preloaded_events:
+            events.extend(preloaded_events)
 
         logger.info(f"Found events to update: {[e.id for e in events]}")
         if not events:
