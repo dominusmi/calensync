@@ -336,7 +336,7 @@ class GoogleCalendarWrapper:
 
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
-        updated_min = self.calendar_db.last_processed
+        updated_min = max(self.calendar_db.last_processed, utcnow() - datetime.timedelta(days=3))
         start_date = utcnow() - datetime.timedelta(days=30)
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
         events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
