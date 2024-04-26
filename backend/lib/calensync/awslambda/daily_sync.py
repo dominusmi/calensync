@@ -6,7 +6,7 @@ from typing import Iterable, List
 import boto3
 import peewee
 
-from api.service import run_initial_sync, delete_calensync_events
+from calensync.api.service import run_initial_sync, delete_calensync_events
 from calensync.api.common import number_of_days_to_sync_in_advance
 from calensync.database.model import User, Calendar, CalendarAccount, SyncRule, EmailDB
 from calensync.libemail import send_trial_ending_email, send_account_to_be_deleted_email

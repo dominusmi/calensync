@@ -5,7 +5,6 @@ from typing import Tuple
 
 import peewee
 
-from api.common import number_of_days_to_sync_in_advance
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
 from calensync.database.model import Calendar, User, SyncRule, EmailDB, CalendarAccount, Session
 from calensync.gwrapper import GoogleCalendarWrapper, source_event_tuple
