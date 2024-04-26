@@ -25,6 +25,7 @@ import calensync.paddle as paddle
 from calensync.session import create_session_and_user
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
     get_paddle_token, prefetch_get_or_none
+from api.service import delete_calensync_events
 
 if os.environ.get("MOCK_GOOGLE"):
     from unittest.mock import MagicMock
@@ -545,14 +546,7 @@ def delete_sync_rule(user: User, sync_uuid: str):
 
     destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
     try:
-        events = destination_wrapper.get_events(
-            private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
-            start_date=datetime.datetime.now(),
-            end_date=datetime.datetime.now() + datetime.timedelta(days=35),
-            showDeleted=False
-        )
-        destination_wrapper.events_handler.delete(events)
-        destination_wrapper.delete_events()
+        delete_calensync_events(destination_wrapper, str(sync_rule.source.uuid))
     except Exception as e:
         logger.error(f"Failed to delete events for sync rule {sync_rule}: {e}\n\n{traceback.format_exc()}")
 
