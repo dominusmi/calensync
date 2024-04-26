@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 from typing import Tuple
 
@@ -8,6 +10,7 @@ from calensync.database.model import Calendar, User, SyncRule, EmailDB, Calendar
 from calensync.gwrapper import GoogleCalendarWrapper, source_event_tuple
 from calensync.log import get_logger
 from calensync.utils import utcnow
+from calensync.dataclass import EventExtendedProperty
 
 logger = get_logger(__file__)
 
@@ -127,3 +130,14 @@ def merge_users(user1: User, user2: User, db) -> Tuple[User,User]:
             session.save()
 
     return main_user, other_user
+
+
+def delete_calensync_events(destination_wrapper: 'GoogleCalendarWrapper', source_calendar_uuid: str):
+    events = destination_wrapper.get_events(
+        private_extended_properties=EventExtendedProperty.for_calendar_id(source_calendar_uuid).to_google_dict(),
+        start_date=datetime.datetime.now(),
+        end_date=datetime.datetime.now() + datetime.timedelta(days=number_of_days_to_sync_in_advance()),
+        showDeleted=False
+    )
+    destination_wrapper.events_handler.delete(events)
+    destination_wrapper.delete_events()

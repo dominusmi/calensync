@@ -6,6 +6,7 @@ from typing import Iterable, List
 import boto3
 import peewee
 
+from calensync.api.service import run_initial_sync, delete_calensync_events
 from calensync.api.common import number_of_days_to_sync_in_advance
 from calensync.database.model import User, Calendar, CalendarAccount, SyncRule, EmailDB
 from calensync.libemail import send_trial_ending_email, send_account_to_be_deleted_email
@@ -49,22 +50,33 @@ def get_users_query_with_active_sync_rules():
 def hard_sync(db):
     """ Only to be used to fix user calendars having issues """
     users_query = get_users_query_with_active_sync_rules()
-    # users_query = list(User.select().where(User.id == 217))
-    start: datetime.datetime = datetime.datetime.today()
-    start_date = datetime.datetime.fromtimestamp(start.timestamp())
-    start_date = start_date.replace(hour=0, minute=0, second=0)
-    end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
-
-    # because the dates are exclusive in the Google API, this will fetch from 00:00:00 of day, to 23:59:59
-    start_date = start_date - datetime.timedelta(seconds=1)
-    logger.info(f"Start/end date: {start_date.isoformat()} -> {end_date.isoformat()}")
+    # users_query = list(User.select().where(User.id == 1))
 
     for user in users_query:
         try:
             logger.info(f"Syncing {user.uuid}")
-            calendar_wrappers = load_calendars(user.accounts, start_date, end_date)
-            for wrapper in calendar_wrappers:
-                wrapper.solve_update_in_calendar(include_preloaded_events=True)
+            # get all sync rule
+            rules: list[SyncRule] = peewee.prefetch(
+                SyncRule
+                .select(SyncRule)
+                .join(Calendar, on=(SyncRule.source_id == Calendar.id))
+                .join(CalendarAccount)
+                .where(CalendarAccount.user_id == user.id),
+                Calendar.select()
+            )
+            # delete all events at destination
+            already_deleted = set([])
+            for rule in rules:
+                destination_wrapper = GoogleCalendarWrapper(rule.destination)
+                try:
+                    delete_calensync_events(destination_wrapper, str(rule.source.uuid))
+                except Exception as e:
+                    logger.error(e)
+                already_deleted.add(rule.destination.uuid)
+
+                # run initial sync
+                run_initial_sync(rule.id)
+
         except Exception as e:
             logger.error(f"Error occured while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
             time.sleep(1)
