@@ -313,6 +313,9 @@ class GoogleCalendarWrapper:
             end = GoogleDatetime(dateTime=source_event.end.dateTime, timeZone=source_event.end.timeZone)
             try:
                 with db.atomic():
+                    if rule.destination.paused:
+                        logger.warning(f"Skipping update on sync rule {rule.id} - paused calendar")
+                        continue
                     summary = source_event.summary
                     description = source_event.description
                     if rule.summary is not None:
