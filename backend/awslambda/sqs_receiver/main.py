@@ -1,3 +1,5 @@
+import traceback
+
 from calensync.api.service import received_webhook
 from calensync.database.utils import DatabaseSession
 from calensync.dataclass import SQSEvent, QueueEvent, GoogleWebhookEvent, UpdateCalendarStateEvent
@@ -21,7 +23,7 @@ def handler(event, context):
                 sqs_event = SQSEvent.parse_raw(record["body"])
                 handle_sqs_event(sqs_event, db)
             except Exception as e:
-                logger.error(f"Failed to process record: {e}")
+                logger.error(f"Failed to process record: {e}\n{traceback.format_exc()}")
                 batch_item_failures.append({"itemIdentifier": record['messageId']})
 
         sqs_batch_response["batchItemFailures"] = batch_item_failures
