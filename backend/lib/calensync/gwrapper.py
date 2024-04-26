@@ -204,7 +204,7 @@ class GoogleCalendarWrapper:
             events = get_events(self.service, self.google_id, start_date, end_date, private_extended_properties, **kwargs)
             self.events = events
         except googleapiclient.errors.HttpError as e:
-            if e.status_code == 403:
+            if e.status_code == 403 and e.reason == "You need to have writer access to this calendar.":
                 self.calendar_db.paused = utcnow()
                 self.calendar_db.paused_reason = e.reason
                 self.calendar_db.save()
@@ -295,7 +295,7 @@ class GoogleCalendarWrapper:
                     summary=summary, description=description
                 )
             except googleapiclient.errors.HttpError as e:
-                if e.status_code == 403:
+                if e.status_code == 403 and e.reason == "You need to have writer access to this calendar.":
                     self.calendar_db.paused = utcnow()
                     self.calendar_db.paused_reason = e.reason
                     self.calendar_db.save()
