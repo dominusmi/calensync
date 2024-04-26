@@ -127,6 +127,8 @@ class Calendar(UUIDBaseModel):
     last_inserted = DateTimeField(default=utcnow)
     last_received = DateTimeField(default=utcnow)
     last_processed = DateTimeField(default=utcnow)
+    paused = DateTimeField(null=True, default=None)
+    paused_reason = CharField(null=True, default=None)
 
     @property
     def friendly_name(self):
