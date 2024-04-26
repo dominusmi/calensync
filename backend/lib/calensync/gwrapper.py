@@ -204,7 +204,7 @@ class GoogleCalendarWrapper:
             events = get_events(self.service, self.google_id, start_date, end_date, private_extended_properties, **kwargs)
             self.events = events
         except googleapiclient.errors.HttpError as e:
-            if e.status_code == 403:
+            if e.status_code == 403 and e.reason == "You need to have writer access to this calendar.":
                 self.calendar_db.paused = utcnow()
                 self.calendar_db.paused_reason = e.reason
                 self.calendar_db.save()
@@ -283,7 +283,7 @@ class GoogleCalendarWrapper:
 
             summary = event.summary
             description = event.description
-            if rule.summary is not None:
+            if rule.summary is not None and summary is not None:
                 summary = format_calendar_text(summary, rule.summary)
             if rule.description is not None and description is not None:
                 description = format_calendar_text(description, rule.description)
@@ -295,7 +295,7 @@ class GoogleCalendarWrapper:
                     summary=summary, description=description
                 )
             except googleapiclient.errors.HttpError as e:
-                if e.status_code == 403:
+                if e.status_code == 403 and e.reason == "You need to have writer access to this calendar.":
                     self.calendar_db.paused = utcnow()
                     self.calendar_db.paused_reason = e.reason
                     self.calendar_db.save()
@@ -370,6 +370,9 @@ class GoogleCalendarWrapper:
         Solves a single event update (by updating all other calendars where this event exists)
         """
         counter_event_changed = 0
+        if len(event.extendedProperties.private) > 0:
+            return 0
+
         if event.status == EventStatus.tentative:
             # this means an invitation was received, but not yet accepted, so nothing to do
             return 0
