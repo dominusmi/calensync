@@ -6,6 +6,7 @@ import traceback
 from typing import List, Dict, Any, Optional
 
 import google.oauth2.credentials
+import googleapiclient
 import peewee
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -199,9 +200,15 @@ class GoogleCalendarWrapper:
         # start_date = start_date if start_date is not None else datetime.datetime.utcnow()
         # end_date = end_date if end_date is not None else datetime.datetime.utcnow() + datetime.timedelta(
         #     days=number_of_days_to_sync_in_advance())
-
-        events = get_events(self.service, self.google_id, start_date, end_date, private_extended_properties, **kwargs)
-        self.events = events
+        try:
+            events = get_events(self.service, self.google_id, start_date, end_date, private_extended_properties, **kwargs)
+            self.events = events
+        except googleapiclient.errors.HttpError as e:
+            if e.status_code == 403:
+                self.calendar_db.paused = utcnow()
+                self.calendar_db.paused_reason = e.reason
+                self.calendar_db.save()
+            self.events = []
         return self.events
 
     def add_watch(self, watch_id: str, token: str, expiration: datetime.datetime, url: str):
@@ -260,6 +267,9 @@ class GoogleCalendarWrapper:
     def insert_events(self):
         if self.calendar_db.is_read_only:
             return
+        elif self.calendar_db.paused is not None:
+            logger.info(f"Skipping insert in calendar {self.calendar_db.uuid} due to paused")
+            return
 
         self.calendar_db.last_inserted = utcnow()
         self.calendar_db.save()
@@ -278,11 +288,17 @@ class GoogleCalendarWrapper:
             if rule.description is not None and description is not None:
                 description = format_calendar_text(description, rule.description)
 
-            insert_event(
-                service=self.service, calendar_id=self.google_id,
-                start=event.start, end=event.end, properties=properties, recurrence=event.recurrence,
-                summary=summary, description=description
-            )
+            try:
+                insert_event(
+                    service=self.service, calendar_id=self.google_id,
+                    start=event.start, end=event.end, properties=properties, recurrence=event.recurrence,
+                    summary=summary, description=description
+                )
+            except googleapiclient.errors.HttpError as e:
+                if e.status_code == 403:
+                    self.calendar_db.paused = utcnow()
+                    self.calendar_db.paused_reason = e.reason
+                    self.calendar_db.save()
 
     def update_events(self):
         """ Only used to update start/end datetime"""
@@ -374,6 +390,7 @@ class GoogleCalendarWrapper:
                     c.get_events(
                         private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
                     )
+
                     if len(c.events) > 0:
                         continue
                     c.events_handler.add([source_event_tuple(event, source_calendar_uuid)], rule)
@@ -388,7 +405,11 @@ class GoogleCalendarWrapper:
                     c = GoogleCalendarWrapper(rule.destination)
                     if "_" in event.id:
                         # handle recurrence, see explanation below
-                        original_id, datetime_str = event.id.split("_")
+                        try:
+                            original_id, datetime_str = event.id.split("_")
+                        except ValueError:
+                            logger.info(f"Event id malformatted: {event.id}")
+                            continue
                         try:
                             datetime.datetime.strptime(datetime_str, "%Y%m%dT%H%M%S%z")
                         except:
@@ -418,7 +439,14 @@ class GoogleCalendarWrapper:
                 # We then update each of this events with the new time
                 logger.info(f"Found confirmed event, updating")
                 is_recurrence_instance = "_" in event.id
-                event_id = event.id if not is_recurrence_instance else event.id.split("_")[0]
+                event_id = event.id
+                if is_recurrence_instance:
+                    try:
+                        event_id, datetime_str = event.id.split("_")
+                    except ValueError:
+                        logger.info(f"Event id malformatted: {event.id}")
+
+
                 for rule in sync_rules:
                     c = GoogleCalendarWrapper(rule.destination)
                     c.get_events(
