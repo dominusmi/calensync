@@ -370,6 +370,8 @@ class GoogleCalendarWrapper:
         Solves a single event update (by updating all other calendars where this event exists)
         """
         counter_event_changed = 0
+        if len(event.extendedProperties.private) > 0:
+            return 0
         if event.status == EventStatus.tentative:
             # this means an invitation was received, but not yet accepted, so nothing to do
             return 0
