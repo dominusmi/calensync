@@ -204,7 +204,6 @@ class GoogleCalendarWrapper:
             events = get_events(self.service, self.google_id, start_date, end_date, private_extended_properties,
                                 **kwargs)
 
-            events = [e for e in events if len(e.extendedProperties.private) == 0]
             self.events = events
         except googleapiclient.errors.HttpError as e:
             if e.status_code == 403 and e.reason == "You need to have writer access to this calendar.":
@@ -366,7 +365,7 @@ class GoogleCalendarWrapper:
                                  showDeleted=True, maxResults=200)
 
         logger.debug(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
-        return [event for event in events if len(event.extendedProperties.private) == 0]
+        return events
 
     @staticmethod
     def push_event_to_rules(event: GoogleEvent, sync_rules: List[SyncRule]) -> int:
@@ -522,6 +521,7 @@ class GoogleCalendarWrapper:
 
         last_processed = datetime.datetime.now()
         events = self.get_updated_events()
+        events = [event for event in events if len(event.extendedProperties.private) == 0]
         if preloaded_events:
             events.extend(preloaded_events)
 
@@ -531,7 +531,8 @@ class GoogleCalendarWrapper:
             return 0
 
         if len(events) > 100:
-            logger.error(f"Calendar<{self.calendar_db.id}> error must've occured -- more than 100 events to update. skipping")
+            logger.error(
+                f"Calendar<{self.calendar_db.id}> error must've occured -- more than 100 events to update. skipping")
         else:
             # sorts them so that even that have a recurrence are handled first
             events.sort(key=lambda x: x.recurrence is None)
