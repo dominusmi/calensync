@@ -1,7 +1,10 @@
 import os
 
-from calensync.api.service import run_initial_sync, received_webhook
-from calensync.dataclass import SQSEvent, QueueEvent, GoogleWebhookEvent, UpdateCalendarStateEvent, PostSyncRuleEvent
+from calensync.api.endpoints import delete_sync_rule
+from calensync.api.service import run_initial_sync, received_webhook, handle_delete_sync_rule_event
+from calensync.database.model import User
+from calensync.dataclass import SQSEvent, QueueEvent, GoogleWebhookEvent, UpdateCalendarStateEvent, PostSyncRuleEvent, \
+    DeleteSyncRuleEvent
 from calensync.log import get_logger
 
 logger = get_logger("sqs")
@@ -21,5 +24,8 @@ def handle_sqs_event(sqs_event: SQSEvent, db):
     elif sqs_event.kind == QueueEvent.POST_SYNC_RULE:
         e: PostSyncRuleEvent = PostSyncRuleEvent.parse_obj(sqs_event.data)
         run_initial_sync(e.sync_rule_id)
+    elif sqs_event.kind == QueueEvent.DELETE_SYNC_RULE:
+        e: DeleteSyncRuleEvent = DeleteSyncRuleEvent.parse_obj(sqs_event.data)
+        handle_delete_sync_rule_event(e.sync_rule_id)
     else:
         logger.error("Unknown event type")

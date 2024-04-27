@@ -138,7 +138,7 @@ def delete__sync_rule(sync_id: str, authorization: Annotated[Union[str, None], C
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        delete_sync_rule(user, sync_id)
+        delete_sync_rule(user, sync_id, db)
 
 
 @app.delete('/calendars/{account_id}')
@@ -279,4 +279,4 @@ if __name__ == "__main__":
     dir = Path().expanduser().resolve().parent
     env_path = dir.joinpath("../.env").resolve()
     reload_dir = dir.joinpath("../").resolve()
-    uvicorn.run(app, host="127.0.0.1", port=8000, env_file=str(env_path), reload_dirs=[str(reload_dir)])
+    uvicorn.run(app, host="127.0.0.1", port=8000, env_file=str(env_path))

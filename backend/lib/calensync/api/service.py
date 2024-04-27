@@ -10,7 +10,7 @@ from calensync.database.model import Calendar, User, SyncRule, EmailDB, Calendar
 from calensync.gwrapper import GoogleCalendarWrapper, source_event_tuple
 from calensync.log import get_logger
 from calensync.utils import utcnow
-from calensync.dataclass import EventExtendedProperty
+from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent
 
 logger = get_logger(__file__)
 
@@ -109,7 +109,7 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str, 
         raise ApiError(message="Service unavailable", code=503)
 
 
-def merge_users(user1: User, user2: User, db) -> Tuple[User,User]:
+def merge_users(user1: User, user2: User, db) -> Tuple[User, User]:
     main_user = user1 if user1.id < user2.id else user2
     other_user = user1 if user1.id > user2.id else user2
 
@@ -141,3 +141,24 @@ def delete_calensync_events(destination_wrapper: 'GoogleCalendarWrapper', source
     )
     destination_wrapper.events_handler.delete(events)
     destination_wrapper.delete_events()
+
+
+def handle_delete_sync_rule_event(sync_rule_id: int):
+    sync_rule = SyncRule.get_or_none(id=sync_rule_id)
+    if sync_rule is None:
+        logger.warning(f"Sync rule {sync_rule_id} doesn't exist")
+        return
+
+    destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
+    try:
+        delete_calensync_events(destination_wrapper, str(sync_rule.source.uuid))
+    except Exception as e:
+        logger.error(f"Failed to delete events for sync rule {sync_rule}: {e}\n\n{traceback.format_exc()}")
+
+    # check if calendar has other rule sync rules, otherwise delete watch
+    other_rules_same_source = list(
+        SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
+    if not other_rules_same_source:
+        GoogleCalendarWrapper(sync_rule.source).delete_watch()
+
+    sync_rule.delete_instance()
