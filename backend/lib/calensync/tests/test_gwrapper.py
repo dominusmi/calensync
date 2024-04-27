@@ -1,12 +1,16 @@
 import os
+from collections import defaultdict
 from unittest.mock import patch, MagicMock
 
 from calensync.database.model import SyncRule
 from calensync.dataclass import GoogleDatetime, EventStatus
 from calensync.gwrapper import GoogleCalendarWrapper
+from calensync.log import get_logger
 from calensync.tests.fixtures import *
 from calensync.tests.mock_service import MockedService
 
+
+logger = get_logger(__file__)
 
 class Mock:
     pass
@@ -116,7 +120,6 @@ def test_solve_update_active(db, account1_1, calendar1_1, account1_2, calendar1_
         assert counter == 1
 
 
-@patch("calensync.gwrapper.GoogleCalendarWrapper.service", lambda *args, **kwargs: None)
 def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1, account1_2, calendar1_2):
     service = MockedService()
     with patch("calensync.gwrapper.GoogleCalendarWrapper.service", service):
@@ -138,135 +141,6 @@ def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1,
 
         counter = gcalendar1_1.solve_update_in_calendar()
         assert counter == 1
-
-
-# def test_insert_events_normal(db, calendar1_1, calendar1_2):
-#     with patch("calensync.gwrapper.insert_event") as insert_event:
-#         with patch("calensync.gwrapper.GoogleCalendarWrapper.service"):
-#             insert_event.side_effect = lambda **kwargs: {"id": str(uuid.uuid4())}
-#             gcalendar = GoogleCalendarWrapper(calendar1_1)
-#
-#             now = datetime.datetime.utcnow()
-#             now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
-#
-#             original_google_events = [
-#                 GoogleEvent(htmlLink="", start=now_google, end=now_google, id="123", created=now, updated=now,
-#                             status=EventStatus.confirmed)
-#             ]
-#             event_db = Event(calendar=calendar1_2, source=None, event_id=original_google_events[0].id, start=now,
-#                              end=now).save_new()
-#
-#             gcalendar.events_handler.add(original_google_events)
-#             gcalendar.insert_events()
-#             insert_event.assert_called_once()
-#             assert Event.select().where(Event.source == event_db, Event.calendar == calendar1_1).count() == 1
-#
-#
-# def test_insert_events_already_exists(calendar1_1, calendar1_2):
-#     service = MockedService()
-#     with patch("calensync.gwrapper.GoogleCalendarWrapper.service", service):
-#         gcalendar = GoogleCalendarWrapper(calendar1_1)
-#
-#         now = datetime.datetime.utcnow()
-#         now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
-#
-#         original_google_events = [
-#             GoogleEvent(htmlLink="", start=now_google, end=now_google, id="123", created=now, updated=now,
-#                         status=EventStatus.confirmed, summary="symmary"),
-#         ]
-#         gcalendar.events_handler.add(original_google_events)
-#
-#         event_db = Event(calendar=calendar1_2, start=now, end=now, event_id="123").save_new()
-#         Event(calendar=calendar1_1, start=now, end=now, event_id=str(uuid.uuid4()), source=event_db).save_new()
-#
-#         gcalendar.insert_events()
-#         insert_event.assert_not_called()
-#         assert Event.select().where(Event.event_id == "123").count() == 1
-#         query, Source = Event.get_self_reference_query()
-#         assert query.where(Source.event_id == "123").count() == 1
-#
-#
-# def test_insert_events_source_doesnt_exist(calendar1_1, calendar1_2):
-#     with (
-#         patch("calensync.gwrapper.insert_event") as insert_event,
-#         patch("calensync.gwrapper.GoogleCalendarWrapper.service")
-#     ):
-#         # shouldn't insert an event if there's no source as it's not supposed to happen
-#         insert_event.side_effect = lambda **kwargs: {"id": str(uuid.uuid4())}
-#         gcalendar = GoogleCalendarWrapper(calendar1_1)
-#
-#         now = datetime.datetime.utcnow()
-#         now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
-#
-#         original_google_events = [
-#             GoogleEvent(htmlLink="", start=now_google, end=now_google, id="123", created=now, updated=now,
-#                         status=EventStatus.confirmed),
-#         ]
-#         gcalendar.events_handler.add(original_google_events)
-#
-#         gcalendar.insert_events()
-#         insert_event.assert_called_once()
-#         assert Event.select().where(Event.event_id == "123").count() == 0
-#         query, Source = Event.get_self_reference_query()
-#         assert query.where(Source.event_id == "123").count() == 0
-#
-#
-# class TestDeleteEvents:
-#     @staticmethod
-#     def test_normal_events(calendar1_1, calendar1_2):
-#         with patch("calensync.gwrapper.delete_event") as delete_event:
-#             start, end = random_dates()
-#             source1_1 = Event(calendar=calendar1_1, event_id=uuid4(), start=start, end=end).save_new()
-#             copy1to2 = Event(calendar=calendar1_2, event_id=uuid4(), start=start, end=end, source=source1_1).save_new()
-#
-#             cal2 = GoogleCalendarWrapper(calendar1_2, service="fake")
-#             cal2.events_handler.events_to_delete = [copy1to2]
-#             cal2.delete_events()
-#
-#             delete_event.assert_called_once()
-#             assert delete_event.call_args[0][2] == copy1to2.event_id
-#             refreshed = copy1to2.refresh()
-#             assert refreshed.deleted
-#
-#     @staticmethod
-#     def test_includes_a_source(calendar1_1, calendar1_2):
-#         with patch("calensync.gwrapper.delete_event") as delete_event:
-#             start, end = random_dates()
-#             source1_1 = Event(calendar=calendar1_1, event_id=uuid4(), start=start, end=end).save_new()
-#             copy1to2 = Event(calendar=calendar1_2, event_id=uuid4(), start=start, end=end, source=source1_1).save_new()
-#
-#             start, end = random_dates()
-#             source2 = Event(calendar=calendar1_1, event_id=uuid4(), start=start, end=end).save_new()
-#
-#             cal2 = GoogleCalendarWrapper(calendar1_2, service="fake")
-#             cal2.events_handler.events_to_delete = [copy1to2, source2]
-#             cal2.delete_events()
-#
-#             assert delete_event.call_count == 1
-#             assert delete_event.call_args[0][2] == copy1to2.event_id
-#             refreshed = copy1to2.refresh()
-#             assert refreshed.deleted
-#             refreshed_source = source2.refresh()
-#             assert refreshed_source.deleted
-#
-#     @staticmethod
-#     def test_include_database(calendar1_1, calendar1_2):
-#         with patch("calensync.gwrapper.delete_event") as delete_event:
-#             start, end = random_dates()
-#             source1_1 = Event(calendar=calendar1_1, event_id=uuid4(), start=start, end=end).save_new()
-#             copy1to2 = Event(calendar=calendar1_2, event_id=uuid4(), start=start, end=end, source=source1_1).save_new()
-#
-#             start, end = random_dates()
-#             source2 = Event(calendar=calendar1_1, event_id=uuid4(), start=start, end=end).save_new()
-#
-#             cal2 = GoogleCalendarWrapper(calendar1_2, service="fake")
-#             cal2.events_handler.events_to_delete = [copy1to2, source2]
-#             cal2.delete_events(include_database=True)
-#
-#             assert delete_event.call_count == 1
-#             assert delete_event.call_args[0][2] == copy1to2.event_id
-#             assert Event.get_or_none(id=copy1to2.id) is None
-#             assert Event.get_or_none(id=source2.id) is None
 
 
 class TestDeleteWatch:
