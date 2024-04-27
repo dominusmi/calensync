@@ -2,30 +2,25 @@ import base64
 import datetime
 import json
 import os
-import traceback
 import uuid
 from typing import Optional, List
 
 import boto3
 import google.oauth2.credentials
-
-from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
 import peewee
 import starlette.responses
 
-from calensync import dataclass
-import calensync.sqs
-from calensync.api.common import ApiError, RedirectResponse, encode_query_message
-from calensync.api.service import verify_valid_sync_rule, run_initial_sync, merge_users
-from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
-from calensync.database.utils import DatabaseSession
-from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty, PostSyncRuleEvent, DeleteSyncRuleEvent
-from calensync.log import get_logger
 import calensync.paddle as paddle
-from calensync.session import create_session_and_user
+import calensync.sqs
+from calensync import dataclass
+from calensync.api.common import ApiError, RedirectResponse, encode_query_message
+from calensync.api.service import verify_valid_sync_rule, merge_users
+from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
+from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent, DeleteSyncRuleEvent
+from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
+from calensync.log import get_logger
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
     get_paddle_token, prefetch_get_or_none
-from calensync.api.service import delete_calensync_events
 
 if os.environ.get("MOCK_GOOGLE"):
     from unittest.mock import MagicMock

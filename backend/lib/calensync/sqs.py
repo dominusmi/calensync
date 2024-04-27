@@ -1,9 +1,7 @@
 import os
 
-from calensync.api.endpoints import delete_sync_rule
 from calensync.api.service import run_initial_sync, received_webhook, handle_delete_sync_rule_event
-from calensync.database.model import User
-from calensync.dataclass import SQSEvent, QueueEvent, GoogleWebhookEvent, UpdateCalendarStateEvent, PostSyncRuleEvent, \
+from calensync.dataclass import SQSEvent, QueueEvent, GoogleWebhookEvent, PostSyncRuleEvent, \
     DeleteSyncRuleEvent
 from calensync.log import get_logger
 
