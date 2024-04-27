@@ -31,6 +31,7 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
         }
       )
       if (response.ok) {
+        createToast("Your rule has been set for deletion. This can take a few minutes to complete.", MessageKind.Info)
         onChange();
       } else {
         const data = await response.json();

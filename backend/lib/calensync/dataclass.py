@@ -148,6 +148,7 @@ def event_list_to_source_id_map(events: List[GoogleEvent]) -> Dict[str, GoogleEv
 class QueueEvent(IntEnum):
     GOOGLE_WEBHOOK = 1
     POST_SYNC_RULE = 3
+    DELETE_SYNC_RULE = 4
 
 
 class GoogleWebhookEvent(BaseModel):
@@ -169,6 +170,10 @@ class UpdateCalendarStateEvent(BaseModel):
 
 
 class PostSyncRuleEvent(BaseModel):
+    sync_rule_id: int
+
+
+class DeleteSyncRuleEvent(BaseModel):
     sync_rule_id: int
 
 

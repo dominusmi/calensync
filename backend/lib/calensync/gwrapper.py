@@ -201,7 +201,9 @@ class GoogleCalendarWrapper:
         # end_date = end_date if end_date is not None else datetime.datetime.utcnow() + datetime.timedelta(
         #     days=number_of_days_to_sync_in_advance())
         try:
-            events = get_events(self.service, self.google_id, start_date, end_date, private_extended_properties, **kwargs)
+            events = get_events(self.service, self.google_id, start_date, end_date, private_extended_properties,
+                                **kwargs)
+
             self.events = events
         except googleapiclient.errors.HttpError as e:
             if e.status_code == 403 and e.reason == "You need to have writer access to this calendar.":
@@ -355,14 +357,15 @@ class GoogleCalendarWrapper:
 
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
-        updated_min = max(self.calendar_db.last_processed.replace(tzinfo=datetime.timezone.utc), utcnow() - datetime.timedelta(days=3))
+        updated_min = max(self.calendar_db.last_processed.replace(tzinfo=datetime.timezone.utc),
+                          utcnow() - datetime.timedelta(days=3))
         start_date = utcnow() - datetime.timedelta(days=30)
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
         events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
                                  showDeleted=True, maxResults=200)
 
         logger.debug(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
-        return [event for event in events if event.source_id is None]
+        return events
 
     @staticmethod
     def push_event_to_rules(event: GoogleEvent, sync_rules: List[SyncRule]) -> int:
@@ -452,7 +455,6 @@ class GoogleCalendarWrapper:
                     except ValueError:
                         logger.info(f"Event id malformatted: {event.id}")
 
-
                 for rule in sync_rules:
                     c = GoogleCalendarWrapper(rule.destination)
                     c.get_events(
@@ -519,20 +521,25 @@ class GoogleCalendarWrapper:
 
         last_processed = datetime.datetime.now()
         events = self.get_updated_events()
+        events = [event for event in events if len(event.extendedProperties.private) == 0]
         if preloaded_events:
             events.extend(preloaded_events)
 
-        logger.info(f"Found events to update: {[e.id for e in events]}")
+        logger.info(f"Found events to update: {len(events)}")
         if not events:
             logger.info(f"No updates found for channel {self.calendar_db.channel_id}")
             return 0
 
-        # sorts them so that even that have a recurrence are handled first
-        events.sort(key=lambda x: x.recurrence is None)
-        for event in events:
-            counter_event_changed += self.push_event_to_rules(event, sync_rules)
+        if len(events) > 100:
+            logger.error(
+                f"Calendar<{self.calendar_db.id}> error must've occured -- more than 100 events to update. skipping")
+        else:
+            # sorts them so that even that have a recurrence are handled first
+            events.sort(key=lambda x: x.recurrence is None)
+            for event in events:
+                counter_event_changed += self.push_event_to_rules(event, sync_rules)
 
-        logger.info(f"Event changed: {counter_event_changed}")
+            logger.info(f"Event changed: {counter_event_changed}")
 
         self.calendar_db.last_processed = last_processed
         self.calendar_db.save()
