@@ -11,10 +11,11 @@ from calensync.utils import utcnow, datetime_to_google_time
 
 class MockedServiceEvents:
     service: 'MockedService'
-    events: Dict[str, List[GoogleEvent]] = defaultdict(list)
+    events: Dict[str, List[GoogleEvent]]
 
     def __init__(self, service):
         self.service = service
+        self.events = defaultdict(list)
 
     def filter_events(self, calendarId: str = None, timeMin: str = None, timeMax: str = None,
              privateExtendedProperties: Union[str, List[str]] = None,
