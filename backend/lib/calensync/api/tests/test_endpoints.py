@@ -68,9 +68,9 @@ class TestProcessCalendar:
 
 class TestDeleteSyncRule:
     @staticmethod
-    def test_normal_case(user, calendar1_1, calendar1_2):
+    def test_normal_case(db, user, calendar1_1, calendar1_2):
         with (
-            patch("calensync.api.endpoints.GoogleCalendarWrapper") as gwrapper,
+            patch("calensync.api.service.GoogleCalendarWrapper") as gwrapper,
             patch("calensync.gwrapper.delete_event") as delete_event
         ):
             rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
@@ -101,14 +101,14 @@ class TestDeleteSyncRule:
             gwrapper.return_value.events_handler = EventsModificationHandler()
             # gwrapper.return_value.events_handler.delete.side_effect = lambda: mock_events_handler_delete
             gwrapper.return_value.delete_events.side_effect = lambda: mock_delete_events(gwrapper)
-            delete_sync_rule(user, str(rule.uuid))
+            delete_sync_rule(user, str(rule.uuid), db)
             assert SyncRule.get_or_none(id=rule.id) is None
             assert SyncRule.get_or_none(id=rule2.id) is not None
 
             assert gwrapper.return_value.delete_watch.call_count == 1
 
     @staticmethod
-    def test_delete_watch_with_other_source(user, account1_1, calendar1_1, calendar1_2):
+    def test_delete_watch_with_other_source(db, user, account1_1, calendar1_1, calendar1_2):
         with (
             patch("calensync.api.endpoints.GoogleCalendarWrapper") as gwrapper,
             patch("calensync.gwrapper.delete_event") as delete_event
@@ -118,20 +118,20 @@ class TestDeleteSyncRule:
             calendar3 = Calendar(account=account1_1, platform_id="platform3", name="name3", active=False).save_new()
             rule2 = SyncRule(source=calendar1_1, destination=calendar3, private=False).save_new()
 
-            delete_sync_rule(user, str(rule.uuid))
+            delete_sync_rule(user, str(rule.uuid), db)
 
             assert gwrapper.return_value.delete_watch.call_count == 0
             assert SyncRule.get_or_none(id=rule.id) is None
             assert SyncRule.get_or_none(id=rule2.id) is not None
 
     @staticmethod
-    def test_user_doesnt_have_permission(user, calendar1_1, calendar1_2):
+    def test_user_doesnt_have_permission(db, user, calendar1_1, calendar1_2):
         with patch("calensync.gwrapper.GoogleCalendarWrapper") as gwrapper:
             rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
 
             new_user = User(email="test2@test.com").save_new()
             with pytest.raises(ApiError):
-                delete_sync_rule(new_user, str(rule.uuid))
+                delete_sync_rule(new_user, str(rule.uuid), db)
 
 
 class TestGetSyncRules:

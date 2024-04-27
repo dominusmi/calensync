@@ -2,30 +2,25 @@ import base64
 import datetime
 import json
 import os
-import traceback
 import uuid
 from typing import Optional, List
 
 import boto3
 import google.oauth2.credentials
-
-from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
 import peewee
 import starlette.responses
 
-from calensync import dataclass
-import calensync.sqs
-from calensync.api.common import ApiError, RedirectResponse, encode_query_message
-from calensync.api.service import verify_valid_sync_rule, run_initial_sync, merge_users
-from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
-from calensync.database.utils import DatabaseSession
-from calensync.dataclass import PostSyncRuleBody, EventExtendedProperty, PostSyncRuleEvent
-from calensync.log import get_logger
 import calensync.paddle as paddle
-from calensync.session import create_session_and_user
+import calensync.sqs
+from calensync import dataclass
+from calensync.api.common import ApiError, RedirectResponse, encode_query_message
+from calensync.api.service import verify_valid_sync_rule, merge_users
+from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
+from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent, DeleteSyncRuleEvent
+from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
+from calensync.log import get_logger
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
     get_paddle_token, prefetch_get_or_none
-from calensync.api.service import delete_calensync_events
 
 if os.environ.get("MOCK_GOOGLE"):
     from unittest.mock import MagicMock
@@ -512,7 +507,6 @@ def process_calendars():
         calendar.save()
 
 
-
 def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database):
     """
     Verifies the input and create the SyncRule database entry. Pushes and SQS
@@ -522,7 +516,8 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
         raise ApiError("Title cannot be empty", 400)
     with db.atomic():
         source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
-        sync_rule = SyncRule(source=source, destination=destination, summary=payload.summary, description=payload.description).save_new()
+        sync_rule = SyncRule(source=source, destination=destination, summary=payload.summary,
+                             description=payload.description).save_new()
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
         if is_local():
@@ -531,32 +526,26 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
 
-def delete_sync_rule(user: User, sync_uuid: str):
-    sync_rules = list(
-        SyncRule.select(SyncRule.id, SyncRule.source, Calendar)
-        .join(Calendar, on=(SyncRule.destination_id == Calendar.id))
-        .join(CalendarAccount)
-        .join(User)
-        .where(SyncRule.uuid == sync_uuid, User.id == user.id)
-    )
+def delete_sync_rule(user: User, sync_uuid: str, db):
+    with db.atomic():
+        sync_rules = list(
+            SyncRule.select(SyncRule.id, SyncRule.source, Calendar)
+            .join(Calendar, on=(SyncRule.destination_id == Calendar.id))
+            .join(CalendarAccount)
+            .join(User)
+            .where(SyncRule.uuid == sync_uuid, User.id == user.id)
+        )
 
-    if len(sync_rules) == 0:
-        raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
-    sync_rule: SyncRule = sync_rules[0]
+        if len(sync_rules) == 0:
+            raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
+        sync_rule: SyncRule = sync_rules[0]
 
-    destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
-    try:
-        delete_calensync_events(destination_wrapper, str(sync_rule.source.uuid))
-    except Exception as e:
-        logger.error(f"Failed to delete events for sync rule {sync_rule}: {e}\n\n{traceback.format_exc()}")
-
-    # check if calendar has other rule sync rules, otherwise delete watch
-    other_rules_same_source = list(
-        SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
-    if not other_rules_same_source:
-        GoogleCalendarWrapper(sync_rule.source).delete_watch()
-
-    sync_rule.delete_instance()
+        event = DeleteSyncRuleEvent(sync_rule_id=sync_rule.id)
+        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.DELETE_SYNC_RULE, data=event)
+        if is_local():
+            calensync.sqs.handle_sqs_event(sqs_event, db)
+        else:
+            calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
 
 def get_sync_rules(user: User):
