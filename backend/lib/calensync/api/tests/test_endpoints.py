@@ -1,4 +1,5 @@
 import os
+import unittest
 from typing import List
 from unittest.mock import patch
 
@@ -432,3 +433,47 @@ class TestHandleAddCalendar():
                 handle_add_calendar(state_db, "testing@email.com", {}, db)
 
 
+class TestRefreshCalendars():
+    @staticmethod
+    @patch("calensync.api.endpoints.google.oauth2.credentials.Credentials.from_authorized_user_info", return_value=None)
+    def test_normal(db, user, account1_1, calendar1_1, calendar1_1_2):
+        with patch("calensync.api.endpoints.get_google_calendars") as patch_get_google_calendars:
+            patch_get_google_calendars.return_value = [
+                GoogleCalendar(
+                    kind="calendar#calendarListEntry",
+                    id=calendar1_1.platform_id,
+                    summary=calendar1_1.name,
+                    timeZone='Europe/Paris',
+                    selected=True,
+                    accessRole="owner",
+                    primary=True
+                ),
+                GoogleCalendar(
+                    kind="calendar#calendarListEntry",
+                    id=calendar1_1_2.platform_id,
+                    summary=calendar1_1_2.name,
+                    timeZone='Europe/Paris',
+                    selected=True,
+                    accessRole="reader",
+                    primary=False
+                ),
+                GoogleCalendar(
+                    kind="calendar#calendarListEntry",
+                    id="new-calendar",
+                    summary="new-calendar-summary",
+                    timeZone='Europe/Paris',
+                    selected=True,
+                    accessRole="owner",
+                    primary=False
+                )
+            ]
+            endpoints.refresh_calendars(user, account1_1.uuid, db)
+
+            c1 = Calendar.get_by_id(calendar1_1.id)
+            c2 = Calendar.get_by_id(calendar1_1_2.id)
+
+            assert not c1.readonly
+            assert c2.readonly
+
+            c3 = Calendar.get(platform_id="new-calendar")
+            assert not c3.readonly
