@@ -11,7 +11,7 @@ from calensync.database.model import Calendar, User, SyncRule, EmailDB, Calendar
 from calensync.gwrapper import GoogleCalendarWrapper, source_event_tuple
 from calensync.log import get_logger
 from calensync.utils import utcnow
-from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent
+from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, GoogleCalendar
 
 logger = get_logger(__file__)
 
@@ -163,3 +163,19 @@ def handle_delete_sync_rule_event(sync_rule_id: int):
         GoogleCalendarWrapper(sync_rule.source).delete_watch()
 
     sync_rule.delete_instance()
+
+
+def handle_refresh_existing_calendar(calendar: GoogleCalendar, calendar_db: Calendar, name: str):
+    updated = False
+    if calendar.accessRole == 'reader':
+        # these are calendars imported from another account, they're read only
+        if not calendar_db.readonly:
+            calendar_db.readonly = True
+            updated = True
+
+    if calendar_db.name != name:
+        calendar_db.name = name
+        updated = True
+
+    if updated:
+        calendar_db.save()

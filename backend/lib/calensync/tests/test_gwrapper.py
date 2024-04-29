@@ -162,6 +162,7 @@ class TestDeleteWatch:
     def test_read_only(calendar1_1: Calendar):
         calendar1_1.platform_id = "whatever@group.v.calendar.google.com"
         calendar1_1.resource_id = "something"
+        calendar1_1.readonly = True
         calendar1_1.save()
         with patch("calensync.gwrapper.delete_google_watch") as delete_google_watch:
             current_google_calendar = GoogleCalendarWrapper(calendar1_1)

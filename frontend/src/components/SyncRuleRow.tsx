@@ -19,6 +19,7 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
 
   const [clickedDelete, setClickedDelete] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deletionInProcess, _] = useState(sessionStorage.getItem(`rule-delete-${rule.uuid}`) != null)
 
   async function deleteRule() {
     try {
@@ -32,6 +33,7 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
       )
       if (response.ok) {
         createToast("Your rule has been set for deletion. This can take a few minutes to complete.", MessageKind.Info)
+        sessionStorage.setItem(`rule-delete-${rule.uuid}`, 'true')
         onChange();
       } else {
         const data = await response.json();
@@ -53,6 +55,9 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
       <div className="d-flex flex-column flex-md-row align-items-md-center my-2 px-2 ps-4">
         <span className="badge bg-primary text-light mx-2my-sm-1 border" style={{ maxWidth: "94px" }}>Active</span>
         <div className="px-md-4 my-sm-1 my-2 pe-4">
+          {deletionInProcess &&
+            <div className='text-wrap'>[Rule set to be deleted]</div>
+          }
           <div className='text-wrap'> {t("dashboard.sync.valid.from")} <span className='fw-bold'>{refactorCalendarName(rule.source)}</span> </div>
           <div className='text-wrap'>{t("dashboard.sync.valid.to")} <span className='fw-bold'>{refactorCalendarName(rule.destination)}</span></div>
         </div>

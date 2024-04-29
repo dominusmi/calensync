@@ -36,8 +36,9 @@ def delete_event(service, calendar_id: str, event_id: str):
                                 sendUpdates=None).execute()
     except Exception as e:
         logger.warn(f"Failed to delete event: {e}")
-        pass
+        return False
 
+    return True
 
 def insert_event(service, calendar_id: str, start: GoogleDatetime, end: GoogleDatetime,
                  properties: List[EventExtendedProperty] = None, display_name="Calensync", summary="Busy",
@@ -350,10 +351,13 @@ class GoogleCalendarWrapper:
         if self.calendar_db.is_read_only:
             return
 
+        deleted_events = 0
         while self.events_handler.events_to_delete:
             event_id = self.events_handler.events_to_delete.pop()
             logger.info(f"Deleting event {event_id} in {self.google_id}")
-            delete_event(self.service, self.google_id, event_id)
+            if delete_event(self.service, self.google_id, event_id):
+                deleted_events += 1
+        logger.info(f"Deleted {deleted_events} events")
 
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
