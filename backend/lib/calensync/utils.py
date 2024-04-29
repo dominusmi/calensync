@@ -14,6 +14,7 @@ from calensync.log import get_logger
 
 logger = get_logger(__file__)
 
+
 def get_env():
     return os.environ["ENV"]
 
@@ -98,7 +99,7 @@ def format_calendar_text(original, template):
 
 
 def google_error_handling_with_backoff(function, calendar_db=None):
-    for i in range(5):
+    for i in range(6):
         try:
             return function()
         except googleapiclient.errors.HttpError as e:
@@ -112,7 +113,11 @@ def google_error_handling_with_backoff(function, calendar_db=None):
                                 f"calendar {calendar_db.id}")
                     return False
 
-            if e.status_code == 429 or (e.status_code == 403 and e.reason == "userRateLimitExceeded"):
+            if (
+                e.status_code == 429
+                or (e.status_code == 403 and e.reason == "userRateLimitExceeded")
+                or (e.status_code == 403 and e.reason == "rateLimitExceeded")
+            ):
                 sleep_delay = 2 ** i + random.random()
                 logger.info(f"Sleeping for {sleep_delay} seconds")
                 sleep(sleep_delay)
