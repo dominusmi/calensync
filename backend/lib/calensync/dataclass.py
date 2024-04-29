@@ -40,6 +40,9 @@ class GoogleDate(AbstractGoogleDate):
     def to_datetime(self):
         return datetime.datetime(self.date.year, self.date.month, self.date.day)
 
+    def clone(self):
+        return GoogleDatetime(dateTime=self.date)
+
 
 class GoogleDatetime(AbstractGoogleDate):
     dateTime: datetime.datetime
@@ -53,6 +56,9 @@ class GoogleDatetime(AbstractGoogleDate):
 
     def to_datetime(self) -> datetime.datetime:
         return self.dateTime
+
+    def clone(self):
+        return GoogleDatetime(dateTime=self.dateTime, timeZone=self.timeZone)
 
 
 class GoogleCalendar(BaseModel):
@@ -116,6 +122,7 @@ class GoogleEvent(BaseModel):
     description: Optional[str] = None
     summary: str = None
     htmlLink: Optional[str] = None
+    visibility: str = "public"
 
     @staticmethod
     def parse_event_list_response(response: Dict) -> List[GoogleEvent]:
