@@ -326,7 +326,8 @@ class GoogleCalendarWrapper:
                     summary=summary, description=description
                 )
 
-                google_error_handling_with_backoff(inner, self.calendar_db)
+                return google_error_handling_with_backoff(inner, self.calendar_db)
+
             except Exception as e:
                 logger.error(f"Failed to insert {event.id} with rule {rule.id}: {e}\n{traceback.format_exc()}")
 
@@ -434,8 +435,8 @@ class GoogleCalendarWrapper:
                     if len(c.events) > 0:
                         continue
                     c.events_handler.add([source_event_tuple(event, source_calendar_uuid)], rule)
-                    c.insert_events()
-                    counter_event_changed += 1
+                    if c.insert_events():
+                        counter_event_changed += 1
         else:
             # check status
             if event.status == EventStatus.cancelled:
