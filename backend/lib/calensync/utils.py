@@ -3,10 +3,16 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import random
+from time import sleep
 
 import boto3
+import googleapiclient.errors
 import peewee
 
+from calensync.log import get_logger
+
+logger = get_logger(__file__)
 
 def get_env():
     return os.environ["ENV"]
@@ -89,3 +95,24 @@ def prefetch_get_or_none(query, *sub_queries):
 
 def format_calendar_text(original, template):
     return template.replace("%original%", original)
+
+
+def google_error_handling_with_backoff(function, calendar_db=None):
+    for i in range(5):
+        try:
+            return function()
+        except googleapiclient.errors.HttpError as e:
+            if e.status_code == 403:
+                if e.reason == "You need to have writer access to this calendar.":
+                    if calendar_db:
+                        calendar_db.paused = utcnow()
+                        calendar_db.paused_reason = e.reason
+                        calendar_db.save()
+                    logger.info(f"Did not insert event - You need to have writer access to this calendar on "
+                                f"calendar {calendar_db.id}")
+                    return False
+
+            if e.status_code == 429 or (e.status_code == 403 and e.reason == "userRateLimitExceeded"):
+                sleep_delay = 2 ** i + random.random()
+                logger.info(f"Sleeping for {sleep_delay} seconds")
+                sleep(sleep_delay)
