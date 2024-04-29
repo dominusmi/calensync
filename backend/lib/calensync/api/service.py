@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import concurrent.futures
 import datetime
 import traceback
 from typing import Tuple
@@ -65,8 +66,11 @@ def run_initial_sync(sync_rule_id: int):
 
     # sorts them so that even that have a recurrence are handled first
     events.sort(key=lambda x: x.recurrence is None)
-    for event in events:
-        source_wrapper.push_event_to_rules(event, [sync_rule])
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        # Use executor.map to apply the function to each event in the events list
+        executor.map(lambda event: source_wrapper.push_event_to_rules(event, [sync_rule]), events)
+    # for event in events:
+    #     source_wrapper.push_event_to_rules(event, [sync_rule])
 
     if source.expiration is None:
         source_wrapper.create_watch()
