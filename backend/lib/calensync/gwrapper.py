@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import concurrent.futures
 import datetime
 import os
 import traceback
@@ -546,16 +547,13 @@ class GoogleCalendarWrapper:
             logger.info(f"No updates found for channel {self.calendar_db.channel_id}")
             return 0
 
-        if len(events) > 100:
-            logger.error(
-                f"Calendar<{self.calendar_db.id}> error must've occured -- more than 100 events to update. skipping")
-        else:
-            # sorts them so that even that have a recurrence are handled first
-            events.sort(key=lambda x: x.recurrence is None)
-            for event in events:
-                counter_event_changed += self.push_event_to_rules(event, sync_rules)
+        # sorts them so that even that have a recurrence are handled first
+        events.sort(key=lambda x: x.recurrence is None)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            # Use executor.map to apply the function to each event in the events list
+            executor.map(lambda event: GoogleCalendarWrapper.push_event_to_rules(event, sync_rules), events)
 
-            logger.info(f"Event changed: {counter_event_changed}")
+        logger.info(f"Event changed: {counter_event_changed}")
 
         self.calendar_db.last_processed = last_processed
         self.calendar_db.save()
