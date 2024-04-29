@@ -167,6 +167,22 @@ def create_google_watch(service, calendar_db: Calendar):
         return resource_id
 
 
+def make_summary_and_description(source_event: GoogleEvent, rule: SyncRule):
+    summary = source_event.summary
+    description = source_event.description
+    if summary is not None and rule.summary is not None:
+        summary = format_calendar_text(summary, rule.summary)
+    if description is not None:
+        if rule.description is None or len(rule.description) == 0:
+            description = None
+        else:
+            description = format_calendar_text(description, rule.description)
+
+    if summary is None:
+        summary = "busy"
+
+    return summary, description
+
 class GoogleCalendarWrapper:
     user_db: User
     calendar_db: Calendar
@@ -299,15 +315,7 @@ class GoogleCalendarWrapper:
                     # never copy an event created by us
                     continue
 
-                summary = event.summary
-                description = event.description
-                if rule.summary is not None and summary is not None:
-                    summary = format_calendar_text(summary, rule.summary)
-                if rule.description is not None and description is not None:
-                    description = format_calendar_text(description, rule.description)
-
-                if summary is None:
-                    summary = "busy"
+                summary, description = make_summary_and_description(event, rule)
 
                 inner = lambda: insert_event(
                             service=self.service, calendar_id=self.google_id,
@@ -335,16 +343,8 @@ class GoogleCalendarWrapper:
                     if rule.destination.paused:
                         logger.warning(f"Skipping update on sync rule {rule.id} - paused calendar")
                         continue
-                    summary = source_event.summary
-                    description = source_event.description
-                    if rule.summary is not None:
-                        summary = format_calendar_text(summary, rule.summary)
-                    if description is not None:
-                        if rule.description is None or len(rule.description) == 0:
-                            description = None
-                        else:
-                            description = format_calendar_text(description, rule.description)
 
+                    summary, description = make_summary_and_description(source_event, rule)
                     inner = lambda: update_event(service=self.service,
                                  calendar_id=self.google_id,
                                  event_id=to_update.id,
