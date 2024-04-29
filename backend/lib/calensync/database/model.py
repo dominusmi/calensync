@@ -137,7 +137,7 @@ class Calendar(UUIDBaseModel):
 
     @property
     def is_read_only(self) -> bool:
-        return self.readonly.python_value(self.readonly)
+        return bool(self.readonly)
 
     class Meta:
         constraints = [peewee.SQL('UNIQUE (platform_id, account_id)')]
