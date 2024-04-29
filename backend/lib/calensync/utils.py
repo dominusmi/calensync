@@ -116,5 +116,9 @@ def google_error_handling_with_backoff(function, calendar_db=None):
                 sleep_delay = 2 ** i + random.random()
                 logger.info(f"Sleeping for {sleep_delay} seconds")
                 sleep(sleep_delay)
+                continue
+
+            else:
+                raise e
 
     return False
