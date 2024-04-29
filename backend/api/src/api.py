@@ -92,7 +92,7 @@ def get__calendars(calendar_account_id: str, authorization: Annotated[Union[str,
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
         calendars = get_calendars(user, calendar_account_id, db)
-        return [{"uuid": c.uuid, "name": c.friendly_name} for c in calendars]
+        return [{"uuid": c.uuid, "name": c.friendly_name, "readonly": c.readonly} for c in calendars]
 
 
 @app.post('/accounts/{calendar_account_id}/calendars/refresh')
