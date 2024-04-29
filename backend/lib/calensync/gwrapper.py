@@ -6,10 +6,13 @@ import traceback
 from typing import List, Dict, Any, Optional
 
 import google.oauth2.credentials
+import google_auth_httplib2
 import googleapiclient
+import httplib2
 import peewee
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import googleapiclient.http
 
 from calensync.api.common import ApiError, number_of_days_to_sync_in_advance
 from calensync.queries.common import get_sync_rules_from_source
@@ -26,7 +29,13 @@ def service_from_account(account: CalendarAccount):
     creds = google.oauth2.credentials.Credentials.from_authorized_user_info(
         account.credentials
     )
-    return build('calendar', 'v3', credentials=creds)
+
+    def build_request(http, *args, **kwargs):
+        new_http = google_auth_httplib2.AuthorizedHttp(creds, http=httplib2.Http())
+        return googleapiclient.http.HttpRequest(new_http, *args, **kwargs)
+
+    authorized_http = google_auth_httplib2.AuthorizedHttp(creds, http=httplib2.Http())
+    return build('calendar', 'v3', requestBuilder=build_request, http=authorized_http)
 
 
 def delete_event(service, calendar_id: str, event_id: str):
