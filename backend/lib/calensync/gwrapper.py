@@ -530,7 +530,6 @@ class GoogleCalendarWrapper:
     def solve_update_in_calendar(self, preloaded_events: list[GoogleEvent] = None) -> int:
         """ Called when we receive a webhook event saying the calendar requires an update """
         sync_rules = list(get_sync_rules_from_source(self.calendar_db))
-        counter_event_changed = 0
 
         logger.info(f"Found {(n_sync := len(sync_rules))} active SyncRules for {self.calendar_db.uuid}")
         if n_sync == 0:
@@ -551,10 +550,10 @@ class GoogleCalendarWrapper:
         events.sort(key=lambda x: x.recurrence is None)
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             # Use executor.map to apply the function to each event in the events list
-            executor.map(lambda event: GoogleCalendarWrapper.push_event_to_rules(event, sync_rules), events)
+            futures = executor.map(lambda event: GoogleCalendarWrapper.push_event_to_rules(event, sync_rules), events)
 
+        counter_event_changed = sum(futures)
         logger.info(f"Event changed: {counter_event_changed}")
-
         self.calendar_db.last_processed = last_processed
         self.calendar_db.save()
         return counter_event_changed
