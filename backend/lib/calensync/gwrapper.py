@@ -291,6 +291,9 @@ class GoogleCalendarWrapper:
             if rule.description is not None and description is not None:
                 description = format_calendar_text(description, rule.description)
 
+            if summary is None:
+                summary = "busy"
+
             try:
                 insert_event(
                     service=self.service, calendar_id=self.google_id,
