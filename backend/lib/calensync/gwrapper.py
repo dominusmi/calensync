@@ -54,6 +54,7 @@ def delete_event(service, calendar_id: str, event_id: str):
 
     return True
 
+
 def insert_event(service, calendar_id: str, start: GoogleDatetime, end: GoogleDatetime,
                  properties: List[EventExtendedProperty] = None, display_name="Calensync", summary="Busy",
                  description=None, **kwargs) -> Dict:
@@ -168,20 +169,22 @@ def create_google_watch(service, calendar_db: Calendar):
 
 
 def make_summary_and_description(source_event: GoogleEvent, rule: SyncRule):
-    summary = source_event.summary
-    description = source_event.description
-    if summary is not None and rule.summary is not None:
-        summary = format_calendar_text(summary, rule.summary)
-    if description is not None:
+    summary = None
+    description = None
+    if source_event.summary is not None and rule.summary is not None:
+        summary = format_calendar_text(source_event.summary, rule.summary)
+
+    if source_event.description is not None:
         if rule.description is None or len(rule.description) == 0:
             description = None
         else:
-            description = format_calendar_text(description, rule.description)
+            description = format_calendar_text(source_event.description, rule.description)
 
     if summary is None:
-        summary = "busy"
+        summary = 'Blocker'
 
     return summary, description
+
 
 class GoogleCalendarWrapper:
     user_db: User
@@ -318,10 +321,10 @@ class GoogleCalendarWrapper:
                 summary, description = make_summary_and_description(event, rule)
 
                 inner = lambda: insert_event(
-                            service=self.service, calendar_id=self.google_id,
-                            start=event.start, end=event.end, properties=properties, recurrence=event.recurrence,
-                            summary=summary, description=description
-                        )
+                    service=self.service, calendar_id=self.google_id,
+                    start=event.start, end=event.end, properties=properties, recurrence=event.recurrence,
+                    summary=summary, description=description
+                )
 
                 google_error_handling_with_backoff(inner, self.calendar_db)
             except Exception as e:
@@ -346,12 +349,12 @@ class GoogleCalendarWrapper:
 
                     summary, description = make_summary_and_description(source_event, rule)
                     inner = lambda: update_event(service=self.service,
-                                 calendar_id=self.google_id,
-                                 event_id=to_update.id,
-                                 start=start, end=end,
-                                 summary=summary,
-                                 description=description,
-                                 recurrence=source_event.recurrence)
+                                                 calendar_id=self.google_id,
+                                                 event_id=to_update.id,
+                                                 start=start, end=end,
+                                                 summary=summary,
+                                                 description=description,
+                                                 recurrence=source_event.recurrence)
 
                     google_error_handling_with_backoff(inner, self.calendar_db)
 

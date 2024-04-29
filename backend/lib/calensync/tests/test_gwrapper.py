@@ -1,16 +1,17 @@
 import os
+import unittest
 from collections import defaultdict
 from unittest.mock import patch, MagicMock
 
 from calensync.database.model import SyncRule
 from calensync.dataclass import GoogleDatetime, EventStatus
-from calensync.gwrapper import GoogleCalendarWrapper
+from calensync.gwrapper import GoogleCalendarWrapper, make_summary_and_description
 from calensync.log import get_logger
 from calensync.tests.fixtures import *
 from calensync.tests.mock_service import MockedService
 
-
 logger = get_logger(__file__)
+
 
 class Mock:
     pass
@@ -63,7 +64,7 @@ def test_get_events_pagination(db, calendar1_1, events_fixture):
     wrapper = GoogleCalendarWrapper(calendar_db=calendar1_1, service=service)
     events = wrapper.get_events()
 
-    assert len(events) == 2*number_of_events_in_fixture
+    assert len(events) == 2 * number_of_events_in_fixture
     ids = set([])
     for i in range(number_of_events_in_fixture):
         for j in range(2):
@@ -197,3 +198,72 @@ class TestDeleteWatch:
             updated = calendar1_1.refresh()
             assert updated.resource_id == "something"
             assert updated.expiration is not None
+
+
+class TestMakeSummaryAndDescription:
+    @staticmethod
+    def test_normal(calendar1_1, calendar1_2):
+        event = GoogleEvent(id="1", status=EventStatus.confirmed,
+                            summary="test", description="description"
+                            )
+        rule = SyncRule(source=calendar1_1, destination=calendar1_2, summary="%original%", description="%original%")
+
+        summary, description = make_summary_and_description(event, rule)
+        assert summary == "test"
+        assert description == "description"
+
+    @staticmethod
+    def test_template(calendar1_1, calendar1_2):
+        event = GoogleEvent(id="1", status=EventStatus.confirmed,
+                            summary="test", description="description"
+                            )
+        rule = SyncRule(source=calendar1_1, destination=calendar1_2,
+                        summary="Copy: %original%",
+                        description="Description: %original%"
+                        )
+
+        summary, description = make_summary_and_description(event, rule)
+        assert summary == "Copy: test"
+        assert description == "Description: description"
+
+    @staticmethod
+    def test_event_summary_description_none(calendar1_1, calendar1_2):
+        event = GoogleEvent(id="1", status=EventStatus.confirmed,
+                            summary=None, description=None
+                            )
+        rule = SyncRule(source=calendar1_1, destination=calendar1_2,
+                        summary="%original%",
+                        description="%original%"
+                        )
+
+        summary, description = make_summary_and_description(event, rule)
+        assert summary == "Blocker"
+        assert description is None
+
+    @staticmethod
+    def test_rule_template_none(calendar1_1, calendar1_2):
+        event = GoogleEvent(id="1", status=EventStatus.confirmed,
+                            summary="test", description="description"
+                            )
+        rule = SyncRule(source=calendar1_1, destination=calendar1_2,
+                        summary=None,
+                        description=None
+                        )
+
+        summary, description = make_summary_and_description(event, rule)
+        assert summary == "Blocker"
+        assert description is None
+
+    @staticmethod
+    def test_overwritten(calendar1_1, calendar1_2):
+        event = GoogleEvent(id="1", status=EventStatus.confirmed,
+                            summary="Something", description="some"
+                            )
+        rule = SyncRule(source=calendar1_1, destination=calendar1_2,
+                        summary="Title",
+                        description="Description"
+                        )
+
+        summary, description = make_summary_and_description(event, rule)
+        assert summary == "Title"
+        assert description == "Description"
