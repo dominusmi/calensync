@@ -99,7 +99,7 @@ def format_calendar_text(original, template):
 
 
 def google_error_handling_with_backoff(function, calendar_db=None):
-    for i in range(6):
+    for i in range(7):
         try:
             return function()
         except googleapiclient.errors.HttpError as e:
