@@ -34,8 +34,8 @@ Resources:
     Properties:
       QueueName: !Sub "Calensync-${Env}-queue"
       DelaySeconds: 0
-      VisibilityTimeout: 30
-      MessageRetentionPeriod: 61
+      VisibilityTimeout: 180
+      MessageRetentionPeriod: 1801
 
   GetSecretsPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -156,7 +156,7 @@ Resources:
           Type: SQS
           Properties:
             Queue: !GetAtt SQSQueue.Arn
-            BatchSize: 10
+            BatchSize: 1
             FunctionResponseTypes:
               - ReportBatchItemFailures
 
