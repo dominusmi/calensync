@@ -3,7 +3,9 @@ from __future__ import annotations
 import concurrent.futures
 import datetime
 import os
+import random
 import traceback
+from time import sleep
 from typing import List, Dict, Any, Optional
 
 import google.oauth2.credentials
@@ -11,6 +13,7 @@ import google_auth_httplib2
 import googleapiclient
 import httplib2
 import peewee
+from google.api_core.exceptions import AlreadyExists
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import googleapiclient.http
@@ -21,7 +24,8 @@ from calensync.libcalendar import EventsModificationHandler
 from calensync.database.model import Calendar, CalendarAccount, db, User, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus
 from calensync.log import get_logger
-from calensync.utils import get_api_url, utcnow, datetime_to_google_time, format_calendar_text
+from calensync.utils import get_api_url, utcnow, datetime_to_google_time, format_calendar_text, \
+    google_error_handling_with_backoff
 
 logger = get_logger(__file__)
 
@@ -290,31 +294,30 @@ class GoogleCalendarWrapper:
         while self.events_handler.events_to_add:
             # order of popping is important for recurrence race condition
             (event, properties, rule) = self.events_handler.events_to_add.pop(0)
-            if event.extendedProperties.private.get("source-id") is not None:
-                # never copy an event created by us
-                continue
-
-            summary = event.summary
-            description = event.description
-            if rule.summary is not None and summary is not None:
-                summary = format_calendar_text(summary, rule.summary)
-            if rule.description is not None and description is not None:
-                description = format_calendar_text(description, rule.description)
-
-            if summary is None:
-                summary = "busy"
-
             try:
-                insert_event(
-                    service=self.service, calendar_id=self.google_id,
-                    start=event.start, end=event.end, properties=properties, recurrence=event.recurrence,
-                    summary=summary, description=description
-                )
-            except googleapiclient.errors.HttpError as e:
-                if e.status_code == 403 and e.reason == "You need to have writer access to this calendar.":
-                    self.calendar_db.paused = utcnow()
-                    self.calendar_db.paused_reason = e.reason
-                    self.calendar_db.save()
+                if event.extendedProperties.private.get("source-id") is not None:
+                    # never copy an event created by us
+                    continue
+
+                summary = event.summary
+                description = event.description
+                if rule.summary is not None and summary is not None:
+                    summary = format_calendar_text(summary, rule.summary)
+                if rule.description is not None and description is not None:
+                    description = format_calendar_text(description, rule.description)
+
+                if summary is None:
+                    summary = "busy"
+
+                inner = lambda: insert_event(
+                            service=self.service, calendar_id=self.google_id,
+                            start=event.start, end=event.end, properties=properties, recurrence=event.recurrence,
+                            summary=summary, description=description
+                        )
+
+                google_error_handling_with_backoff(inner, self.calendar_db)
+            except Exception as e:
+                logger.error(f"Failed to insert {event.id} with rule {rule.id}: {e}\n{traceback.format_exc()}")
 
     def update_events(self):
         """ Only used to update start/end datetime"""
@@ -341,13 +344,17 @@ class GoogleCalendarWrapper:
                             description = None
                         else:
                             description = format_calendar_text(description, rule.description)
-                    update_event(service=self.service,
+
+                    inner = lambda: update_event(service=self.service,
                                  calendar_id=self.google_id,
                                  event_id=to_update.id,
                                  start=start, end=end,
                                  summary=summary,
                                  description=description,
                                  recurrence=source_event.recurrence)
+
+                    google_error_handling_with_backoff(inner, self.calendar_db)
+
             except Exception as e:
                 logger.warn(f"Failed to process event {to_update.id}: {e}. {traceback.format_exc()}")
 
@@ -367,9 +374,13 @@ class GoogleCalendarWrapper:
         deleted_events = 0
         while self.events_handler.events_to_delete:
             event_id = self.events_handler.events_to_delete.pop()
-            logger.info(f"Deleting event {event_id} in {self.google_id}")
-            if delete_event(self.service, self.google_id, event_id):
-                deleted_events += 1
+            try:
+                logger.info(f"Deleting event {event_id} in {self.google_id}")
+                inner = lambda: delete_event(self.service, self.google_id, event_id)
+                if google_error_handling_with_backoff(inner, self.calendar_db):
+                    deleted_events += 1
+            except Exception as e:
+                logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}")
         logger.info(f"Deleted {deleted_events} events")
 
     def get_updated_events(self) -> List[GoogleEvent]:
