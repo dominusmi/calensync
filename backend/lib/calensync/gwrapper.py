@@ -312,8 +312,8 @@ class GoogleCalendarWrapper:
             source_event: GoogleEvent
             to_update: GoogleEvent
             rule: SyncRule
-            start = GoogleDatetime(dateTime=source_event.start.dateTime, timeZone=source_event.start.timeZone)
-            end = GoogleDatetime(dateTime=source_event.end.dateTime, timeZone=source_event.end.timeZone)
+            start = source_event.start.clone()
+            end = source_event.end.clone()
             try:
                 with db.atomic():
                     if rule.destination.paused:
