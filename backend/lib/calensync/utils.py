@@ -115,8 +115,7 @@ def google_error_handling_with_backoff(function, calendar_db=None):
 
             if (
                 e.status_code == 429
-                or (e.status_code == 403 and e.reason == "userRateLimitExceeded")
-                or (e.status_code == 403 and e.reason == "rateLimitExceeded")
+                or (e.status_code == 403 and e.reason in ["userRateLimitExceeded", 'Rate Limit Exceeded', "rateLimitExceeded"])
             ):
                 sleep_delay = 2 ** i + random.random()
                 logger.info(f"Sleeping for {sleep_delay} seconds")
