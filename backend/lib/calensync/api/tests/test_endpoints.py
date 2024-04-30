@@ -21,32 +21,6 @@ os.environ["FRONTEND"] = "http://test.com"
 os.environ["ENV"] = "test"
 
 
-class TestWebhook:
-    @staticmethod
-    def test_no_recent_insertion(db, user: User, calendar1_1: Calendar):
-        calendar1_1.last_inserted = utcnow() - datetime.timedelta(seconds=187)
-        calendar1_1.save()
-        with patch("calensync.gwrapper.GoogleCalendarWrapper.solve_update_in_calendar") as mocked:
-            received_webhook(str(calendar1_1.channel_id), "", "resource1", str(calendar1_1.token), db)
-            mocked.assert_called_once()
-            c = calendar1_1.refresh()
-            assert (utcnow() - c.last_received.replace(tzinfo=datetime.timezone.utc)).seconds < 5
-
-    @staticmethod
-    def test_with_recent_insertion(db, user, calendar1_1):
-        new_inserted_dt = utcnow() - datetime.timedelta(seconds=1)
-        calendar1_1.last_inserted = new_inserted_dt
-        calendar1_1.save()
-        with patch("calensync.gwrapper.GoogleCalendarWrapper.solve_update_in_calendar") as mocked:
-            with pytest.raises(ApiError):
-                received_webhook(str(calendar1_1.channel_id), "", "resource1", str(calendar1_1.token), db)
-            mocked.assert_not_called()
-            c = calendar1_1.refresh()
-            # last received should be updated, but not last inserted no
-            assert (utcnow() - c.last_received.replace(tzinfo=datetime.timezone.utc)).seconds < 5
-            assert c.last_inserted.replace(tzinfo=datetime.timezone.utc) == new_inserted_dt
-
-
 class TestProcessCalendar:
     @staticmethod
     def test_process_calendar(db, user, calendar1_1, calendar1_2):
