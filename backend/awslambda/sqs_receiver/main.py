@@ -21,9 +21,9 @@ def handler(event, context):
         for record in event["Records"]:
             try:
                 sqs_event = SQSEvent.parse_raw(record["body"])
-                first_received_timestamp = record.get("attributes", {}).get("ApproximateFirstReceiveTimestamp", utcnow().timestamp())
+                first_received_timestamp = record.get("attributes", {}).get("ApproximateFirstReceiveTimestamp", "nan")
                 try:
-                    first_received_timestamp = int(first_received_timestamp)
+                    first_received_timestamp = int(first_received_timestamp / 1000)
                 except ValueError:
                     logger.warn(f"Can't parse {first_received_timestamp} as int")
                     first_received_timestamp = utcnow().timestamp()
