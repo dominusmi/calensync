@@ -2,8 +2,8 @@ from typing import Annotated, Union, Dict
 
 from fastapi import FastAPI, Request, Query, Body, Cookie, Header
 from mangum import Mangum
-from starlette.responses import JSONResponse
 
+import calensync.api.service
 from calensync import sqs
 from calensync.api import endpoints
 from calensync.api.common import format_response
@@ -30,7 +30,7 @@ def post__webhook(event: Request):
         if get_env() in ["prod", "dev"]:
             sqs.send_event(boto3.session.Session(), sqs_event.json())
         else:
-            sqs.handle_sqs_event(sqs_event, db)
+            calensync.api.service.handle_sqs_event(sqs_event, db)
 
 
 @app.get("/paddle/verify_transaction")
