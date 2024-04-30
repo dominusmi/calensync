@@ -10,6 +10,7 @@ import google.oauth2.credentials
 import peewee
 import starlette.responses
 
+import calensync.api.service
 import calensync.paddle as paddle
 import calensync.sqs
 from calensync import dataclass
@@ -519,7 +520,7 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
         if is_local():
-            calensync.sqs.handle_sqs_event(sqs_event, db)
+            calensync.api.service.handle_sqs_event(sqs_event, db)
         else:
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
@@ -541,7 +542,7 @@ def delete_sync_rule(user: User, sync_uuid: str, db):
         event = DeleteSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.DELETE_SYNC_RULE, data=event)
         if is_local():
-            calensync.sqs.handle_sqs_event(sqs_event, db)
+            calensync.api.service.handle_sqs_event(sqs_event, db)
         else:
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 

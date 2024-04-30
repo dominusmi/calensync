@@ -550,7 +550,6 @@ class GoogleCalendarWrapper:
         if n_sync == 0:
             return 0
 
-        last_processed = datetime.datetime.now()
         events = self.get_updated_events()
         events = [event for event in events if len(event.extendedProperties.private) == 0]
         if preloaded_events:
@@ -569,8 +568,6 @@ class GoogleCalendarWrapper:
 
         counter_event_changed = sum(futures)
         logger.info(f"Event changed: {counter_event_changed}")
-        self.calendar_db.last_processed = last_processed
-        self.calendar_db.save()
         return counter_event_changed
 
     @classmethod
