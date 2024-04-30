@@ -56,11 +56,14 @@ def run_initial_sync(sync_rule_id: int):
         SyncRule.select().where(SyncRule.id == sync_rule_id).limit(1),
         Calendar.select()
     ))[0]
-    source = sync_rule.source
-    destination = sync_rule.destination
+    source: Calendar = sync_rule.source
+    destination: Calendar = sync_rule.destination
 
     source_wrapper = GoogleCalendarWrapper(calendar_db=source)
     start_date = datetime.datetime.now()
+
+    source.last_received = utcnow()
+    source.save()
 
     # number of days to sync in the future
     end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
@@ -73,6 +76,9 @@ def run_initial_sync(sync_rule_id: int):
         executor.map(lambda event: source_wrapper.push_event_to_rules(event, [sync_rule]), events)
     # for event in events:
     #     source_wrapper.push_event_to_rules(event, [sync_rule])
+
+    source.last_processed = utcnow()
+    source.save()
 
     if source.expiration is None:
         source_wrapper.create_watch()
