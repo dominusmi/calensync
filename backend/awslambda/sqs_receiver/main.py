@@ -27,7 +27,8 @@ def handler(event, context):
                 except ValueError:
                     logger.warn(f"Can't parse {first_received_timestamp} as int")
                     first_received_timestamp = utcnow().timestamp()
-                sqs_event.first_received = datetime.datetime.utcfromtimestamp(first_received_timestamp)
+                sqs_event.first_received = datetime.datetime.utcfromtimestamp(first_received_timestamp).replace(
+                    tzinfo=datetime.timezone.utc)
                 handle_sqs_event(sqs_event, db)
             except Exception as e:
                 logger.warn(f"Failed to process record: {e}\n{traceback.format_exc()}")
