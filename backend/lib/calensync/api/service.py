@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import concurrent.futures
 import datetime
 import traceback
 from typing import Tuple
@@ -8,10 +9,12 @@ import peewee
 
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
 from calensync.database.model import Calendar, User, SyncRule, EmailDB, CalendarAccount, Session
-from calensync.gwrapper import GoogleCalendarWrapper, source_event_tuple
+from calensync.gwrapper import GoogleCalendarWrapper
 from calensync.log import get_logger
+from calensync.sqs import SQSEventRun, logger, check_if_should_run_time_or_wait
 from calensync.utils import utcnow
-from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent
+from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, GoogleCalendar, SQSEvent, QueueEvent, \
+    GoogleWebhookEvent, PostSyncRuleEvent
 
 logger = get_logger(__file__)
 
@@ -53,11 +56,14 @@ def run_initial_sync(sync_rule_id: int):
         SyncRule.select().where(SyncRule.id == sync_rule_id).limit(1),
         Calendar.select()
     ))[0]
-    source = sync_rule.source
-    destination = sync_rule.destination
+    source: Calendar = sync_rule.source
+    destination: Calendar = sync_rule.destination
 
     source_wrapper = GoogleCalendarWrapper(calendar_db=source)
     start_date = datetime.datetime.now()
+
+    source.last_received = utcnow()
+    source.save()
 
     # number of days to sync in the future
     end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
@@ -65,14 +71,22 @@ def run_initial_sync(sync_rule_id: int):
 
     # sorts them so that even that have a recurrence are handled first
     events.sort(key=lambda x: x.recurrence is None)
-    for event in events:
-        source_wrapper.push_event_to_rules(event, [sync_rule])
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        # Use executor.map to apply the function to each event in the events list
+        executor.map(lambda event: source_wrapper.push_event_to_rules(event, [sync_rule]), events)
+    # for event in events:
+    #     source_wrapper.push_event_to_rules(event, [sync_rule])
+
+    source.last_processed = utcnow()
+    source.save()
 
     if source.expiration is None:
         source_wrapper.create_watch()
 
 
-def received_webhook(channel_id: str, state: str, resource_id: str, token: str, db: peewee.Database):
+def received_webhook(channel_id: str, state: str, resource_id: str, token: str,
+                     approximate_first_received: datetime.datetime,
+                     db: peewee.Database):
     calendar = Calendar.get_or_none(Calendar.channel_id == channel_id)
 
     if calendar is None or str(calendar.token) != token:
@@ -89,25 +103,28 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str, 
         return
 
     if calendar is None:
-        logger.warn(f"Received webhook for inexistent calendar with channel {channel_id}")
+        logger.warn(f"Received webhook for non-existent calendar with channel {channel_id}")
         return
 
-    calendar.last_received = utcnow()
-    calendar.save()
+    logger.info(f"Processing event first received at {(utcnow() - approximate_first_received).seconds} seconds ago")
 
-    if (utcnow() - calendar.last_inserted.replace(tzinfo=datetime.timezone.utc)).seconds > 1:
-        # process the event immediately
+    sqs_event_run = check_if_should_run_time_or_wait(calendar, approximate_first_received)
+
+    if sqs_event_run == SQSEventRun.RETRY:
+        logger.info("Event set for retry")
+        raise ApiError(message="Service unavailable", code=503)
+    elif sqs_event_run == SQSEventRun.DELETE:
+        logger.info("Event already processed")
+        return True
+    else:
+        calendar.last_received = utcnow()
+        calendar.save()
+
         wrapper = GoogleCalendarWrapper(calendar)
         wrapper.solve_update_in_calendar()
 
         calendar.last_processed = utcnow()
         calendar.save()
-    else:
-        logger.info("Time interval too short, not updating")
-        # Let google know to retry with exponential back-off
-        # you may ask why do we do this? I don't know.
-        # I think there might have been some "race condition" but I can't remember
-        raise ApiError(message="Service unavailable", code=503)
 
 
 def merge_users(user1: User, user2: User, db) -> Tuple[User, User]:
@@ -163,3 +180,38 @@ def handle_delete_sync_rule_event(sync_rule_id: int):
         GoogleCalendarWrapper(sync_rule.source).delete_watch()
 
     sync_rule.delete_instance()
+
+
+def handle_refresh_existing_calendar(calendar: GoogleCalendar, calendar_db: Calendar, name: str):
+    updated = False
+    if calendar.accessRole == 'reader':
+        # these are calendars imported from another account, they're read only
+        if not calendar_db.readonly:
+            calendar_db.readonly = True
+            updated = True
+
+    if calendar_db.name != name:
+        calendar_db.name = name
+        updated = True
+
+    if updated:
+        calendar_db.save()
+
+
+def handle_sqs_event(sqs_event: SQSEvent, db):
+    if sqs_event.kind == QueueEvent.GOOGLE_WEBHOOK:
+        we: GoogleWebhookEvent = GoogleWebhookEvent.parse_obj(sqs_event.data)
+        logger.info(f"Processing calendar with token {we.token} ")
+        received_webhook(we.channel_id, we.state, we.resource_id, we.token, sqs_event.first_received, db)
+
+    elif sqs_event.kind == QueueEvent.POST_SYNC_RULE:
+        logger.info("Adding sync rule")
+        e: PostSyncRuleEvent = PostSyncRuleEvent.parse_obj(sqs_event.data)
+        run_initial_sync(e.sync_rule_id)
+
+    elif sqs_event.kind == QueueEvent.DELETE_SYNC_RULE:
+        logger.info("Deleting sync rule")
+        e: DeleteSyncRuleEvent = DeleteSyncRuleEvent.parse_obj(sqs_event.data)
+        handle_delete_sync_rule_event(e.sync_rule_id)
+    else:
+        logger.error("Unknown event type")

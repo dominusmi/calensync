@@ -129,6 +129,7 @@ class Calendar(UUIDBaseModel):
     last_processed = DateTimeField(default=utcnow)
     paused = DateTimeField(null=True, default=None)
     paused_reason = CharField(null=True, default=None)
+    readonly = peewee.BooleanField(default=False)
 
     @property
     def friendly_name(self):
@@ -136,7 +137,7 @@ class Calendar(UUIDBaseModel):
 
     @property
     def is_read_only(self) -> bool:
-        return "@group.v.calendar.google.com" in self.platform_id
+        return bool(self.readonly)
 
     class Meta:
         constraints = [peewee.SQL('UNIQUE (platform_id, account_id)')]

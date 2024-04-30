@@ -10,11 +10,12 @@ import google.oauth2.credentials
 import peewee
 import starlette.responses
 
+import calensync.api.service
 import calensync.paddle as paddle
 import calensync.sqs
 from calensync import dataclass
 from calensync.api.common import ApiError, RedirectResponse, encode_query_message
-from calensync.api.service import verify_valid_sync_rule, merge_users
+from calensync.api.service import verify_valid_sync_rule, merge_users, handle_refresh_existing_calendar
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
 from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent, DeleteSyncRuleEvent
 from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
@@ -369,14 +370,14 @@ def get_calendar(user: User, calendar_id: str, db: peewee.Database) -> Calendar:
     return calendars[0]
 
 
-def refresh_calendars(user: User, account_id: str, db: peewee.Database):
+def refresh_calendars(user: User, account_uuid: str, db: peewee.Database):
     """
     Gets all the calendars for the account, and saves the new one to the db.
     Returns a list of the calendars
     """
     account: CalendarAccount = (
         CalendarAccount.select().join(User)
-        .where(User.id == User.id, CalendarAccount.uuid == account_id)
+        .where(User.id == User.id, CalendarAccount.uuid == account_uuid)
     ).get_or_none()
 
     if account is None:
@@ -389,7 +390,7 @@ def refresh_calendars(user: User, account_id: str, db: peewee.Database):
         Calendar.select()
         .join(CalendarAccount)
         .join(User)
-        .where(User.id == user.id, CalendarAccount.uuid == account_id)
+        .where(User.id == user.id, CalendarAccount.uuid == account_uuid)
     )
 
     new_calendars_db = []
@@ -398,14 +399,12 @@ def refresh_calendars(user: User, account_id: str, db: peewee.Database):
         name = (calendar.summary or calendar.id)
         if calendar.id in platform_ids:
             calendar_db: Calendar = platform_ids[calendar.id]
-            if calendar_db.name != name:
-                calendar_db.name = name
-                calendar_db.update()
-            continue
-
-        new_calendars_db.append(
-            Calendar(account=account, platform_id=calendar.id, name=name)
-        )
+            handle_refresh_existing_calendar(calendar, calendar_db, name)
+        else:
+            readonly = (calendar.accessRole == 'reader')
+            new_calendars_db.append(
+                Calendar(account=account, platform_id=calendar.id, name=name, readonly=readonly)
+            )
 
     with db.atomic():
         for new_calendar in new_calendars_db:
@@ -521,7 +520,7 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
         if is_local():
-            calensync.sqs.handle_sqs_event(sqs_event, db)
+            calensync.api.service.handle_sqs_event(sqs_event, db)
         else:
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
@@ -543,7 +542,7 @@ def delete_sync_rule(user: User, sync_uuid: str, db):
         event = DeleteSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.DELETE_SYNC_RULE, data=event)
         if is_local():
-            calensync.sqs.handle_sqs_event(sqs_event, db)
+            calensync.api.service.handle_sqs_event(sqs_event, db)
         else:
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 

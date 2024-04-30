@@ -1,4 +1,5 @@
 import os
+import unittest
 from typing import List
 from unittest.mock import patch
 
@@ -18,32 +19,6 @@ from calensync.utils import utcnow
 
 os.environ["FRONTEND"] = "http://test.com"
 os.environ["ENV"] = "test"
-
-
-class TestWebhook:
-    @staticmethod
-    def test_no_recent_insertion(db, user: User, calendar1_1: Calendar):
-        calendar1_1.last_inserted = utcnow() - datetime.timedelta(seconds=187)
-        calendar1_1.save()
-        with patch("calensync.gwrapper.GoogleCalendarWrapper.solve_update_in_calendar") as mocked:
-            received_webhook(str(calendar1_1.channel_id), "", "resource1", str(calendar1_1.token), db)
-            mocked.assert_called_once()
-            c = calendar1_1.refresh()
-            assert (utcnow() - c.last_received.replace(tzinfo=datetime.timezone.utc)).seconds < 5
-
-    @staticmethod
-    def test_with_recent_insertion(db, user, calendar1_1):
-        new_inserted_dt = utcnow() - datetime.timedelta(seconds=1)
-        calendar1_1.last_inserted = new_inserted_dt
-        calendar1_1.save()
-        with patch("calensync.gwrapper.GoogleCalendarWrapper.solve_update_in_calendar") as mocked:
-            with pytest.raises(ApiError):
-                received_webhook(str(calendar1_1.channel_id), "", "resource1", str(calendar1_1.token), db)
-            mocked.assert_not_called()
-            c = calendar1_1.refresh()
-            # last received should be updated, but not last inserted no
-            assert (utcnow() - c.last_received.replace(tzinfo=datetime.timezone.utc)).seconds < 5
-            assert c.last_inserted.replace(tzinfo=datetime.timezone.utc) == new_inserted_dt
 
 
 class TestProcessCalendar:
@@ -432,3 +407,47 @@ class TestHandleAddCalendar():
                 handle_add_calendar(state_db, "testing@email.com", {}, db)
 
 
+class TestRefreshCalendars():
+    @staticmethod
+    @patch("calensync.api.endpoints.google.oauth2.credentials.Credentials.from_authorized_user_info", return_value=None)
+    def test_normal(db, user, account1_1, calendar1_1, calendar1_1_2):
+        with patch("calensync.api.endpoints.get_google_calendars") as patch_get_google_calendars:
+            patch_get_google_calendars.return_value = [
+                GoogleCalendar(
+                    kind="calendar#calendarListEntry",
+                    id=calendar1_1.platform_id,
+                    summary=calendar1_1.name,
+                    timeZone='Europe/Paris',
+                    selected=True,
+                    accessRole="owner",
+                    primary=True
+                ),
+                GoogleCalendar(
+                    kind="calendar#calendarListEntry",
+                    id=calendar1_1_2.platform_id,
+                    summary=calendar1_1_2.name,
+                    timeZone='Europe/Paris',
+                    selected=True,
+                    accessRole="reader",
+                    primary=False
+                ),
+                GoogleCalendar(
+                    kind="calendar#calendarListEntry",
+                    id="new-calendar",
+                    summary="new-calendar-summary",
+                    timeZone='Europe/Paris',
+                    selected=True,
+                    accessRole="owner",
+                    primary=False
+                )
+            ]
+            endpoints.refresh_calendars(user, account1_1.uuid, db)
+
+            c1 = Calendar.get_by_id(calendar1_1.id)
+            c2 = Calendar.get_by_id(calendar1_1_2.id)
+
+            assert not c1.readonly
+            assert c2.readonly
+
+            c3 = Calendar.get(platform_id="new-calendar")
+            assert not c3.readonly

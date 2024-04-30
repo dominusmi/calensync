@@ -86,12 +86,12 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], setState: (x: boolean) =
                     </div>
                     <div className="btn-group pe-lg-2 col-12 col-lg-3 form-floating my-lg-0 my-2">
                         <select className="form-select" aria-label="Floating label select example" ref={destinationRef} >
-                            {accounts.reverse().map((a) => {
+                            {accounts.map((a) => {
                                 return (
                                     <React.Fragment key={`${a.uuid}-destination-fragment`}>
                                         <option key={`${a.uuid}-destination`} disabled={true}>{a.key}</option>
                                         {
-                                            a.calendars?.reverse().map(c =>
+                                            a.calendars?.filter(c => !c.readonly).map(c =>
                                                 <option key={`${c.uuid}-destination`} value={c.uuid}>{refactorCalendarName(c.name)}</option>
                                             )}
                                     </React.Fragment>

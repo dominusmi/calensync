@@ -47,6 +47,7 @@ def test_unique_user_account_succeeds(db, user, account1_1):
 def test_is_read_only(db, user, account1_1, calendar1_1):
     assert not calendar1_1.is_read_only
     calendar1_1.platform_id = "whatever@group.v.calendar.google.com"
+    calendar1_1.readonly = True
     calendar1_1.save()
     calendar = calendar1_1.refresh()
     assert calendar.is_read_only

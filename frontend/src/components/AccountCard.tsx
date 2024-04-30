@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 export interface Calendar {
     uuid: string;
     name: string;
+    readonly: boolean;
 }
 
 export interface Account {
