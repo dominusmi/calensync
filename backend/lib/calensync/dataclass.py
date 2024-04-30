@@ -6,7 +6,7 @@ from enum import Enum, IntEnum
 from typing import Dict, List, Optional, Union
 
 import pydantic
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from calensync.log import get_logger
 from calensync.utils import datetime_to_google_time
@@ -187,6 +187,7 @@ class DeleteSyncRuleEvent(BaseModel):
 class SQSEvent(BaseModel):
     kind: QueueEvent
     data: Dict
+    first_received: Optional[datetime.datetime] = Field(None)
 
 
 class PatchCalendarBody(BaseModel):
