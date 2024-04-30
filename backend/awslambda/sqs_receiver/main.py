@@ -22,6 +22,11 @@ def handler(event, context):
             try:
                 sqs_event = SQSEvent.parse_raw(record["body"])
                 first_received_timestamp = record.get("attributes", {}).get("ApproximateFirstReceiveTimestamp", utcnow().timestamp())
+                try:
+                    first_received_timestamp = int(first_received_timestamp)
+                except ValueError:
+                    logger.warn(f"Can't parse {first_received_timestamp} as int")
+                    first_received_timestamp = utcnow().timestamp()
                 sqs_event.first_received = datetime.datetime.utcfromtimestamp(first_received_timestamp)
                 handle_sqs_event(sqs_event, db)
             except Exception as e:
