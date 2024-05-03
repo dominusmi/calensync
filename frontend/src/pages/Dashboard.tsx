@@ -1,5 +1,4 @@
 // Home.tsx
-
 import React, { useEffect, useState } from 'react';
 import { getLocalSession, getLoggedUser, User } from '../utils/session'; // Adjust the import path
 import API, { PUBLIC_URL } from '../utils/const';
@@ -7,13 +6,15 @@ import AccountCard, { Account, Calendar } from '../components/AccountCard';
 import LoadingOverlay from '../components/LoadingOverlay';
 import AddCalendarAccount from '../components/AddCalendarAccount';
 import { createToast } from '../components/Toast';
-import Layout from '../components/Layout';
-import { MessageKind } from '../utils/common';
+import { MessageKind, refreshPage } from '../utils/common';
 import ContactButton, { TallyComponent } from '../components/FeedbackButton';
 import SyncRuleRow, { SyncRule } from '../components/SyncRuleRow';
 import SyncRuleDraftRow from '../components/SyncRuleDraftRow';
 import { useTranslation } from 'react-i18next';
-import { ClientOnly } from 'vite-react-ssg';
+import MagicLinkConnect from '../components/MagicLinkConnect';
+import { Flex } from '@mantine/core';
+import AppLayout from '../layouts/AppLayout';
+import { getSearchParam, handleApiError } from '../utils/app';
 
 
 const Dashboard: React.FC = () => {
@@ -30,7 +31,23 @@ const Dashboard: React.FC = () => {
 
   // Render AccountCards for each account
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [magicValue, setMagicValue] = useState<string | null>(null);
 
+  const handleMagicLink = async (_magicValue: string) => {
+    window.location.href = `${API}/magic-link/${_magicValue}`
+  }
+
+
+  useEffect(() => {
+    const magicValue = getSearchParam('magic');
+    console.log(magicValue)
+    setMagicValue(magicValue);
+  }, []);
+
+  useEffect(() => {
+    if(!magicValue){ return; }
+    handleMagicLink(magicValue);
+  }, [magicValue])
 
   useEffect(() => {
     if (getLocalSession() != null && !sessionChecked) {
@@ -142,77 +159,83 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <ClientOnly>
-      {() => {
-        return (<Layout onlyRequired={true}>
-          <div className='container col-xxl-8'>
-            {loading && <LoadingOverlay />}
-            {user == null &&
-              <div className='alert alert-light py-2 mt-4 border-2'>{t("dashboard.already-have-account")} <a href='login?login=true'>{t("dashboard.login")}</a></div>
+    <AppLayout onlyRequired={true}>
+      <div className='container col-xxl-8'>
+        {loading && <LoadingOverlay />}
+        {user == null &&
+          <div className='alert alert-light py-2 mt-4 border-2'>{t("dashboard.already-have-account")} <a href='login?login=true'>{t("dashboard.login")}</a></div>
+        }
+        {user != null && user.customer_id == null &&
+          // show trial message
+          <div className='container-sm p-0 my-2'>
+            {daysLeft < 0 &&
+              <p className='p-0 m-0 text-danger'> {t("dashboard.trial-ended")} </p>
             }
-            {user != null && user.customer_id == null &&
-              // show trial message
-              <div className='container-sm p-0 my-2'>
-                {daysLeft < 0 &&
-                  <p className='p-0 m-0 text-danger'> {t("dashboard.trial-ended")} </p>
-                }
-                {daysLeft >= 0 &&
-                  <p className='p-0 m-0'>{t("dashboard.days-left").replace("DAYS", daysLeft.toString())}</p>
-                }
-                <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>{t("dashboard.upgrade")}</a>
-              </div>
+            {daysLeft >= 0 &&
+              <p className='p-0 m-0'>{t("dashboard.days-left").replace("DAYS", daysLeft.toString())}</p>
             }
-            {accounts.length > 0 &&
-              <>
-                <div className='d-md-flex align-items-center justify-content-center d-flex-row my-3 px-0'>
-                  <span className='display-5 me-auto mb-2 mb-sm-0'>{t("dashboard.synchronize-calendars")}</span>
-                  <div className="break py-2"></div>
-                  <button className={`btn btn-primary ${(accounts.length >= 2 && rules.length === 0) ? 'glowing' : ''}`} onClick={() => setOpenDraft(true)}>Add Synchronization</button>
-                </div>
-                {rules.length === 0 && accounts && accounts.length > 0 &&
-                  <div className="alert alert-secondary" role="alert">
-                    {t("dashboard.no-syncs")}
-                  </div>
-                }
-                {rules.length > 0 && rules.map((rule) => <SyncRuleRow key={rule.uuid} rule={rule} onChange={() => fetchSyncRule()} />)
-                }
-                {openDraft &&
-                  <SyncRuleDraftRow accounts={accounts} setState={setOpenDraft} successCallback={() => { fetchSyncRule(); setOpenDraft(false) }} />
-                }
-              </>
-            }
-            <div className='display-5 my-4'>{t("dashboard.connected-accounts")}</div>
-            {accounts && accounts.length === 0 &&
-              <div>
-                <div className="alert alert-success" role="alert">
-                  <span className='fw-bold'> {t("dashboard.welcome")} 🎉 </span>
-                  {t("dashboard.first-thing")}
-                </div>
-              </div>
-            }
-            {accounts && accounts.length === 1 &&
-              <div>
-                <div className="alert alert-success" role="alert">
-                  <span className='fw-bold'> {t("dashboard.one-account")} ✅ </span><br />
-                  {t("dashboard.second-account")}
-                </div>
-              </div>
-            }
-            <AddCalendarAccount isConnected={user != null} glowing={accounts != null && accounts.length < 2} />
-            {accounts && accounts.map((account) => (
-              <AccountCard key={account.uuid} account={account} />
-            ))}
-
-            <ContactButton />
-            <TallyComponent />
+            <a className='m-0 p-0' href={`${PUBLIC_URL}/plan`}>{t("dashboard.upgrade")}</a>
           </div>
-          {/* {showOnboarding &&
+        }
+        {accounts.length > 0 &&
+          <>
+            <div className='d-md-flex align-items-center justify-content-center d-flex-row my-3 px-0'>
+              <span className='display-5 me-auto mb-2 mb-sm-0'>{t("dashboard.synchronize-calendars")}</span>
+              <div className="break py-2"></div>
+              <button className={`btn btn-primary ${(accounts.length >= 2 && rules.length === 0) ? 'glowing' : ''}`} onClick={() => setOpenDraft(true)}>Add Synchronization</button>
+            </div>
+            {rules.length === 0 && accounts && accounts.length > 0 &&
+              <div className="alert alert-secondary" role="alert">
+                {t("dashboard.no-syncs")}
+              </div>
+            }
+            {rules.length > 0 && rules.map((rule) => <SyncRuleRow key={rule.uuid} rule={rule} onChange={() => fetchSyncRule()} />)
+            }
+            {openDraft &&
+              <SyncRuleDraftRow accounts={accounts} setState={setOpenDraft} successCallback={() => { fetchSyncRule(); setOpenDraft(false) }} />
+            }
+          </>
+        }
+        <div className='display-5 my-4'>{t("dashboard.connected-accounts")}</div>
+        {accounts && accounts.length === 0 &&
+          <div>
+            <div className="alert alert-success" role="alert">
+              <span className='fw-bold'> {t("dashboard.welcome")} 🎉 </span>
+              {t("dashboard.first-thing")}
+            </div>
+          </div>
+        }
+        {accounts && accounts.length === 1 &&
+          <div>
+            <div className="alert alert-success" role="alert">
+              <span className='fw-bold'> {t("dashboard.one-account")} ✅ </span><br />
+              {t("dashboard.second-account")}
+            </div>
+          </div>
+        }
+        <Flex
+          align="center"
+          direction="column"
+          maw={"250px"}
+          justify="center"
+          mx={"auto"}
+          mb={"lg"}
+        >
+          <AddCalendarAccount isConnected={user != null} glowing={accounts != null && accounts.length < 2} />
+          {accounts.length > 0 && <MagicLinkConnect /> }
+        </Flex>
+        {accounts && accounts.map((account) => (
+          <AccountCard key={account.uuid} account={account} />
+        ))}
+
+        <ContactButton />
+        <TallyComponent />
+      </div>
+      {/* {showOnboarding &&
         <OnboardingModal onClose={() => setShowOnboarding(false)} />
       } */}
-        </Layout>)
-      }}
-    </ClientOnly>
-  );
+    </AppLayout>
+  )
 };
 
 export default Dashboard;

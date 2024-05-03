@@ -1,6 +1,6 @@
 import React from 'react';
 import { PUBLIC_URL } from '../utils/const';
-import Layout from '../components/Layout';
+import Layout from '../layouts/Layout';
 import { useTranslation } from 'react-i18next';
 import { BlogProperties, RouteWrapper, getBlogForLanguage } from 'reactyll';
 import { blogs } from '../_blog/routes';

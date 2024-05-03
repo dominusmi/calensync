@@ -1,5 +1,5 @@
 import React, { lazy } from 'react';
-const Layout = lazy(() => import('../components/Layout'))
+const Layout = lazy(() => import('../layouts/Layout'))
 
 const Tos: React.FC = () => {
     return (

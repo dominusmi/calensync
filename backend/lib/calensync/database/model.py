@@ -191,4 +191,9 @@ class Session(BaseModel):
     session_id = UUIDField(null=True, unique=True, default=uuid.uuid4)
 
 
-MODELS = [Session, OAuthState, EmailDB, SyncRule, Calendar, CalendarAccount, User]
+class MagicLinkDB(UUIDBaseModel):
+    user = ForeignKeyField(User)
+    used = IntegerField(default=0)
+
+
+MODELS = [MagicLinkDB, Session, OAuthState, EmailDB, SyncRule, Calendar, CalendarAccount, User]

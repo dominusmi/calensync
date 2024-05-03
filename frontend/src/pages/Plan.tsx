@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import API, { ENV, PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
 import { CheckoutEventNames, Paddle, PaddleEventData, initializePaddle } from '@paddle/paddle-js';
-import Layout from '../components/Layout';
+import Layout from '../layouts/Layout';
 import { Price } from '@paddle/paddle-js/types/price-preview/price-preview';
 import LoadingOverlay from '../components/LoadingOverlay';
 import { getLoggedUser, User } from '../utils/session';
