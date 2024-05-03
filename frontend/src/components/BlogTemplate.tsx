@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import Layout from '../components/Layout';
+import Layout from '../layouts/Layout';
 import { PUBLIC_URL } from '../utils/const';
 import { BlogPage } from 'reactyll';
 import MarkDown from 'react-markdown'

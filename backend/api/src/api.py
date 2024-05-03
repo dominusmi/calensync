@@ -1,3 +1,4 @@
+import os
 from typing import Annotated, Union, Dict
 
 from fastapi import FastAPI, Request, Query, Body, Cookie, Header
@@ -8,6 +9,7 @@ from calensync import sqs
 from calensync.api import endpoints
 from calensync.api.common import format_response
 from calensync.api.endpoints import *
+from calensync.api.response import PostMagicLinkResponse
 from calensync.database.utils import DatabaseSession
 from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PostSyncRuleBody
 from calensync.log import get_logger
@@ -237,7 +239,8 @@ def get__unsubscribe(user_id: str):
 
 @app.get('/user/{user_id}/reset')
 @format_response
-def reset__user(user_uuid: str, session_id: str = Header(None), authorization: Annotated[Union[str, None], Cookie()] = None):
+def reset__user(user_uuid: str, session_id: str = Header(None),
+                authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
         auth = session_id if session_id is not None else authorization
         if auth is None:
@@ -245,6 +248,28 @@ def reset__user(user_uuid: str, session_id: str = Header(None), authorization: A
 
         caller = verify_session(auth)
         reset_user(caller, user_uuid)
+
+
+@app.post('/magic-link', response_model=PostMagicLinkResponse)
+@format_response
+def post__magic_link(authorization: Annotated[Union[str, None], Cookie()] = None) -> PostMagicLinkResponse:
+    """
+    Returns a magic link
+    """
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = verify_session(authorization)
+        return handle_post_magic_link(user)
+
+
+@app.get('/magic-link/{link_uuid}')
+@format_response
+def post__magic_link(link_uuid: str):
+    """
+    Returns a magic link
+    """
+    with DatabaseSession(os.environ["ENV"]) as db:
+        return handle_use_magic_link(link_uuid)
+
 
 
 from fastapi.middleware.cors import CORSMiddleware

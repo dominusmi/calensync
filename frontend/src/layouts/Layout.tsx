@@ -1,37 +1,25 @@
 import React, { ReactNode, lazy, useEffect, useState } from 'react';
-const Footer = lazy(() => import('./Footer'))
-const NavBar = lazy(() => import('./Navbar'))
-import Toast, { createToast } from './Toast';
+const Footer = lazy(() => import('../components/Footer'))
+const NavBar = lazy(() => import('../components/Navbar'))
+import Toast, { createToast } from '../components/Toast';
 import { MessageKind, consumeMessages } from '../utils/common';
 import axios from 'axios';
 import { PlausibleProvider } from '../contexts/PlausibleProvider';
 import { ClientOnly } from 'vite-react-ssg';
+import { sendErrorToH2E } from '../utils/app';
 
 interface LayoutProps {
     children: ReactNode;
-    verifySession?: boolean;
     onlyRequired?: boolean;
+    dashboard?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyRequired = false }) => {
+const Layout: React.FC<LayoutProps> = ({ children, onlyRequired = false, dashboard = false }) => {
     const [toastReady, setToastReady] = useState(false);
     const handleToastReady = () => {
         setToastReady(true);
     };
 
-    const handleError = async (ev: any) => {
-        try {
-            await axios.post(
-                `https://api.hook2email.com/hook/4b262ccb-a724-4bf7-b362-092b7407dba0/send`,
-                { error: JSON.stringify(ev, ["message", "arguments", "type", "name"]) },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-        } catch (e) { }
-    }
 
     useEffect(() => {
         // Your function to be triggered after the component is ready
@@ -51,11 +39,11 @@ const Layout: React.FC<LayoutProps> = ({ children, verifySession = true, onlyReq
 
     useEffect(() => {
         window.addEventListener('error', (ev) => {
-            handleError(ev)
+            sendErrorToH2E(ev)
         });
 
         return () => {
-            window.removeEventListener('error', handleError);
+            window.removeEventListener('error', sendErrorToH2E);
         };
     }, [])
 
