@@ -41,6 +41,9 @@
             "customize-event-template": "Customize the title and description of synced events",
             "example-title": "An event with title <b className='fw-bold'>\"Birthday party\"</b> will be synced as ",
             "example-description": "An event with description <b>\"Let's all meet together for Tom's birthday\"</b> will be synced as "
-        }
+        },
+        "connect_from_other_device": "Is your calendar on another device?",
+        "connect_from_other_device_post": "Send this link to your device to easily connect!",
+        "link_copied": "Link copied!"
     }
 }

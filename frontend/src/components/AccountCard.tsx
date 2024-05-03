@@ -56,8 +56,6 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
                                     {t("dashboard.refresh-calendars")}
                                 </button>
                             </div>
-
-
                         </Accordion.Header>
                         <Accordion.Body>
                             <>

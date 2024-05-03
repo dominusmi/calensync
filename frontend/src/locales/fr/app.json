@@ -41,6 +41,9 @@
             "customize-event-template": "Modifier le titre et la description des événements synchronisés",
             "example-title": "Un événement avec titre <b className='fw-bold'>\"Birthday party\"</b> sera synchronisé comme ",
             "example-description": "Un événement avec description <b>\"Let's all meet together for Tom's birthday\"</b> sera synchronisé comme "
-        }
+        },
+        "connect_from_other_device": "Votre compte est sur un autre appareil?",
+        "connect_from_other_device_post": "Envoyer ce lien a votre appareil pour vous connecter simplement!",
+        "link_copied": "Link copié!"
     }
 }

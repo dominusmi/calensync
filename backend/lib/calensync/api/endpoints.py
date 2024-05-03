@@ -15,13 +15,15 @@ import calensync.paddle as paddle
 import calensync.sqs
 from calensync import dataclass
 from calensync.api.common import ApiError, RedirectResponse, encode_query_message
+from calensync.api.response import PostMagicLinkResponse
 from calensync.api.service import verify_valid_sync_rule, merge_users, handle_refresh_existing_calendar
-from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB
+from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB, \
+    MagicLinkDB
 from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent, DeleteSyncRuleEvent
 from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
 from calensync.log import get_logger
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
-    get_paddle_token, prefetch_get_or_none
+    get_paddle_token, prefetch_get_or_none, replace_timezone
 
 if os.environ.get("MOCK_GOOGLE"):
     from unittest.mock import MagicMock
@@ -581,3 +583,45 @@ def reset_user(caller: User, user_uuid: str):
     sync_rules = get_sync_rules(user)
     for rule in sync_rules:
         delete_sync_rule(user, rule["uuid"])
+
+
+def handle_post_magic_link(user_db: User) -> PostMagicLinkResponse:
+    links = list(MagicLinkDB.select().where(MagicLinkDB.user_id==user_db.id))
+    if links:
+        expiration = utcnow() - datetime.timedelta(days=1)
+        for expired_link in filter(lambda x: replace_timezone(x.date_created) < expiration, links):
+            logger.info(f"Deleting link {expired_link.id}")
+            expired_link.delete_instance()
+
+        valid_links = list(filter(lambda x: replace_timezone(x.date_created) > expiration, links))
+        if valid_links:
+            return PostMagicLinkResponse(uuid=str(valid_links[0].uuid))
+
+    magic_link = MagicLinkDB(user=user_db).save_new()
+    return PostMagicLinkResponse(uuid=str(magic_link.uuid))
+
+
+def handle_use_magic_link(link_uuid: str):
+    try:
+        magic_link = list(peewee.prefetch(
+            MagicLinkDB.select().where(MagicLinkDB.uuid == link_uuid).limit(1),
+            User.select()
+        ))
+    except Exception:
+        msg = encode_query_message(f"The magic link is invalid")
+        return RedirectResponse(f"https://calensync.live/login?error_msg={msg}")
+
+    if not magic_link:
+        msg = encode_query_message(f"The magic link is invalid")
+        return RedirectResponse(f"https://calensync.live/login?error_msg={msg}")
+
+    magic_link = magic_link[0]
+    if replace_timezone(magic_link.date_created) < utcnow() - datetime.timedelta(days=1):
+        msg = encode_query_message(f"The magic link has expired")
+        return RedirectResponse(f"https://calensync.live/login?error_msg={msg}")
+
+    magic_link.used += 1
+    magic_link.save()
+    session = Session(user=magic_link.user).save_new()
+    cookie = {"authorization": str(session.session_id)}
+    return RedirectResponse(location=f"{get_frontend_env()}/dashboard", cookie=cookie)

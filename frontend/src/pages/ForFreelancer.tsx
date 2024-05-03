@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ENV, PADDLE_CLIENT_TOKEN, PUBLIC_URL } from '../utils/const';
-import Layout from '../components/Layout';
+import Layout from '../layouts/Layout';
 import { PaddlePricing } from '../components/PaddlePricing';
 import { Paddle, initializePaddle } from '@paddle/paddle-js';
 import { useTranslation } from 'react-i18next';

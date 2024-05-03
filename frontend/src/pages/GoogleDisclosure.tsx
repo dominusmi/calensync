@@ -1,6 +1,6 @@
 import React from 'react';
 import { PUBLIC_URL } from '../utils/const';
-import Layout from '../components/Layout';
+import Layout from '../layouts/Layout';
 
 
 

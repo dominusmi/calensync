@@ -115,7 +115,7 @@ def google_error_handling_with_backoff(function, calendar_db=None):
 
             if (
                 e.status_code == 429
-                or (e.status_code == 403 and e.reason in ["userRateLimitExceeded", 'Rate Limit Exceeded', "rateLimitExceeded"])
+                or (e.status_code == 403 and e.reason in ["userRateLimitExceeded", 'Rate Limit Exceeded', "rateLimitExceeded", "quotaExceeded", 'Calendar usage limits exceeded.'])
             ):
                 sleep_delay = 2 ** i + random.random()
                 logger.info(f"Sleeping for {sleep_delay} seconds")
@@ -126,3 +126,7 @@ def google_error_handling_with_backoff(function, calendar_db=None):
                 raise e
 
     return False
+
+
+def replace_timezone(dt: datetime.datetime):
+    return dt.replace(tzinfo=datetime.timezone.utc)
