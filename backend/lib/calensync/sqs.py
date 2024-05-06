@@ -4,9 +4,12 @@ import datetime
 import enum
 import os
 
-from calensync.database.model import Calendar
+import boto3
+
+from calensync.database.model import Calendar, SyncRule
+from calensync.dataclass import UpdateGoogleEvent, GoogleEvent, QueueEvent, SQSEvent
 from calensync.log import get_logger
-from calensync.utils import utcnow
+from calensync.utils import utcnow, is_local, BackoffException
 
 logger = get_logger("sqs")
 
@@ -45,3 +48,14 @@ def check_if_should_run_time_or_wait(calendar_db: Calendar, first_received: date
         else:
             # maybe the previous run is still ongoing, make the event wait for a bit
             return SQSEventRun.RETRY
+
+
+def push_event_to_queue(event: GoogleEvent, rules: list[SyncRule], session: boto3.Session, db):
+    event = UpdateGoogleEvent(event=event, rule_ids=[rule.id for rule in rules])
+    sqs_event = SQSEvent(kind=QueueEvent.UPDATED_EVENT, data=event.dict(), first_received=utcnow())
+    if is_local():
+        from calensync.api.service import handle_sqs_event
+        handle_sqs_event(sqs_event=sqs_event, db=db)
+
+    else:
+        send_event(session, sqs_event.json())
