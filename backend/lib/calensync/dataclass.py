@@ -156,6 +156,7 @@ class QueueEvent(IntEnum):
     GOOGLE_WEBHOOK = 1
     POST_SYNC_RULE = 3
     DELETE_SYNC_RULE = 4
+    UPDATED_EVENT = 5
 
 
 class GoogleWebhookEvent(BaseModel):
@@ -182,6 +183,11 @@ class PostSyncRuleEvent(BaseModel):
 
 class DeleteSyncRuleEvent(BaseModel):
     sync_rule_id: int
+
+
+class UpdateGoogleEvent(BaseModel):
+    event: GoogleEvent
+    rule_ids: list[int]
 
 
 class SQSEvent(BaseModel):
