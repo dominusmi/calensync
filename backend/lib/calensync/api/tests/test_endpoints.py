@@ -1,5 +1,4 @@
 import os
-import unittest
 from typing import List
 from unittest.mock import patch
 
@@ -7,38 +6,17 @@ import starlette.responses
 
 from calensync.api import endpoints
 from calensync.api.common import ApiError, RedirectResponse
-from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env, reset_user, \
+from calensync.api.endpoints import delete_sync_rule, get_oauth_token, get_frontend_env, reset_user, \
     handle_add_calendar
-from calensync.api.service import received_webhook
-from calensync.libcalendar import EventsModificationHandler
-from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB
 from calensync.database.model import Session
+from calensync.database.model import SyncRule, OAuthState, OAuthKind
 from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty, GoogleCalendar
+from calensync.libcalendar import EventsModificationHandler
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
 
 os.environ["FRONTEND"] = "http://test.com"
 os.environ["ENV"] = "test"
-
-
-class TestProcessCalendar:
-    @staticmethod
-    def test_process_calendar(db, user, calendar1_1, calendar1_2):
-        now = utcnow()
-        three_minutes_ago = now - datetime.timedelta(seconds=180)
-        calendar1_1.active = True
-        calendar1_1.last_inserted = three_minutes_ago
-        calendar1_1.last_processed = three_minutes_ago
-        calendar1_1.save()
-
-        user2 = User(email="test@test.com").save_new()
-        account1_21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
-        calendar1_21 = Calendar(account=account1_21, platform_id="platform_id21", name="name21", active=True,
-                                last_processed=three_minutes_ago, last_inserted=three_minutes_ago).save_new()
-
-        with patch("calensync.gwrapper.GoogleCalendarWrapper.solve_update_in_calendar") as mocked:
-            process_calendars()
-            assert mocked.call_count == 2
 
 
 class TestDeleteSyncRule:

@@ -100,8 +100,7 @@ def test_solve_update_tentative(db, account1_1, calendar1_1, account1_2, calenda
             gcalendar1_1.google_id
         )
 
-        counter = gcalendar1_1.solve_update_in_calendar()
-        assert counter == 0
+        gcalendar1_1.solve_update_in_calendar()
 
 
 def test_solve_update_active(db, account1_1, calendar1_1, account1_2, calendar1_2):
