@@ -495,19 +495,6 @@ def unsubscribe(user_id: str):
         return starlette.responses.HTMLResponse(status_code=404)
 
 
-def process_calendars():
-    now = datetime.datetime.utcnow()
-    query = Calendar.select().where(
-        now - datetime.timedelta(seconds=60) > Calendar.last_inserted,
-        Calendar.last_received > Calendar.last_processed
-    )
-    for calendar in query:
-        gcalendar = GoogleCalendarWrapper(calendar)
-        gcalendar.solve_update_in_calendar()
-        calendar.last_processed = datetime.datetime.utcnow()
-        calendar.save()
-
-
 def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database):
     """
     Verifies the input and create the SyncRule database entry. Pushes and SQS
@@ -586,7 +573,7 @@ def reset_user(caller: User, user_uuid: str):
 
 
 def handle_post_magic_link(user_db: User) -> PostMagicLinkResponse:
-    links = list(MagicLinkDB.select().where(MagicLinkDB.user_id==user_db.id))
+    links = list(MagicLinkDB.select().where(MagicLinkDB.user_id == user_db.id))
     if links:
         expiration = utcnow() - datetime.timedelta(days=1)
         for expired_link in filter(lambda x: replace_timezone(x.date_created) < expiration, links):
