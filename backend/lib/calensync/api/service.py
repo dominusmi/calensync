@@ -5,16 +5,17 @@ import datetime
 import traceback
 from typing import Tuple
 
+import boto3
 import peewee
 
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
 from calensync.database.model import Calendar, User, SyncRule, EmailDB, CalendarAccount, Session
 from calensync.gwrapper import GoogleCalendarWrapper
 from calensync.log import get_logger
-from calensync.sqs import SQSEventRun, logger, check_if_should_run_time_or_wait
+from calensync.sqs import SQSEventRun, logger, check_if_should_run_time_or_wait, push_event_to_queue
 from calensync.utils import utcnow
 from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, GoogleCalendar, SQSEvent, QueueEvent, \
-    GoogleWebhookEvent, PostSyncRuleEvent
+    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent
 
 logger = get_logger(__file__)
 
@@ -51,7 +52,7 @@ def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_ca
     return source, destination
 
 
-def run_initial_sync(sync_rule_id: int):
+def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
     sync_rule = list(peewee.prefetch(
         SyncRule.select().where(SyncRule.id == sync_rule_id).limit(1),
         Calendar.select()
@@ -71,11 +72,9 @@ def run_initial_sync(sync_rule_id: int):
 
     # sorts them so that even that have a recurrence are handled first
     events.sort(key=lambda x: x.recurrence is None)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        # Use executor.map to apply the function to each event in the events list
-        executor.map(lambda event: source_wrapper.push_event_to_rules(event, [sync_rule]), events)
-    # for event in events:
-    #     source_wrapper.push_event_to_rules(event, [sync_rule])
+
+    for event in events:
+        push_event_to_queue(event, [sync_rule], session, db)
 
     source.last_processed = utcnow()
     source.save()
@@ -206,12 +205,25 @@ def handle_sqs_event(sqs_event: SQSEvent, db):
 
     elif sqs_event.kind == QueueEvent.POST_SYNC_RULE:
         logger.info("Adding sync rule")
+        session = boto3.Session()
         e: PostSyncRuleEvent = PostSyncRuleEvent.parse_obj(sqs_event.data)
-        run_initial_sync(e.sync_rule_id)
+        run_initial_sync(e.sync_rule_id, session, db)
 
     elif sqs_event.kind == QueueEvent.DELETE_SYNC_RULE:
         logger.info("Deleting sync rule")
         e: DeleteSyncRuleEvent = DeleteSyncRuleEvent.parse_obj(sqs_event.data)
         handle_delete_sync_rule_event(e.sync_rule_id)
+
+    elif sqs_event.kind == QueueEvent.UPDATED_EVENT:
+        e: UpdateGoogleEvent = UpdateGoogleEvent.parse_obj(sqs_event.data)
+        handle_updated_event(e)
+
     else:
         logger.error("Unknown event type")
+
+
+def handle_updated_event(e: UpdateGoogleEvent):
+    rules = list(SyncRule.select().where(SyncRule.id << e.rule_ids))
+    if len(rules) == 0:
+        logger.warn(f"No rules found for update event: {e.dict()}")
+    GoogleCalendarWrapper.push_event_to_rules(e.event, rules)
