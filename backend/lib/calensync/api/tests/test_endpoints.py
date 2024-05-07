@@ -445,6 +445,8 @@ class TestRefreshCalendars():
 
 class TestResyncCalendar:
     def test_normal(self, db, user, calendar1_1, calendar1_2, calendar1_2_2, boto_session):
+        calendar1_1.last_resync = utcnow() - datetime.timedelta(days=3)
+        calendar1_1.save()
         rule = SyncRule(source=calendar1_1, destination=calendar1_2).save_new()
         rule2 = SyncRule(source=calendar1_1, destination=calendar1_2_2).save_new()
 
