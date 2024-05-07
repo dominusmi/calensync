@@ -390,7 +390,7 @@ def resync_calendar(user: User, calendar_uuid: str, boto_session: boto3.Session,
         raise ApiError("Calendar doesn't exist or is not owned by you", 404)
     calendar = calendar[0]
 
-    if (utcnow() - replace_timezone(calendar.last_resync)).seconds / 60 < 30:
+    if calendar.last_resync is not None and (utcnow() - replace_timezone(calendar.last_resync)).total_seconds() / 60 < 30:
         raise ApiError("Syncing can take a few minutes time! You can only trigger a manual re-sync once every 30 "
                        "minutes", 429)
 
