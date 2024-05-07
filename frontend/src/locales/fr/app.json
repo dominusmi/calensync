@@ -24,6 +24,7 @@
         "one-account": "Un compte connecté",
         "second-account": "87% des personnes connectent un deuxième compte, allez-y et cliquez sur le bouton ci-dessous",
         "refresh-calendars": "Actualiser les agendas",
+        "refresh-events": "Actualiser les evenements",
         "connect-google": "Connecter un agenda Google",
         "sync": {
             "draft": {
