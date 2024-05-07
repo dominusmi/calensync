@@ -51,35 +51,36 @@ class TestVerifySyncRule:
 
 class TestReceivedWebhook:
     @staticmethod
-    def test_normal(db, calendar1_1: Calendar):
+    def test_normal(db, calendar1_1: Calendar, boto_session, queue_url):
         calendar1_1.last_received = utcnow() - datetime.timedelta(minutes=30)
         calendar1_1.last_processed = utcnow() - datetime.timedelta(minutes=25)
         calendar1_1.token = uuid4()
         calendar1_1.save()
         received_webhook(
             calendar1_1.channel_id, "not-sync", calendar1_1.resource_id, calendar1_1.token,
-            utcnow(), db
+            utcnow(), boto_session, db
         )
         updated_c = Calendar.get_by_id(calendar1_1.id)
         assert updated_c.last_received.replace(tzinfo=datetime.timezone.utc) > utcnow() - datetime.timedelta(seconds=5)
         assert updated_c.last_processed.replace(tzinfo=datetime.timezone.utc) == calendar1_1.last_received.replace(tzinfo=datetime.timezone.utc)
 
     @staticmethod
-    def test_timestamp_format(db, calendar1_1: Calendar):
+    def test_timestamp_format(db, calendar1_1: Calendar, boto_session, queue_url):
         calendar1_1.last_received = utcnow() - datetime.timedelta(minutes=30)
         calendar1_1.last_processed = utcnow() - datetime.timedelta(minutes=25)
         calendar1_1.token = uuid4()
         calendar1_1.save()
         received_webhook(
             calendar1_1.channel_id, "not-sync", calendar1_1.resource_id, calendar1_1.token,
-            datetime.datetime.utcfromtimestamp(1545082649185 / 1000).replace(tzinfo=datetime.timezone.utc), db
+            datetime.datetime.utcfromtimestamp(1545082649185 / 1000).replace(tzinfo=datetime.timezone.utc),
+            boto_session, db
         )
         updated_c = Calendar.get_by_id(calendar1_1.id)
         assert updated_c.last_received.replace(tzinfo=datetime.timezone.utc) == calendar1_1.last_received
         assert updated_c.last_processed.replace(tzinfo=datetime.timezone.utc) == calendar1_1.last_processed
 
     @staticmethod
-    def test_should_delete(db, calendar1_1: Calendar):
+    def test_should_delete(db, calendar1_1: Calendar, boto_session, queue_url):
         calendar1_1.last_received = utcnow() - datetime.timedelta(minutes=30)
         calendar1_1.last_processed = utcnow() - datetime.timedelta(minutes=25)
         calendar1_1.token = uuid4()
@@ -91,7 +92,7 @@ class TestReceivedWebhook:
             checker.return_value = SQSEventRun.DELETE
             received_webhook(
                 calendar1_1.channel_id, "not-sync", calendar1_1.resource_id, calendar1_1.token,
-                utcnow(), db
+                utcnow(), boto_session, db
             )
             assert wrapper.call_count == 0
             updated_c = Calendar.get_by_id(calendar1_1.id)
@@ -99,7 +100,7 @@ class TestReceivedWebhook:
             assert updated_c.last_processed.replace(tzinfo=datetime.timezone.utc) == calendar1_1.last_processed
 
     @staticmethod
-    def test_should_retry(db, calendar1_1: Calendar):
+    def test_should_retry(db, calendar1_1: Calendar, boto_session, queue_url):
         calendar1_1.last_received = utcnow() - datetime.timedelta(minutes=30)
         calendar1_1.last_processed = utcnow() - datetime.timedelta(minutes=25)
         calendar1_1.token = uuid4()
@@ -112,7 +113,7 @@ class TestReceivedWebhook:
             with pytest.raises(ApiError):
                 received_webhook(
                     calendar1_1.channel_id, "not-sync", calendar1_1.resource_id, calendar1_1.token,
-                    utcnow(), db
+                    utcnow(), boto_session, db
                 )
             assert wrapper.call_count == 0
             updated_c = Calendar.get_by_id(calendar1_1.id)
