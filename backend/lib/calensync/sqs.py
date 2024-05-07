@@ -31,23 +31,12 @@ def check_if_should_run_time_or_wait(calendar_db: Calendar, first_received: date
     This function checks the timing of the message and the calendar, and decides whether to return
     an error (in order to retry later), or process the event
     """
-    if calendar_db.last_processed > calendar_db.last_received:
-        # this implies the previous run finished successfully
-        if first_received > calendar_db.last_received.replace(tzinfo=datetime.timezone.utc):
-            # must run because could be new event
-            return SQSEventRun.MUST_PROCESS
-        else:
-            # must already have been processed in a previous run
-            return SQSEventRun.DELETE
+    if first_received > calendar_db.last_received.replace(tzinfo=datetime.timezone.utc):
+        # must run because could be new event
+        return SQSEventRun.MUST_PROCESS
     else:
-        # need to check if the previous run failed, or just still running
-        delta: datetime.timedelta = utcnow() - calendar_db.last_received.replace(tzinfo=datetime.timezone.utc)
-        if delta.seconds > 600:
-            # we have to assume the previous run failed, and we run again
-            return SQSEventRun.MUST_PROCESS
-        else:
-            # maybe the previous run is still ongoing, make the event wait for a bit
-            return SQSEventRun.RETRY
+        # must already have been processed in a previous run
+        return SQSEventRun.DELETE
 
 
 def push_update_event_to_queue(event: GoogleEvent, rule_ids: list[int], delete: bool, session: boto3.Session, db):
