@@ -84,7 +84,7 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
 
 def received_webhook(channel_id: str, state: str, resource_id: str, token: str,
                      approximate_first_received: datetime.datetime,
-                     db: peewee.Database):
+                     boto_session: boto3.Session, db: peewee.Database):
     calendar = Calendar.get_or_none(Calendar.channel_id == channel_id)
 
     if calendar is None or str(calendar.token) != token:
@@ -115,13 +115,14 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str,
         logger.info("Event already processed")
         return True
     else:
-        calendar.last_processed = calendar.last_received
-        calendar.last_received = utcnow()
-        calendar.save()
-
-        wrapper = GoogleCalendarWrapper(calendar)
-        wrapper.solve_update_in_calendar()
-
+        with db.atomic():
+            # db atomic so that if solve_update_in_calendar fails for any reason,
+            # we assume we didn't push the event to the queue
+            calendar.last_processed = calendar.last_received
+            calendar.last_received = utcnow()
+            wrapper = GoogleCalendarWrapper(calendar, session=boto_session)
+            wrapper.solve_update_in_calendar()
+            calendar.save()
 
 
 def merge_users(user1: User, user2: User, db) -> Tuple[User, User]:
@@ -206,7 +207,7 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
     if sqs_event.kind == QueueEvent.GOOGLE_WEBHOOK:
         we: GoogleWebhookEvent = GoogleWebhookEvent.parse_obj(sqs_event.data)
         logger.info(f"Processing calendar with token {we.token} ")
-        received_webhook(we.channel_id, we.state, we.resource_id, we.token, sqs_event.first_received, db)
+        received_webhook(we.channel_id, we.state, we.resource_id, we.token, sqs_event.first_received, boto_session, db)
 
     elif sqs_event.kind == QueueEvent.POST_SYNC_RULE:
         logger.info("Adding sync rule")
