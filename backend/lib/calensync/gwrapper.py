@@ -394,10 +394,10 @@ class GoogleCalendarWrapper:
         """ Returns the events updated since last_processed """
         updated_min = max(self.calendar_db.last_processed.replace(tzinfo=datetime.timezone.utc),
                           utcnow() - datetime.timedelta(days=3))
-        updated_max = replace_timezone(self.calendar_db.last_received)
+
         start_date = utcnow() - datetime.timedelta(days=30)
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
-        events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, updatedMax=updated_max, orderBy="updated",
+        events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
                                  showDeleted=True, maxResults=200)
 
         logger.debug(f"Found updated events: {[(e.id, e.start, e.end) for e in events]}")
