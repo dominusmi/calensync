@@ -390,6 +390,10 @@ def resync_calendar(user: User, calendar_uuid: str, boto_session: boto3.Session,
         raise ApiError("Calendar doesn't exist or is not owned by you", 404)
     calendar = calendar[0]
 
+    if (utcnow() - replace_timezone(calendar.last_resync)).seconds / 60 < 30:
+        raise ApiError("Syncing can take a few minutes time! You can only trigger a manual re-sync once every 30 "
+                       "minutes", 429)
+
     for sync_rule in calendar.source_rules:
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
