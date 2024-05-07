@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import concurrent.futures
 import datetime
 import traceback
 from typing import Tuple
@@ -10,12 +9,12 @@ import peewee
 
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
 from calensync.database.model import Calendar, User, SyncRule, EmailDB, CalendarAccount, Session
+from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, GoogleCalendar, SQSEvent, QueueEvent, \
+    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent, EventStatus
 from calensync.gwrapper import GoogleCalendarWrapper
 from calensync.log import get_logger
-from calensync.sqs import SQSEventRun, logger, check_if_should_run_time_or_wait, push_event_to_queue
-from calensync.utils import utcnow
-from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, GoogleCalendar, SQSEvent, QueueEvent, \
-    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent
+from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait, push_update_event_to_queue
+from calensync.utils import utcnow, BackoffException
 
 logger = get_logger(__file__)
 
@@ -74,7 +73,7 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
     events.sort(key=lambda x: x.recurrence is None)
 
     for event in events:
-        push_event_to_queue(event, [sync_rule], session, db)
+        push_update_event_to_queue(event, [sync_rule.id], False, session, db)
 
     source.last_processed = utcnow()
     source.save()
@@ -160,7 +159,7 @@ def delete_calensync_events(destination_wrapper: 'GoogleCalendarWrapper', source
     destination_wrapper.delete_events()
 
 
-def handle_delete_sync_rule_event(sync_rule_id: int):
+def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session, db):
     sync_rule = SyncRule.get_or_none(id=sync_rule_id)
     if sync_rule is None:
         logger.warning(f"Sync rule {sync_rule_id} doesn't exist")
@@ -168,7 +167,14 @@ def handle_delete_sync_rule_event(sync_rule_id: int):
 
     destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
     try:
-        delete_calensync_events(destination_wrapper, str(sync_rule.source.uuid))
+        events = destination_wrapper.get_events(
+            private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
+            start_date=datetime.datetime.now(),
+            end_date=datetime.datetime.now() + datetime.timedelta(days=number_of_days_to_sync_in_advance()),
+            showDeleted=False
+        )
+        for event in events:
+            push_update_event_to_queue(event, rule_ids=[sync_rule.id], delete=True, session=boto_session, db=db)
     except Exception as e:
         logger.error(f"Failed to delete events for sync rule {sync_rule}: {e}\n\n{traceback.format_exc()}")
 
@@ -197,7 +203,7 @@ def handle_refresh_existing_calendar(calendar: GoogleCalendar, calendar_db: Cale
         calendar_db.save()
 
 
-def handle_sqs_event(sqs_event: SQSEvent, db):
+def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
     if sqs_event.kind == QueueEvent.GOOGLE_WEBHOOK:
         we: GoogleWebhookEvent = GoogleWebhookEvent.parse_obj(sqs_event.data)
         logger.info(f"Processing calendar with token {we.token} ")
@@ -205,18 +211,20 @@ def handle_sqs_event(sqs_event: SQSEvent, db):
 
     elif sqs_event.kind == QueueEvent.POST_SYNC_RULE:
         logger.info("Adding sync rule")
-        session = boto3.Session()
         e: PostSyncRuleEvent = PostSyncRuleEvent.parse_obj(sqs_event.data)
-        run_initial_sync(e.sync_rule_id, session, db)
+        run_initial_sync(e.sync_rule_id, boto_session, db)
 
     elif sqs_event.kind == QueueEvent.DELETE_SYNC_RULE:
         logger.info("Deleting sync rule")
         e: DeleteSyncRuleEvent = DeleteSyncRuleEvent.parse_obj(sqs_event.data)
-        handle_delete_sync_rule_event(e.sync_rule_id)
+        handle_delete_sync_rule_event(e.sync_rule_id, boto_session, db)
 
     elif sqs_event.kind == QueueEvent.UPDATED_EVENT:
         e: UpdateGoogleEvent = UpdateGoogleEvent.parse_obj(sqs_event.data)
-        handle_updated_event(e)
+        try:
+            handle_updated_event(e)
+        except BackoffException as exc:
+            push_update_event_to_queue(e.event, e.rule_ids, e.delete, boto_session, db)
 
     else:
         logger.error("Unknown event type")
@@ -226,4 +234,13 @@ def handle_updated_event(e: UpdateGoogleEvent):
     rules = list(SyncRule.select().where(SyncRule.id << e.rule_ids))
     if len(rules) == 0:
         logger.warn(f"No rules found for update event: {e.dict()}")
-    GoogleCalendarWrapper.push_event_to_rules(e.event, rules)
+
+    event = e.event
+
+    if e.delete:
+        # we mark the event as if it was cancelled, so that all the event update logic
+        # is handled in the same function and makes things simpler
+        event.status = EventStatus.cancelled
+
+    GoogleCalendarWrapper.push_event_to_rules(event, rules)
+

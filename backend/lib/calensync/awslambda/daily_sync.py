@@ -75,10 +75,10 @@ def hard_sync(db):
                 already_deleted.add(rule.destination.uuid)
 
                 # run initial sync
-                run_initial_sync(rule.id)
+                run_initial_sync(rule.id, boto3.Session(), db)
 
         except Exception as e:
-            logger.error(f"Error occured while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
+            logger.error(f"Error occurred while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
             time.sleep(1)
 
 
@@ -98,7 +98,7 @@ def sync_user_calendars_by_date(db):
             logger.info(f"Syncing {user.uuid}")
             calendar_wrappers = load_calendars(user.accounts, start_date, end_date)
             for wrapper in calendar_wrappers:
-                wrapper.solve_update_in_calendar()
+                wrapper.solve_update_in_calendar(wrapper.events)
         except Exception as e:
             logger.error(f"Error occured while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
             time.sleep(1)

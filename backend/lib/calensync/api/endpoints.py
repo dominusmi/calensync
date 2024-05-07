@@ -495,7 +495,7 @@ def unsubscribe(user_id: str):
         return starlette.responses.HTMLResponse(status_code=404)
 
 
-def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database):
+def create_sync_rule(payload: PostSyncRuleBody, user: User, boto_session: boto3.Session, db: peewee.Database):
     """
     Verifies the input and create the SyncRule database entry. Pushes and SQS
     event which will then call run_initial_sync
@@ -509,12 +509,12 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, db: peewee.Database)
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
         if is_local():
-            calensync.api.service.handle_sqs_event(sqs_event, db)
+            calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
         else:
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
 
-def delete_sync_rule(user: User, sync_uuid: str, db):
+def delete_sync_rule(user: User, sync_uuid: str, boto3_session, db):
     with db.atomic():
         sync_rules = list(
             SyncRule.select(SyncRule.id, SyncRule.source, Calendar)
@@ -531,7 +531,7 @@ def delete_sync_rule(user: User, sync_uuid: str, db):
         event = DeleteSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.DELETE_SYNC_RULE, data=event)
         if is_local():
-            calensync.api.service.handle_sqs_event(sqs_event, db)
+            calensync.api.service.handle_sqs_event(sqs_event, db, boto3_session)
         else:
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
@@ -560,7 +560,7 @@ def get_sync_rules(user: User):
     )
 
 
-def reset_user(caller: User, user_uuid: str):
+def reset_user(caller: User, user_uuid: str, boto_session: boto3.Session, db):
     if not caller.is_admin:
         raise ApiError("Forbidden", 403)
     user = User.get_or_none(uuid=user_uuid)
@@ -569,7 +569,7 @@ def reset_user(caller: User, user_uuid: str):
 
     sync_rules = get_sync_rules(user)
     for rule in sync_rules:
-        delete_sync_rule(user, rule["uuid"])
+        delete_sync_rule(user, rule["uuid"], boto_session, db)
 
 
 def handle_post_magic_link(user_db: User) -> PostMagicLinkResponse:

@@ -1,4 +1,3 @@
-import os
 from typing import Annotated, Union, Dict
 
 from fastapi import FastAPI, Request, Query, Body, Cookie, Header
@@ -129,7 +128,7 @@ def post__sync_rule(body: PostSyncRuleBody, authorization: Annotated[Union[str, 
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        create_sync_rule(body, user, db)
+        create_sync_rule(body, user, boto3.Session(), db)
 
 
 @app.delete('/sync/{sync_id}')
@@ -247,7 +246,7 @@ def reset__user(user_uuid: str, session_id: str = Header(None),
             raise ApiError("Forbidden", 403)
 
         caller = verify_session(auth)
-        reset_user(caller, user_uuid)
+        reset_user(caller, user_uuid, boto3.Session(), db)
 
 
 @app.post('/magic-link', response_model=PostMagicLinkResponse)
