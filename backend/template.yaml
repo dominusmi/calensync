@@ -34,8 +34,8 @@ Resources:
     Properties:
       QueueName: !Sub "Calensync-${Env}-queue"
       DelaySeconds: 0
-      VisibilityTimeout: 301
-      MessageRetentionPeriod: 1815
+      VisibilityTimeout: 61
+      MessageRetentionPeriod: 601
 
   GetSecretsPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -109,12 +109,19 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref GetSecretsPolicy
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt SQSQueue.Arn
       Layers:
         - !Ref CalensyncLayer
       Environment:
         Variables:
           ENV: !Ref Env
           API_ENDPOINT: !Ref ApiEndpoint
+          SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
       Events:
         DailySyncEvent:
           Type: Schedule
@@ -130,7 +137,7 @@ Resources:
       Runtime: python3.9
       CodeUri: awslambda/sqs_receiver/
       Handler: main.handler
-      Timeout: 300
+      Timeout: 60
       MemorySize: 512
       Policies:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
@@ -140,6 +147,7 @@ Resources:
           Statement:
           - Effect: Allow
             Action:
+              - sqs:SendMessage
               - sqs:ReceiveMessage
               - sqs:DeleteMessage
               - sqs:GetQueueAttributes
@@ -151,12 +159,13 @@ Resources:
         Variables:
           ENV: !Ref Env
           API_ENDPOINT: !Ref ApiEndpoint
+          SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
       Events:
         SQSPutVisit:
           Type: SQS
           Properties:
             Queue: !GetAtt SQSQueue.Arn
-            BatchSize: 1
+            BatchSize: 10
             FunctionResponseTypes:
               - ReportBatchItemFailures
 

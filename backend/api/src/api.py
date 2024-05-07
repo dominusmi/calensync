@@ -1,6 +1,6 @@
-import os
 from typing import Annotated, Union, Dict
 
+import boto3
 from fastapi import FastAPI, Request, Query, Body, Cookie, Header
 from mangum import Mangum
 
@@ -32,7 +32,7 @@ def post__webhook(event: Request):
         if get_env() in ["prod", "dev"]:
             sqs.send_event(boto3.session.Session(), sqs_event.json())
         else:
-            calensync.api.service.handle_sqs_event(sqs_event, db)
+            calensync.api.service.handle_sqs_event(sqs_event, db, boto3.Session())
 
 
 @app.get("/paddle/verify_transaction")
@@ -129,7 +129,7 @@ def post__sync_rule(body: PostSyncRuleBody, authorization: Annotated[Union[str, 
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        create_sync_rule(body, user, db)
+        create_sync_rule(body, user, boto3.Session(), db)
 
 
 @app.delete('/sync/{sync_id}')
@@ -247,7 +247,7 @@ def reset__user(user_uuid: str, session_id: str = Header(None),
             raise ApiError("Forbidden", 403)
 
         caller = verify_session(auth)
-        reset_user(caller, user_uuid)
+        reset_user(caller, user_uuid, boto3.Session(), db)
 
 
 @app.post('/magic-link', response_model=PostMagicLinkResponse)

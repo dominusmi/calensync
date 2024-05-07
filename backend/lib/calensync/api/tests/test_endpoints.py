@@ -1,19 +1,20 @@
 import os
-import unittest
 from typing import List
 from unittest.mock import patch
 
+import boto3
 import starlette.responses
+from moto import mock_aws
 
 from calensync.api import endpoints
 from calensync.api.common import ApiError, RedirectResponse
-from calensync.api.endpoints import process_calendars, delete_sync_rule, get_oauth_token, get_frontend_env, reset_user, \
+from calensync.api.endpoints import delete_sync_rule, get_oauth_token, get_frontend_env, reset_user, \
     handle_add_calendar
-from calensync.api.service import received_webhook
-from calensync.libcalendar import EventsModificationHandler
-from calensync.database.model import Event, SyncRule, OAuthState, OAuthKind, EmailDB
+from calensync.api.tests.util import simulate_sqs_receiver
 from calensync.database.model import Session
+from calensync.database.model import SyncRule, OAuthState, OAuthKind
 from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty, GoogleCalendar
+from calensync.libcalendar import EventsModificationHandler
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
 
@@ -21,29 +22,14 @@ os.environ["FRONTEND"] = "http://test.com"
 os.environ["ENV"] = "test"
 
 
-class TestProcessCalendar:
-    @staticmethod
-    def test_process_calendar(db, user, calendar1_1, calendar1_2):
-        now = utcnow()
-        three_minutes_ago = now - datetime.timedelta(seconds=180)
-        calendar1_1.active = True
-        calendar1_1.last_inserted = three_minutes_ago
-        calendar1_1.last_processed = three_minutes_ago
-        calendar1_1.save()
-
-        user2 = User(email="test@test.com").save_new()
-        account1_21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
-        calendar1_21 = Calendar(account=account1_21, platform_id="platform_id21", name="name21", active=True,
-                                last_processed=three_minutes_ago, last_inserted=three_minutes_ago).save_new()
-
-        with patch("calensync.gwrapper.GoogleCalendarWrapper.solve_update_in_calendar") as mocked:
-            process_calendars()
-            assert mocked.call_count == 2
+def dummy_boto_session():
+    return boto3.Session(aws_access_key_id="123", aws_secret_access_key="123")
 
 
+@mock_aws
 class TestDeleteSyncRule:
     @staticmethod
-    def test_normal_case(db, user, calendar1_1, calendar1_2):
+    def test_normal_case(db, user, calendar1_1, calendar1_2, boto_session, queue_url):
         with (
             patch("calensync.api.service.GoogleCalendarWrapper") as gwrapper,
             patch("calensync.gwrapper.delete_event") as delete_event
@@ -76,14 +62,16 @@ class TestDeleteSyncRule:
             gwrapper.return_value.events_handler = EventsModificationHandler()
             # gwrapper.return_value.events_handler.delete.side_effect = lambda: mock_events_handler_delete
             gwrapper.return_value.delete_events.side_effect = lambda: mock_delete_events(gwrapper)
-            delete_sync_rule(user, str(rule.uuid), db)
+            delete_sync_rule(user, str(rule.uuid), boto_session, db)
+
+            simulate_sqs_receiver(boto_session, queue_url, db)
+
             assert SyncRule.get_or_none(id=rule.id) is None
             assert SyncRule.get_or_none(id=rule2.id) is not None
-
             assert gwrapper.return_value.delete_watch.call_count == 1
 
     @staticmethod
-    def test_delete_watch_with_other_source(db, user, account1_1, calendar1_1, calendar1_2):
+    def test_delete_watch_with_other_source(db, user, account1_1, calendar1_1, calendar1_2, boto_session, queue_url):
         with (
             patch("calensync.api.endpoints.GoogleCalendarWrapper") as gwrapper,
             patch("calensync.gwrapper.delete_event") as delete_event
@@ -93,20 +81,21 @@ class TestDeleteSyncRule:
             calendar3 = Calendar(account=account1_1, platform_id="platform3", name="name3", active=False).save_new()
             rule2 = SyncRule(source=calendar1_1, destination=calendar3, private=False).save_new()
 
-            delete_sync_rule(user, str(rule.uuid), db)
+            delete_sync_rule(user, str(rule.uuid), boto_session, db)
 
+            simulate_sqs_receiver(boto_session, queue_url, db)
             assert gwrapper.return_value.delete_watch.call_count == 0
             assert SyncRule.get_or_none(id=rule.id) is None
             assert SyncRule.get_or_none(id=rule2.id) is not None
 
     @staticmethod
-    def test_user_doesnt_have_permission(db, user, calendar1_1, calendar1_2):
+    def test_user_doesnt_have_permission(db, user, calendar1_1, calendar1_2, boto_session, queue_url):
         with patch("calensync.gwrapper.GoogleCalendarWrapper") as gwrapper:
             rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
 
             new_user = User(email="test2@test.com").save_new()
             with pytest.raises(ApiError):
-                delete_sync_rule(new_user, str(rule.uuid), db)
+                delete_sync_rule(new_user, str(rule.uuid), boto_session, db)
 
 
 class TestGetSyncRules:
@@ -322,7 +311,7 @@ class TestGetOauthToken:
 
 class TestResetUser:
     @staticmethod
-    def test_valid(user, account1_1, calendar1_1, calendar1_2, user2, calendar1_1_2, calendar1_2_2):
+    def test_valid(db, user, account1_1, calendar1_1, calendar1_2, user2, calendar1_1_2, calendar1_2_2, boto_session, queue_url):
         with (
             patch("calensync.api.endpoints.delete_sync_rule") as delete_sync_rule,
         ):
@@ -340,18 +329,18 @@ class TestResetUser:
             sr1 = SyncRule(source=calendar2_1, destination=calendar2_2, private=True).save_new()
             sr2 = SyncRule(source=calendar2_2, destination=calendar2_1, private=True).save_new()
 
-            reset_user(user, str(user2.uuid))
+            reset_user(user, str(user2.uuid), boto_session, db)
             assert delete_sync_rule.call_count == 2
             assert delete_sync_rule.call_args_list[0].args[1] == sr1.uuid
             assert delete_sync_rule.call_args_list[1].args[1] == sr2.uuid
 
     @staticmethod
-    def test_not_admin(user, user2):
+    def test_not_admin(db, user, user2, boto_session, queue_url):
         with (
             patch("calensync.api.endpoints.delete_sync_rule") as delete_sync_rule,
         ):
             with pytest.raises(ApiError):
-                reset_user(user, str(user2.uuid))
+                reset_user(user, str(user2.uuid), boto_session, db)
 
 
 class TestHandleAddCalendar():

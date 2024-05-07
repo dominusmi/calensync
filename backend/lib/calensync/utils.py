@@ -98,8 +98,14 @@ def format_calendar_text(original, template):
     return template.replace("%original%", original)
 
 
+class BackoffException(Exception):
+    def __init__(self, delay: int):
+        self.delay = delay
+        super().__init__()
+
+
 def google_error_handling_with_backoff(function, calendar_db=None):
-    for i in range(7):
+    for i in range(4):
         try:
             return function()
         except googleapiclient.errors.HttpError as e:
@@ -117,6 +123,7 @@ def google_error_handling_with_backoff(function, calendar_db=None):
                 e.status_code == 429
                 or (e.status_code == 403 and e.reason in ["userRateLimitExceeded", 'Rate Limit Exceeded', "rateLimitExceeded", "quotaExceeded", 'Calendar usage limits exceeded.'])
             ):
+
                 sleep_delay = 2 ** i + random.random()
                 logger.info(f"Sleeping for {sleep_delay} seconds")
                 sleep(sleep_delay)
@@ -125,7 +132,7 @@ def google_error_handling_with_backoff(function, calendar_db=None):
             else:
                 raise e
 
-    return False
+    raise BackoffException(60)
 
 
 def replace_timezone(dt: datetime.datetime):

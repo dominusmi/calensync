@@ -24,8 +24,9 @@ from calensync.libcalendar import EventsModificationHandler
 from calensync.database.model import Calendar, CalendarAccount, db, User, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus
 from calensync.log import get_logger
+from calensync.sqs import push_update_event_to_queue
 from calensync.utils import get_api_url, utcnow, datetime_to_google_time, format_calendar_text, \
-    google_error_handling_with_backoff
+    google_error_handling_with_backoff, replace_timezone
 
 logger = get_logger(__file__)
 
@@ -201,10 +202,12 @@ class GoogleCalendarWrapper:
     """ Cache of service. Avoids creating a service during __init__"""
     _service: Any
 
-    def __init__(self, calendar_db: Calendar, service=None):
+    def __init__(self, calendar_db: Calendar, service=None, db=None, session=None):
         self._service = None
         self.calendar_db = calendar_db
         self.user_db = calendar_db.account.user
+        self.db = db
+        self.session = session
 
         if service:
             self._service = service
@@ -391,6 +394,7 @@ class GoogleCalendarWrapper:
         """ Returns the events updated since last_processed """
         updated_min = max(self.calendar_db.last_processed.replace(tzinfo=datetime.timezone.utc),
                           utcnow() - datetime.timedelta(days=3))
+
         start_date = utcnow() - datetime.timedelta(days=30)
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
         events = self.get_events(start_date=start_date, end_date=end_date, updatedMin=updated_min, orderBy="updated",
@@ -562,13 +566,10 @@ class GoogleCalendarWrapper:
 
         # sorts them so that even that have a recurrence are handled first
         events.sort(key=lambda x: x.recurrence is None)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            # Use executor.map to apply the function to each event in the events list
-            futures = executor.map(lambda event: GoogleCalendarWrapper.push_event_to_rules(event, sync_rules), events)
+        for event in events:
+            push_update_event_to_queue(event, [sr.id for sr in sync_rules], False, self.session, self.db)
 
-        counter_event_changed = sum(futures)
-        logger.info(f"Event changed: {counter_event_changed}")
-        return counter_event_changed
+        return len(events)
 
     @classmethod
     def from_channel_id(cls, channel_id: str):

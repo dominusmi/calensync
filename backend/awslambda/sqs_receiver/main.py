@@ -1,6 +1,8 @@
 import datetime
 import traceback
 
+import boto3
+
 from calensync.api.service import received_webhook, handle_sqs_event
 from calensync.database.utils import DatabaseSession
 from calensync.dataclass import SQSEvent, QueueEvent, GoogleWebhookEvent, UpdateCalendarStateEvent
@@ -29,7 +31,7 @@ def handler(event, context):
                     first_received_timestamp = utcnow().timestamp()
                 sqs_event.first_received = datetime.datetime.utcfromtimestamp(first_received_timestamp).replace(
                     tzinfo=datetime.timezone.utc)
-                handle_sqs_event(sqs_event, db)
+                handle_sqs_event(sqs_event, db, boto3.Session())
             except Exception as e:
                 logger.warn(f"Failed to process record: {e}\n{traceback.format_exc()}")
                 batch_item_failures.append({"itemIdentifier": record['messageId']})

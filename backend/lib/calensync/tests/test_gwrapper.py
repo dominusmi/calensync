@@ -3,6 +3,7 @@ import unittest
 from collections import defaultdict
 from unittest.mock import patch, MagicMock
 
+from calensync.api.tests.util import simulate_sqs_receiver
 from calensync.database.model import SyncRule
 from calensync.dataclass import GoogleDatetime, EventStatus
 from calensync.gwrapper import GoogleCalendarWrapper, make_summary_and_description
@@ -18,6 +19,7 @@ class Mock:
 
 
 os.environ["ENV"] = "test"
+os.environ["AWS_ACCESS_KEY_ID"] = "123"
 
 
 def test_google_wrapper_class(db, calendar1_1, events_fixture):
@@ -85,10 +87,11 @@ def test_from_channel_id():
         assert wrapper.google_id == "platform1"
 
 
-def test_solve_update_tentative(db, account1_1, calendar1_1, account1_2, calendar1_2):
+@mock_aws
+def test_solve_update_tentative(db, account1_1, calendar1_1, account1_2, calendar1_2, boto_session, queue_url):
     service = MockedService()
     with patch("calensync.gwrapper.GoogleCalendarWrapper.service", service):
-        gcalendar1_1 = GoogleCalendarWrapper(calendar1_1)
+        gcalendar1_1 = GoogleCalendarWrapper(calendar1_1, session=boto_session)
         SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
 
         now = datetime.datetime.utcnow()
@@ -100,16 +103,21 @@ def test_solve_update_tentative(db, account1_1, calendar1_1, account1_2, calenda
             gcalendar1_1.google_id
         )
 
-        counter = gcalendar1_1.solve_update_in_calendar()
-        assert counter == 0
+        gcalendar1_1.solve_update_in_calendar()
+        simulate_sqs_receiver(boto_session, queue_url, db)
 
 
-def test_solve_update_active(db, account1_1, calendar1_1, account1_2, calendar1_2):
+@mock_aws
+def test_solve_update_active(db, account1_1, calendar1_1, account1_2, calendar1_2, boto_session, queue_url):
     now = datetime.datetime.utcnow()
     now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
     service = MockedService()
-    with patch("calensync.gwrapper.GoogleCalendarWrapper.service", service):
-        gcalendar1_1 = GoogleCalendarWrapper(calendar1_1)
+    real_push_event_to_rules = GoogleCalendarWrapper.push_event_to_rules
+    with (
+        patch("calensync.gwrapper.GoogleCalendarWrapper.service", service),
+        patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules
+    ):
+        gcalendar1_1 = GoogleCalendarWrapper(calendar1_1, session=boto_session)
         SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
 
         service.add_event(
@@ -117,15 +125,29 @@ def test_solve_update_active(db, account1_1, calendar1_1, account1_2, calendar1_
                         status=EventStatus.confirmed, summary="summary"),
             gcalendar1_1.google_id
         )
-        counter = gcalendar1_1.solve_update_in_calendar()
-        assert counter == 1
+        gcalendar1_1.solve_update_in_calendar()
+
+        counter = [0]
+
+        def _push_event_to_rules_side_effect(*args, **kwargs):
+            counter[0] += real_push_event_to_rules(*args, **kwargs)
+
+        push_event_to_rules.side_effect = _push_event_to_rules_side_effect
+
+        simulate_sqs_receiver(boto_session, queue_url, db)
+        assert counter[0] == 1
 
 
-def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1, account1_2, calendar1_2):
+def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1, account1_2, calendar1_2, boto_session, queue_url):
     service = MockedService()
-    with patch("calensync.gwrapper.GoogleCalendarWrapper.service", service):
-        gcalendar1_1 = GoogleCalendarWrapper(calendar1_1)
-        gcalendar1_2 = GoogleCalendarWrapper(calendar1_2)
+    real_push_event_to_rules = GoogleCalendarWrapper.push_event_to_rules
+    with (
+        patch("calensync.gwrapper.GoogleCalendarWrapper.service", service),
+        patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules
+    ):
+
+        gcalendar1_1 = GoogleCalendarWrapper(calendar1_1, session=boto_session)
+        gcalendar1_2 = GoogleCalendarWrapper(calendar1_2, session=boto_session)
 
         SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
 
@@ -140,8 +162,16 @@ def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1,
             gcalendar1_1.google_id
         )
 
-        counter = gcalendar1_1.solve_update_in_calendar()
-        assert counter == 1
+        gcalendar1_1.solve_update_in_calendar()
+        counter = [0]
+
+        def _push_event_to_rules_side_effect(*args, **kwargs):
+            counter[0] += real_push_event_to_rules(*args, **kwargs)
+
+        push_event_to_rules.side_effect = _push_event_to_rules_side_effect
+
+        simulate_sqs_receiver(boto_session, queue_url, db)
+        assert counter[0] == 1
 
 
 class TestDeleteWatch:

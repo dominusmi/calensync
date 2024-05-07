@@ -125,6 +125,10 @@ class Calendar(UUIDBaseModel):
     expiration = DateTimeField(null=True)
     last_sync = DateTimeField(null=True)
     last_inserted = DateTimeField(default=utcnow)
+    # last received and process alternate, basically each time an event is received,
+    # last processed <- last received and
+    # last received <- now
+    # this allows us to always cover the entire timeline, and be able to set a good updateMin
     last_received = DateTimeField(default=utcnow)
     last_processed = DateTimeField(default=utcnow)
     paused = DateTimeField(null=True, default=None)
