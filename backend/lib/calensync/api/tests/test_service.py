@@ -62,7 +62,7 @@ class TestReceivedWebhook:
         )
         updated_c = Calendar.get_by_id(calendar1_1.id)
         assert updated_c.last_received.replace(tzinfo=datetime.timezone.utc) > utcnow() - datetime.timedelta(seconds=5)
-        assert updated_c.last_processed.replace(tzinfo=datetime.timezone.utc) > utcnow() - datetime.timedelta(seconds=5)
+        assert updated_c.last_processed.replace(tzinfo=datetime.timezone.utc) == calendar1_1.last_received.replace(tzinfo=datetime.timezone.utc)
 
     @staticmethod
     def test_timestamp_format(db, calendar1_1: Calendar):
@@ -133,7 +133,7 @@ class TestCheckIfShouldRunTimeOrWait:
         calendar1_1.last_received = utcnow() - datetime.timedelta(minutes=5)
         calendar1_1.last_processed = utcnow() - datetime.timedelta(minutes=6)
         calendar1_1.save()
-        assert check_if_should_run_time_or_wait(calendar1_1, utcnow()) == SQSEventRun.RETRY
+        assert check_if_should_run_time_or_wait(calendar1_1, utcnow()) == SQSEventRun.MUST_PROCESS
 
     @staticmethod
     def test_last_process_failed(calendar1_1):
