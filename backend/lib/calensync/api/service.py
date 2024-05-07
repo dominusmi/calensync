@@ -115,14 +115,13 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str,
         logger.info("Event already processed")
         return True
     else:
+        calendar.last_processed = calendar.last_received
         calendar.last_received = utcnow()
         calendar.save()
 
         wrapper = GoogleCalendarWrapper(calendar)
         wrapper.solve_update_in_calendar()
 
-        calendar.last_processed = utcnow()
-        calendar.save()
 
 
 def merge_users(user1: User, user2: User, db) -> Tuple[User, User]:
