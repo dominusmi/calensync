@@ -15,6 +15,8 @@ from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow, BackoffException
 
+os.environ["ENV"] = "test"
+
 
 class TestVerifySyncRule:
     @staticmethod
@@ -149,13 +151,6 @@ class TestCheckIfShouldRunTimeOrWait:
         assert check_if_should_run_time_or_wait(calendar1_1, received) == SQSEventRun.DELETE
 
 
-class TestDeleteSyncRule:
-    @staticmethod
-    def test_normal_case():
-        # should delete the watch, and add events to the queue WITH the delete flag
-        ...
-
-
 class TestReceiveUpdateEvent:
     @staticmethod
     @mock_aws
@@ -184,31 +179,23 @@ class TestReceiveUpdateEvent:
 
     @staticmethod
     @mock_aws
-    def test_backoff(db, calendar1_1, calendar1_2, calendar1_2_2):
+    def test_backoff(db, calendar1_1, calendar1_2, calendar1_2_2, boto_session, queue_url):
         # receive update, calls the update function, however the google call fails
         # needs to raise BackOff exception
         rule1 = SyncRule(source=calendar1_1, destination=calendar1_2).save_new()
         SyncRule(source=calendar1_2_2, destination=calendar1_1).save_new()
         event = GoogleEvent(id="123", status=EventStatus.confirmed)
 
+        sqs = boto_session.client('sqs')
         sqs_event = SQSEvent(
             kind=QueueEvent.UPDATED_EVENT,
             data=UpdateGoogleEvent(event=event, rule_ids=[rule1.id], delete=False).dict(),
             delete=False
         )
-        boto_session = boto3.Session(aws_secret_access_key="123", aws_access_key_id="123", region_name='eu-north-1')
-        sqs = boto_session.client('sqs')
-        response = sqs.create_queue(QueueName='Test')
-        queue_url = response["QueueUrl"]
-
-        os.environ["SQS_QUEUE_URL"] = queue_url
 
         with (
             patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules,
-            patch("calensync.sqs.is_local") as is_local,
         ):
-            is_local.return_value = False
-
             def _raise_backoff(*args, **kwargs):
                 raise BackoffException(60)
 
@@ -303,11 +290,7 @@ class TestReceiveCreateRuleEvent:
 
         with (
             patch("calensync.api.service.GoogleCalendarWrapper") as GoogleCalendarWrapper,
-            patch("calensync.sqs.is_local") as is_local,
-            patch("calensync.api.common.is_local") as is_local2,
         ):
-            is_local.return_value = False
-            is_local2.return_value = False
 
             GoogleCalendarWrapper.return_value.get_events.return_value = [
                 GoogleEvent(id="1", status=EventStatus.confirmed, summary="Test1"),
@@ -352,7 +335,7 @@ class TestReceiveCreateRuleEvent:
 
     @staticmethod
     @mock_aws
-    def test_delete_sync_rule(db, calendar1_1, calendar1_2, calendar1_2_2):
+    def test_delete_sync_rule(db, calendar1_1, calendar1_2, calendar1_2_2, boto_session, queue_url):
         rule1 = SyncRule(source=calendar1_1, destination=calendar1_2).save_new()
         rule2 = SyncRule(source=calendar1_1, destination=calendar1_2_2).save_new()
         rule3 = SyncRule(source=calendar1_2, destination=calendar1_1).save_new()
@@ -361,20 +344,10 @@ class TestReceiveCreateRuleEvent:
             kind=QueueEvent.DELETE_SYNC_RULE,
             data=DeleteSyncRuleEvent(sync_rule_id=rule1.id).dict(),
         )
-
-        boto_session = boto3.Session(aws_secret_access_key="123", aws_access_key_id="123", region_name='eu-north-1')
         sqs = boto_session.client('sqs')
-        response = sqs.create_queue(QueueName='Test')
-        queue_url = response["QueueUrl"]
-        os.environ["SQS_QUEUE_URL"] = queue_url
-
         with (
             patch("calensync.api.service.GoogleCalendarWrapper") as GoogleCalendarWrapper,
-            patch("calensync.sqs.is_local") as is_local,
-            patch("calensync.api.common.is_local") as is_local2,
         ):
-            is_local.return_value = False
-            is_local2.return_value = False
 
             GoogleCalendarWrapper.return_value.get_events.return_value = [
                 GoogleEvent(id="1", status=EventStatus.confirmed, summary="Test1"),

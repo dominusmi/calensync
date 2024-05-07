@@ -53,7 +53,7 @@ def check_if_should_run_time_or_wait(calendar_db: Calendar, first_received: date
 def push_update_event_to_queue(event: GoogleEvent, rule_ids: list[int], delete: bool, session: boto3.Session, db):
     event = UpdateGoogleEvent(event=event, rule_ids=rule_ids, delete=delete)
     sqs_event = SQSEvent(kind=QueueEvent.UPDATED_EVENT, data=event.dict(), first_received=utcnow())
-    if is_local():
+    if is_local() and os.getenv("SQS_QUEUE_URL") is None:
         from calensync.api.service import handle_sqs_event
         handle_sqs_event(sqs_event=sqs_event, db=db, boto_session=session)
     else:

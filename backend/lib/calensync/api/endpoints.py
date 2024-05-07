@@ -514,7 +514,7 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, boto_session: boto3.
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
 
-def delete_sync_rule(user: User, sync_uuid: str, boto3_session, db):
+def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
     with db.atomic():
         sync_rules = list(
             SyncRule.select(SyncRule.id, SyncRule.source, Calendar)
@@ -530,10 +530,10 @@ def delete_sync_rule(user: User, sync_uuid: str, boto3_session, db):
 
         event = DeleteSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.DELETE_SYNC_RULE, data=event)
-        if is_local():
-            calensync.api.service.handle_sqs_event(sqs_event, db, boto3_session)
+        if is_local() and os.getenv("SQS_QUEUE_URL") is None:
+            calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
         else:
-            calensync.sqs.send_event(boto3.Session(), sqs_event.json())
+            calensync.sqs.send_event(boto_session, sqs_event.json())
 
 
 def get_sync_rules(user: User):
