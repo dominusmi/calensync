@@ -372,6 +372,33 @@ def get_calendar(user: User, calendar_id: str, db: peewee.Database) -> Calendar:
     return calendars[0]
 
 
+def resync_calendar(user: User, calendar_uuid: str, boto_session: boto3.Session, db: peewee.Database):
+    calendar = list(
+        peewee.prefetch(
+            Calendar.select()
+            .join(CalendarAccount)
+            .join(SyncRule, on=(SyncRule.source_id == Calendar.id))
+            .where(
+                Calendar.uuid == calendar_uuid,
+                CalendarAccount.user_id == user.id
+            )
+            .limit(1),
+            SyncRule.select()
+        )
+    )
+    if not calendar:
+        raise ApiError("Calendar doesn't exist or is not owned by you", 404)
+    calendar = calendar[0]
+
+    for sync_rule in calendar.source_rules:
+        event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
+        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
+        if is_local():
+            calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
+        else:
+            calensync.sqs.send_event(boto3.Session(), sqs_event.json())
+
+
 def refresh_calendars(user: User, account_uuid: str, db: peewee.Database):
     """
     Gets all the calendars for the account, and saves the new one to the db.
