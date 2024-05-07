@@ -109,12 +109,19 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref GetSecretsPolicy
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt SQSQueue.Arn
       Layers:
         - !Ref CalensyncLayer
       Environment:
         Variables:
           ENV: !Ref Env
           API_ENDPOINT: !Ref ApiEndpoint
+          SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
       Events:
         DailySyncEvent:
           Type: Schedule
@@ -140,6 +147,7 @@ Resources:
           Statement:
           - Effect: Allow
             Action:
+              - sqs:SendMessage
               - sqs:ReceiveMessage
               - sqs:DeleteMessage
               - sqs:GetQueueAttributes
