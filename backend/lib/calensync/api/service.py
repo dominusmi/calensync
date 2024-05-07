@@ -52,6 +52,7 @@ def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_ca
 
 
 def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
+    logger.info(f"Running first sync on {sync_rule_id}")
     sync_rule = list(peewee.prefetch(
         SyncRule.select().where(SyncRule.id == sync_rule_id).limit(1),
         Calendar.select()
@@ -71,7 +72,7 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
 
     # sorts them so that even that have a recurrence are handled first
     events.sort(key=lambda x: x.recurrence is None)
-
+    logger.info(f"Found {len(events)} events, pushing to queue")
     for event in events:
         push_update_event_to_queue(event, [sync_rule.id], False, session, db)
 
