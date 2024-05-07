@@ -1,13 +1,16 @@
 import datetime
 import functools
 import json
+import os
 import random
 import uuid
 from pathlib import Path
 from time import sleep
 
+import boto3
 import pytest
 from _pytest.fixtures import fixture
+from moto import mock_aws
 
 from calensync.database.model import User, CalendarAccount, Calendar, EmailDB
 from calensync.database.utils import reset_db, DatabaseSession
@@ -101,3 +104,18 @@ def events_fixture():
         data = json.load(f)
 
     return data
+
+
+@fixture
+def boto_session():
+    with mock_aws():
+        yield boto3.Session(aws_secret_access_key="123", aws_access_key_id="123", region_name='us-east-1')
+
+
+@fixture
+def queue_url(boto_session):
+    sqs = boto_session.client('sqs')
+    response = sqs.create_queue(QueueName='Test')
+    queue_url = response["QueueUrl"]
+    os.environ["SQS_QUEUE_URL"] = queue_url
+    return queue_url

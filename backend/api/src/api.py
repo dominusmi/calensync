@@ -1,5 +1,6 @@
 from typing import Annotated, Union, Dict
 
+import boto3
 from fastapi import FastAPI, Request, Query, Body, Cookie, Header
 from mangum import Mangum
 
@@ -31,7 +32,7 @@ def post__webhook(event: Request):
         if get_env() in ["prod", "dev"]:
             sqs.send_event(boto3.session.Session(), sqs_event.json())
         else:
-            calensync.api.service.handle_sqs_event(sqs_event, db)
+            calensync.api.service.handle_sqs_event(sqs_event, db, boto3.Session())
 
 
 @app.get("/paddle/verify_transaction")
