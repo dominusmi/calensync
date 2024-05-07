@@ -224,7 +224,8 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
         try:
             handle_updated_event(e)
         except BackoffException as exc:
-            push_update_event_to_queue(e.event, e.rule_ids, e.delete, boto_session, db)
+            logger.info(f"Back-off: retrying event {e.event.id} for rules {e.rule_ids}")
+            raise exc
 
     else:
         logger.error("Unknown event type")

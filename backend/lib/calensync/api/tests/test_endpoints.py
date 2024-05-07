@@ -9,11 +9,12 @@ from moto import mock_aws
 from calensync.api import endpoints
 from calensync.api.common import ApiError, RedirectResponse
 from calensync.api.endpoints import delete_sync_rule, get_oauth_token, get_frontend_env, reset_user, \
-    handle_add_calendar
+    handle_add_calendar, resync_calendar
 from calensync.api.tests.util import simulate_sqs_receiver
 from calensync.database.model import Session
 from calensync.database.model import SyncRule, OAuthState, OAuthKind
-from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty, GoogleCalendar
+from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty, GoogleCalendar, \
+    PostSyncRuleEvent
 from calensync.libcalendar import EventsModificationHandler
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
@@ -440,3 +441,25 @@ class TestRefreshCalendars():
 
             c3 = Calendar.get(platform_id="new-calendar")
             assert not c3.readonly
+
+
+class TestResyncCalendar:
+    def test_normal(self, db, user, calendar1_1, calendar1_2, calendar1_2_2, boto_session):
+        rule = SyncRule(source=calendar1_1, destination=calendar1_2).save_new()
+        rule2 = SyncRule(source=calendar1_1, destination=calendar1_2_2).save_new()
+
+        with patch("calensync.api.service.handle_sqs_event") as handle_sqs_event:
+            resync_calendar(user, calendar1_1.uuid, boto_session, db)
+            assert handle_sqs_event.call_count == 2
+            event = PostSyncRuleEvent.parse_obj(handle_sqs_event.call_args_list[0].args[0].data)
+            assert event.sync_rule_id == rule.id
+
+            event = PostSyncRuleEvent.parse_obj(handle_sqs_event.call_args_list[1].args[0].data)
+            assert event.sync_rule_id == rule2.id
+
+    def test_not_owner(self, db, user, user2, calendar1_1, calendar1_2, calendar1_2_2, boto_session):
+        rule = SyncRule(source=calendar1_1, destination=calendar1_2).save_new()
+        rule2 = SyncRule(source=calendar1_1, destination=calendar1_2_2).save_new()
+
+        with pytest.raises(ApiError):
+            resync_calendar(user2, calendar1_1.uuid, boto_session, db)

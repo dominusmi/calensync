@@ -173,8 +173,8 @@ class Event(BaseModel):
 
 
 class SyncRule(UUIDBaseModel):
-    source = ForeignKeyField(Calendar)
-    destination = ForeignKeyField(Calendar)
+    source = ForeignKeyField(Calendar, backref="source_rules")
+    destination = ForeignKeyField(Calendar, backref="destination_rules")
     summary = CharField(null=True, default=None)
     description = CharField(null=True, default=None)
 
