@@ -131,6 +131,7 @@ class Calendar(UUIDBaseModel):
     # this allows us to always cover the entire timeline, and be able to set a good updateMin
     last_received = DateTimeField(default=utcnow)
     last_processed = DateTimeField(default=utcnow)
+    last_resync = DateTimeField(default=utcnow)
     paused = DateTimeField(null=True, default=None)
     paused_reason = CharField(null=True, default=None)
     readonly = peewee.BooleanField(default=False)

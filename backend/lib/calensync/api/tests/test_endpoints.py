@@ -463,3 +463,13 @@ class TestResyncCalendar:
 
         with pytest.raises(ApiError):
             resync_calendar(user2, calendar1_1.uuid, boto_session, db)
+
+    def test_already_re_synced(self, db, user, calendar1_1, calendar1_2, calendar1_2_2, boto_session):
+        rule = SyncRule(source=calendar1_1, destination=calendar1_2).save_new()
+        rule2 = SyncRule(source=calendar1_1, destination=calendar1_2_2).save_new()
+
+        calendar1_1.last_resync = utcnow() - datetime.timedelta(minutes=15)
+        with pytest.raises(ApiError) as exc:
+            resync_calendar(user, calendar1_1.uuid, boto_session, db)
+
+        assert exc.value.code == 429
