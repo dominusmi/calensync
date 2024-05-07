@@ -394,6 +394,7 @@ def resync_calendar(user: User, calendar_uuid: str, boto_session: boto3.Session,
         raise ApiError("Syncing can take a few minutes time! You can only trigger a manual re-sync once every 30 "
                        "minutes", 429)
 
+    logger.info(f"Found {len(calendar.source_rules)} to resync")
     for sync_rule in calendar.source_rules:
         event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
         sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)

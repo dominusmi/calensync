@@ -363,6 +363,7 @@ class GoogleCalendarWrapper:
                     google_error_handling_with_backoff(inner, self.calendar_db)
 
             except Exception as e:
+                # todo: non-retryable exceptions should throw the error
                 logger.warn(f"Failed to process event {to_update.id}: {e}. {traceback.format_exc()}")
 
     def delete_events(self):
