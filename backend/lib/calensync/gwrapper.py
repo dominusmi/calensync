@@ -611,5 +611,4 @@ def delete_events_for_sync_rule(sync_rule: SyncRule):
         event.id = source_event_id
         event.extendedProperties = ExtendedProperties()
         event.status = EventStatus.cancelled
-        GoogleCalendarWrapper.push_event_to_rules(event, [sync_rule])
-        # push_update_event_to_queue(event, rule_ids=[sync_rule.id], delete=True, session=boto_session, db=db)
+        push_update_event_to_queue(event, rule_ids=[sync_rule.id], delete=True, session=boto_session, db=db)
