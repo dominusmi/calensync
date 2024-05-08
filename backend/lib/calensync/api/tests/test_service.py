@@ -10,7 +10,7 @@ from calensync.api.common import ApiError
 from calensync.api.service import verify_valid_sync_rule, received_webhook, handle_sqs_event
 from calensync.database.model import SyncRule
 from calensync.dataclass import SQSEvent, QueueEvent, UpdateGoogleEvent, EventStatus, PostSyncRuleEvent, \
-    DeleteSyncRuleEvent
+    DeleteSyncRuleEvent, ExtendedProperties, EventExtendedProperty
 from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow, BackoffException
@@ -62,7 +62,8 @@ class TestReceivedWebhook:
         )
         updated_c = Calendar.get_by_id(calendar1_1.id)
         assert updated_c.last_received.replace(tzinfo=datetime.timezone.utc) > utcnow() - datetime.timedelta(seconds=5)
-        assert updated_c.last_processed.replace(tzinfo=datetime.timezone.utc) == calendar1_1.last_received.replace(tzinfo=datetime.timezone.utc)
+        assert updated_c.last_processed.replace(tzinfo=datetime.timezone.utc) == calendar1_1.last_received.replace(
+            tzinfo=datetime.timezone.utc)
 
     @staticmethod
     def test_timestamp_format(db, calendar1_1: Calendar, boto_session, queue_url):
@@ -348,13 +349,16 @@ class TestReceiveCreateRuleEvent:
         )
         sqs = boto_session.client('sqs')
         with (
-            patch("calensync.api.service.GoogleCalendarWrapper") as GoogleCalendarWrapper,
+            patch("calensync.gwrapper.GoogleCalendarWrapper") as GoogleCalendarWrapper,
         ):
 
             GoogleCalendarWrapper.return_value.get_events.return_value = [
-                GoogleEvent(id="1", status=EventStatus.confirmed, summary="Test1"),
-                GoogleEvent(id="2", status=EventStatus.confirmed, summary="Test2"),
-                GoogleEvent(id="3", status=EventStatus.cancelled, summary="Test3"),
+                GoogleEvent(id="1", status=EventStatus.confirmed, summary="Summary1",
+                            extendedProperties=ExtendedProperties.from_sources("Test1", str(calendar1_1.uuid))),
+                GoogleEvent(id="2", status=EventStatus.confirmed, summary="Summary2",
+                            extendedProperties=ExtendedProperties.from_sources("Test2", str(calendar1_1.uuid))),
+                GoogleEvent(id="3", status=EventStatus.cancelled, summary="Summary3",
+                            extendedProperties=ExtendedProperties.from_sources("Test3", str(calendar1_1.uuid))),
             ]
             handle_sqs_event(sqs_event, db, boto_session)
 
@@ -382,13 +386,13 @@ class TestReceiveCreateRuleEvent:
                 assert len(response["Messages"]) == 1
                 messages.append(response["Messages"][0])
 
-            ids = {"1", "2", "3"}
+            ids = {"Test1", "Test2", "Test3"}
             for msg in messages:
                 parsed_sqs_event = SQSEvent.parse_raw(msg['Body'])
                 assert parsed_sqs_event.kind == QueueEvent.UPDATED_EVENT
                 update_event: UpdateGoogleEvent = UpdateGoogleEvent.parse_obj(parsed_sqs_event.data)
                 assert update_event.delete
-                assert update_event.event.summary == f"Test{update_event.event.id}"
+                assert update_event.event.summary == f"Summary{update_event.event.id[-1]}"
                 ids.remove(update_event.event.id)
 
             assert len(ids) == 0
