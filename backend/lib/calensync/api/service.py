@@ -168,7 +168,7 @@ def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session
         return
 
     try:
-        delete_events_for_sync_rule(sync_rule)
+        delete_events_for_sync_rule(sync_rule, boto_session, db)
     except Exception as e:
         logger.error(f"Failed to delete events for sync rule {sync_rule}: {e}\n\n{traceback.format_exc()}")
 

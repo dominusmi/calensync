@@ -595,7 +595,7 @@ class GoogleCalendarWrapper:
         return cls(calendar)
 
 
-def delete_events_for_sync_rule(sync_rule: SyncRule):
+def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db):
     destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
 
     events = destination_wrapper.get_events(
