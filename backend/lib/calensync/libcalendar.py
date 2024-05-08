@@ -126,3 +126,12 @@ class EventsModificationHandler:
             if e.extendedProperties.private.get(EventExtendedProperty.get_source_id_key()) is None:
                 continue
             self.events_to_delete.append(e.id)
+
+
+class PushToQueueException(Exception):
+    """
+    Exception used to signal that, during processing, something went wrong and an event must be missing
+    """
+    def __init__(self, event: GoogleEvent):
+        super().__init__()
+        self.event = event
