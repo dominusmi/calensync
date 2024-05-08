@@ -580,3 +580,23 @@ class GoogleCalendarWrapper:
         assert len(calendars) == 1
         calendar = calendars[0]
         return cls(calendar)
+
+
+def delete_events_for_sync_rule(sync_rule: SyncRule):
+    destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
+
+    events = destination_wrapper.get_events(
+            private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
+            start_date=datetime.datetime.now(),
+            end_date=datetime.datetime.now() + datetime.timedelta(days=number_of_days_to_sync_in_advance()),
+            showDeleted=False
+        )
+    for event in events:
+        if (source_event_id := event.extendedProperties.private.get(EventExtendedProperty.get_source_id_key())) is None:
+            logger.warn("Shouldn't be possible to have a copied event without source id")
+            continue
+        event.id = source_event_id
+        event.extendedProperties = ExtendedProperties()
+        event.status = EventStatus.cancelled
+        GoogleCalendarWrapper.push_event_to_rules(event, [sync_rule])
+        # push_update_event_to_queue(event, rule_ids=[sync_rule.id], delete=True, session=boto_session, db=db)
