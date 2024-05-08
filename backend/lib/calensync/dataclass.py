@@ -130,6 +130,7 @@ class GoogleEvent(BaseModel):
     summary: str = None
     htmlLink: Optional[str] = None
     visibility: str = "public"
+    recurringEventId: str = None
 
     @staticmethod
     def parse_event_list_response(response: Dict) -> List[GoogleEvent]:
