@@ -10,8 +10,9 @@ import peewee
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
 from calensync.database.model import Calendar, User, SyncRule, EmailDB, CalendarAccount, Session
 from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, GoogleCalendar, SQSEvent, QueueEvent, \
-    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent, EventStatus
-from calensync.gwrapper import GoogleCalendarWrapper
+    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent, EventStatus, ExtendedProperties
+from calensync.gwrapper import GoogleCalendarWrapper, delete_events_for_sync_rule
+from calensync.libcalendar import PushToQueueException
 from calensync.log import get_logger
 from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait, push_update_event_to_queue
 from calensync.utils import utcnow, BackoffException
@@ -166,16 +167,8 @@ def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session
         logger.warning(f"Sync rule {sync_rule_id} doesn't exist")
         return
 
-    destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
     try:
-        events = destination_wrapper.get_events(
-            private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
-            start_date=datetime.datetime.now(),
-            end_date=datetime.datetime.now() + datetime.timedelta(days=number_of_days_to_sync_in_advance()),
-            showDeleted=False
-        )
-        for event in events:
-            push_update_event_to_queue(event, rule_ids=[sync_rule.id], delete=True, session=boto_session, db=db)
+        delete_events_for_sync_rule(sync_rule)
     except Exception as e:
         logger.error(f"Failed to delete events for sync rule {sync_rule}: {e}\n\n{traceback.format_exc()}")
 
