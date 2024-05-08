@@ -108,6 +108,13 @@ class EventStatus(Enum):
 class ExtendedProperties(BaseModel):
     private: Optional[Dict[str, str]] = dict()
 
+    @classmethod
+    def from_sources(cls, source_event_id, source_calendar_id):
+        result = cls()
+        result.private[EventExtendedProperty.get_source_id_key()] = source_event_id
+        result.private[EventExtendedProperty.get_calendar_id_key()] = source_calendar_id
+        return result
+
 
 class GoogleEvent(BaseModel):
     id: str
