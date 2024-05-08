@@ -95,11 +95,13 @@ class EventsModificationHandler:
         self.events_to_update = []
         self.events_to_delete = []
 
-    def add(self, events: List[Tuple[GoogleEvent, List[EventExtendedProperty]]], rule: SyncRule):
+    def add(self, events: List[Tuple[GoogleEvent, List[EventExtendedProperty]]], rule: SyncRule, keep_event_id: bool = False):
         for e, ep in events:
             if e.id in self._added_ids:
                 continue
             self._added_ids.add(e.id)
+            if not keep_event_id:
+                e.id = ""
             # recurrent elements should be inserted first, so they're treated first and avoid
             # "race-condition" with potential modified instances
             if e.recurrence is not None:
@@ -107,11 +109,15 @@ class EventsModificationHandler:
             else:
                 self.events_to_add.append((e, ep, rule))
 
-    def update(self, events: List[Tuple[GoogleEvent, GoogleEvent]], rule: SyncRule):
+    def update(self, events: List[Tuple[GoogleEvent, GoogleEvent]], rule: SyncRule, keep_event_id: bool = False):
         for e, ep in events:
             if e.id in self._updated_ids:
                 continue
             self._updated_ids.add(e.id)
+
+            if not keep_event_id:
+                e.id = ""
+
             if e.recurrence is not None:
                 self.events_to_update.insert(0, (e, ep, rule))
             else:
