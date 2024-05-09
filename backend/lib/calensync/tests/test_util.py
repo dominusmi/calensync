@@ -1,10 +1,16 @@
 import logging
+from unittest.mock import MagicMock, patch
+
+import googleapiclient.errors
+import pytest
+
 logging.root.setLevel(logging.DEBUG)
 import peewee
+
 peewee.logger.setLevel(logging.DEBUG)
 from calensync.tests.fixtures import db, user
 from calensync.database.model import User, EmailDB
-from calensync.utils import prefetch_get_or_none
+from calensync.utils import prefetch_get_or_none, google_error_handling_with_backoff, BackoffException
 
 
 class TestPrefetchOrNone:
@@ -29,3 +35,67 @@ class TestPrefetchOrNone:
             User.select()
         )
         assert result is None
+
+
+class TestGoogleExceptionWithBackoff:
+    @staticmethod
+    def test_normal():
+        i = [0]
+
+        def _inner():
+            i[0] += 1
+
+        google_error_handling_with_backoff(_inner)
+        assert i[0] == 1
+
+    @staticmethod
+    def test_backoff():
+        i = [0]
+        resp = MagicMock()
+        resp.status = 429
+        resp.reason = 'Rate Limit Exceeded'
+
+        def _inner():
+            i[0] += 1
+            raise googleapiclient.errors.HttpError(resp, content=b"")
+
+        with pytest.raises(BackoffException):
+            with patch("calensync.utils.sleep") as sleep:
+                google_error_handling_with_backoff(_inner)
+
+        assert i[0] == 4
+
+    @staticmethod
+    def test_success_after_one_retry():
+        i = [0]
+        resp = MagicMock()
+        resp.status = 429
+        resp.reason = 'Rate Limit Exceeded'
+
+        def _inner():
+            if i[0] == 1:
+                return
+            i[0] += 1
+            raise googleapiclient.errors.HttpError(resp, content=b"")
+
+        with patch("calensync.utils.sleep") as sleep:
+            google_error_handling_with_backoff(_inner)
+
+        assert i[0] == 1
+
+    @staticmethod
+    def test_unhandled_error():
+        i = [0]
+        resp = MagicMock()
+        resp.status = 429
+        resp.reason = 'Rate Limit Exceeded'
+
+        def _inner():
+            i[0] += 1
+            raise RuntimeError()
+
+        with pytest.raises(RuntimeError):
+            with patch("calensync.utils.sleep") as sleep:
+                google_error_handling_with_backoff(_inner)
+
+        assert i[0] == 1
