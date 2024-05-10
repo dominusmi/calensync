@@ -148,7 +148,7 @@ def delete__sync_rule(sync_id: str, authorization: Annotated[Union[str, None], C
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        delete_sync_rule(user, sync_id, db)
+        delete_sync_rule(user, sync_id, boto3.Session(), db)
 
 
 @app.delete('/calendars/{account_id}')
