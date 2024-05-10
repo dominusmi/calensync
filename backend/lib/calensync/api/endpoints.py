@@ -16,7 +16,7 @@ import calensync.sqs
 from calensync import dataclass
 from calensync.api.common import ApiError, RedirectResponse, encode_query_message
 from calensync.api.response import PostMagicLinkResponse
-from calensync.api.service import verify_valid_sync_rule, merge_users, handle_refresh_existing_calendar
+from calensync.api.service import verify_valid_sync_rule, merge_users, handle_refresh_existing_calendar, handle_delete_sync_rule_event
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB, \
     MagicLinkDB
 from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent, DeleteSyncRuleEvent
@@ -538,12 +538,8 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, boto_session: boto3.
         source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
         sync_rule = SyncRule(source=source, destination=destination, summary=payload.summary,
                              description=payload.description).save_new()
-        event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
-        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
-        if is_local():
-            calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
-        else:
-            calensync.sqs.send_event(boto3.Session(), sqs_event.json())
+
+        calensync.api.service.run_initial_sync(sync_rule.id, boto_session, db)
 
 
 def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
@@ -560,12 +556,7 @@ def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
             raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
         sync_rule: SyncRule = sync_rules[0]
 
-        event = DeleteSyncRuleEvent(sync_rule_id=sync_rule.id)
-        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.DELETE_SYNC_RULE, data=event)
-        if is_local() and os.getenv("SQS_QUEUE_URL") is None:
-            calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
-        else:
-            calensync.sqs.send_event(boto_session, sqs_event.json())
+        handle_delete_sync_rule_event(sync_rule.id, boto_session, db)
 
 
 def get_sync_rules(user: User):
