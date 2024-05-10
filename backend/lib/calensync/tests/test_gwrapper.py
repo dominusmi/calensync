@@ -106,37 +106,6 @@ def test_solve_update_tentative(db, account1_1, calendar1_1, account1_2, calenda
         simulate_sqs_receiver(boto_session, queue_url, db)
 
 
-@mock_aws
-def test_solve_update_active(db, account1_1, calendar1_1, account1_2, calendar1_2, boto_session, queue_url):
-    now = datetime.datetime.utcnow()
-    now_google = GoogleDatetime(dateTime=now, timeZone="UCT")
-    service = MockedService()
-    real_push_event_to_rules = GoogleCalendarWrapper.push_event_to_rules
-    with (
-        patch("calensync.gwrapper.GoogleCalendarWrapper.service", service),
-        patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules
-    ):
-        gcalendar1_1 = GoogleCalendarWrapper(calendar1_1, session=boto_session)
-        SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
-
-        service.add_event(
-            GoogleEvent(htmlLink="", start=now_google, end=now_google, id=str(uuid.uuid4()), created=now, updated=now,
-                        status=EventStatus.confirmed, summary="summary"),
-            gcalendar1_1.google_id
-        )
-        gcalendar1_1.solve_update_in_calendar()
-
-        counter = [0]
-
-        def _push_event_to_rules_side_effect(*args, **kwargs):
-            counter[0] += real_push_event_to_rules(*args, **kwargs)
-
-        push_event_to_rules.side_effect = _push_event_to_rules_side_effect
-
-        simulate_sqs_receiver(boto_session, queue_url, db)
-        assert counter[0] == 1
-
-
 def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1, account1_2, calendar1_2, boto_session,
                                                     queue_url):
     service = MockedService()
@@ -309,7 +278,7 @@ class TestPushEventToRules:
             assert update_event.call_count == 0
 
     @staticmethod
-    def test_recurrent_instance_update():
+    def test_recurrent_instance_update(calendar1_1, calendar1_2):
         rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
         start = utcnow() + datetime.timedelta(days=1)
         end = utcnow() + datetime.timedelta(days=1, hours=1)

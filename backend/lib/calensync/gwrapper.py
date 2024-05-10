@@ -493,13 +493,8 @@ class GoogleCalendarWrapper:
                     events = c.get_events(
                         private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
                     )
-                    # recurrent event id have the same source id as their root event
-                    # therefore, the check len(c.events) == 0 is not enough. Instead, we should check whether
-                    # the exact event id is found
-                    existing_event = next(filter(lambda x: x.extendedProperties.private.get(
-                        EventExtendedProperty.for_source_id(event.id).key) == event.id, events), None)
 
-                    if existing_event:
+                    if events:
                         # normal update
                         c.events_handler.update([(event, to_update) for to_update in events], rule)
                         c.update_events()
