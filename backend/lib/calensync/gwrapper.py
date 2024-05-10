@@ -434,14 +434,14 @@ class GoogleCalendarWrapper:
             for rule in sync_rules:
                 c = GoogleCalendarWrapper(rule.destination)
                 if event.recurringEventId is not None:
-                    # handle recurrence, see explanation below
-
                     fetched_events = c.get_events(
                         private_extended_properties=EventExtendedProperty.for_source_id(
                             event.recurringEventId).to_google_dict()
                     )
                     for fetched_event in fetched_events:
                         if "_" in fetched_event.id:
+                            # for events with _R, you don't want to try and delete id_R{date}_{date},
+                            # so we re-write the event correctly
                             event_id_to_delete = f'{fetched_event.id.split("_")[0]}_{event.id.split("_")[1]}'
                         else:
                             event_id_to_delete = f'{fetched_event.id}_{event.id.split("_")[1]}'
@@ -491,18 +491,18 @@ class GoogleCalendarWrapper:
 
                 for rule in sync_rules:
                     c = GoogleCalendarWrapper(rule.destination)
-                    c.get_events(
+                    events = c.get_events(
                         private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
                     )
                     # recurrent event id have the same source id as their root event
                     # therefore, the check len(c.events) == 0 is not enough. Instead, we should check whether
                     # the exact event id is found
                     existing_event = next(filter(lambda x: x.extendedProperties.private.get(
-                        EventExtendedProperty.for_source_id(event.id).key) == event.id, c.events), None)
+                        EventExtendedProperty.for_source_id(event.id).key) == event.id, events), None)
 
                     if existing_event:
                         # normal update
-                        c.events_handler.update([(event, to_update) for to_update in c.events], rule)
+                        c.events_handler.update([(event, to_update) for to_update in events], rule)
                         c.update_events()
                         counter_event_changed += 1
                         continue
