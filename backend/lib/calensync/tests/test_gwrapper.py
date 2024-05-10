@@ -1,15 +1,14 @@
-import os
-import unittest
-from collections import defaultdict
 from unittest.mock import patch, MagicMock
 
 from calensync.api.tests.util import simulate_sqs_receiver
 from calensync.database.model import SyncRule
-from calensync.dataclass import GoogleDatetime, EventStatus
+from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty
 from calensync.gwrapper import GoogleCalendarWrapper, make_summary_and_description
+from calensync.libcalendar import PushToQueueException
 from calensync.log import get_logger
 from calensync.tests.fixtures import *
 from calensync.tests.mock_service import MockedService
+from calensync.utils import utcnow
 
 logger = get_logger(__file__)
 
@@ -138,14 +137,14 @@ def test_solve_update_active(db, account1_1, calendar1_1, account1_2, calendar1_
         assert counter[0] == 1
 
 
-def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1, account1_2, calendar1_2, boto_session, queue_url):
+def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1, account1_2, calendar1_2, boto_session,
+                                                    queue_url):
     service = MockedService()
     real_push_event_to_rules = GoogleCalendarWrapper.push_event_to_rules
     with (
         patch("calensync.gwrapper.GoogleCalendarWrapper.service", service),
         patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules
     ):
-
         gcalendar1_1 = GoogleCalendarWrapper(calendar1_1, session=boto_session)
         gcalendar1_2 = GoogleCalendarWrapper(calendar1_2, session=boto_session)
 
@@ -172,6 +171,298 @@ def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1,
 
         simulate_sqs_receiver(boto_session, queue_url, db)
         assert counter[0] == 1
+
+
+class TestPushEventToRules:
+
+    @staticmethod
+    def test_normal_insert(calendar1_1, calendar1_2):
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        event = GoogleEvent(
+            id="123", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow(), updated=utcnow(),
+        )
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event
+        ):
+            get_events.return_value = []
+            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            assert get_events.call_count == 1
+            assert insert_event.call_count == 1
+
+    @staticmethod
+    def test_normal_update(calendar1_1, calendar1_2):
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        event = GoogleEvent(
+            id="123", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
+        )
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.gwrapper.update_event") as update_event
+        ):
+            get_events.return_value = [
+                GoogleEvent(
+                    id="321", status=EventStatus.confirmed,
+                    start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+                    created=utcnow(), updated=utcnow(), extendedProperties=ExtendedProperties.from_sources(
+                        event.id, calendar1_1.id
+                    )
+                )
+            ]
+            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            assert get_events.call_count == 1
+            assert insert_event.call_count == 0
+            assert update_event.call_count == 1
+
+    @staticmethod
+    def test_update_but_doesnt_exist_so_insert(calendar1_1, calendar1_2):
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        event = GoogleEvent(
+            id="123", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
+        )
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.gwrapper.update_event") as update_event
+        ):
+            get_events.return_value = []
+            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            assert get_events.call_count == 1
+            assert insert_event.call_count == 1
+            assert update_event.call_count == 0
+
+    @staticmethod
+    def test_recurrent_instance_update_but_source_not_there(calendar1_1, calendar1_2):
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        event = GoogleEvent(
+            id="123_321", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
+            recurringEventId="123"
+        )
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.gwrapper.update_event") as update_event
+        ):
+            get_events.return_value = []
+            with pytest.raises(PushToQueueException):
+                GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            assert get_events.call_count == 2
+            assert insert_event.call_count == 0
+            assert update_event.call_count == 0
+
+    @staticmethod
+    def test_recurrent_instance_insert(calendar1_1, calendar1_2):
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        recurrent_source = GoogleEvent(
+            id="123", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow()
+        )
+        recurrent_instance = GoogleEvent(
+            id="123_321", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
+            recurringEventId="123", originalStartTime=GoogleDatetime(dateTime=start)
+        )
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.gwrapper.update_event") as update_event
+        ):
+            def simulate_get_events(**kwargs):
+                extended_properties = kwargs['private_extended_properties']
+                if extended_properties[EventExtendedProperty.get_source_id_key()] == "123_321":
+                    return []
+                elif extended_properties[EventExtendedProperty.get_source_id_key()] == "123":
+                    return [recurrent_source]
+                else:
+                    raise RuntimeError("Shouldn't happen in this test")
+
+            get_events.side_effect = simulate_get_events
+            GoogleCalendarWrapper.push_event_to_rules(recurrent_instance, [rule])
+            assert get_events.call_count == 2
+            assert insert_event.call_count == 1
+            assert update_event.call_count == 0
+
+    @staticmethod
+    def test_recurrent_instance_update():
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        recurrent_source = GoogleEvent(
+            id="123", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow()
+        )
+        recurrent_instance = GoogleEvent(
+            id="123_321", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
+            recurringEventId="123", originalStartTime=GoogleDatetime(dateTime=start)
+        )
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.gwrapper.update_event") as update_event
+        ):
+            def simulate_get_events(**kwargs):
+                extended_properties = kwargs['private_extended_properties']
+                if extended_properties[EventExtendedProperty.get_source_id_key()] == "123_321":
+                    return [recurrent_instance]
+                elif extended_properties[EventExtendedProperty.get_source_id_key()] == "123":
+                    return [recurrent_source]
+                else:
+                    raise RuntimeError("Shouldn't happen in this test")
+
+            get_events.side_effect = simulate_get_events
+            GoogleCalendarWrapper.push_event_to_rules(recurrent_instance, [rule])
+            assert get_events.call_count == 1
+            assert insert_event.call_count == 0
+            assert update_event.call_count == 1
+
+    @staticmethod
+    def test_delete_event(calendar1_1, calendar1_2):
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        event = GoogleEvent(
+            id="123", status=EventStatus.cancelled,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow()
+        )
+
+        copied_event = GoogleEvent(
+            id="321", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
+            extendedProperties=ExtendedProperties.from_sources("123", calendar1_1.id)
+        )
+
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.gwrapper.update_event") as update_event,
+            patch("calensync.gwrapper.delete_event") as delete_event
+        ):
+            def simulate_get_events(**kwargs):
+                extended_properties = kwargs['private_extended_properties']
+                if extended_properties[EventExtendedProperty.get_source_id_key()] == event.id:
+                    return [copied_event]
+                else:
+                    raise RuntimeError("Shouldn't happen in this test")
+
+            get_events.side_effect = simulate_get_events
+            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            assert get_events.call_count == 1
+            assert insert_event.call_count == 0
+            assert update_event.call_count == 0
+            assert delete_event.call_count == 1
+
+    @staticmethod
+    def test_do_not_delete_event_which_doesnt_have_extended_properties_source_id(calendar1_1, calendar1_2):
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        event = GoogleEvent(
+            id="123", status=EventStatus.cancelled,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow()
+        )
+
+        copied_event = GoogleEvent(
+            id="321", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow()
+        )
+
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.gwrapper.update_event") as update_event,
+            patch("calensync.gwrapper.delete_event") as delete_event
+        ):
+            def simulate_get_events(**kwargs):
+                extended_properties = kwargs['private_extended_properties']
+                if extended_properties[EventExtendedProperty.get_source_id_key()] == event.id:
+                    return [copied_event]
+                else:
+                    raise RuntimeError("Shouldn't happen in this test")
+
+            get_events.side_effect = simulate_get_events
+            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            assert get_events.call_count == 1
+            assert insert_event.call_count == 0
+            assert update_event.call_count == 0
+            assert delete_event.call_count == 0
+
+    @staticmethod
+    def test_delete_recurrent_instance(calendar1_1, calendar1_2):
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id).save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        event = GoogleEvent(
+            id="123_20241201Z", status=EventStatus.cancelled,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
+            recurringEventId="123"
+        )
+
+        copied_recurrence_source = GoogleEvent(
+            id="321", status=EventStatus.cancelled,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
+            extendedProperties=ExtendedProperties.from_sources("123", calendar1_1.id)
+        )
+
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.gwrapper.update_event") as update_event,
+            patch("calensync.gwrapper.delete_event") as delete_event
+        ):
+            def simulate_get_events(**kwargs):
+                extended_properties = kwargs['private_extended_properties']
+                if extended_properties[EventExtendedProperty.get_source_id_key()] == "123":
+                    return [copied_recurrence_source]
+                else:
+                    raise RuntimeError("Shouldn't happen in this test")
+
+            get_events.side_effect = simulate_get_events
+            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            assert get_events.call_count == 1
+            assert insert_event.call_count == 0
+            assert update_event.call_count == 0
+            assert delete_event.call_count == 1
+            (service, google_id, deleted_event_id) = delete_event.call_args_list[0].args
+            assert deleted_event_id == "321_20241201Z"
 
 
 class TestDeleteWatch:
