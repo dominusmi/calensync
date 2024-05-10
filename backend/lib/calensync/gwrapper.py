@@ -401,7 +401,6 @@ class GoogleCalendarWrapper:
                 logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}")
         logger.info(f"Deleted {deleted_events} events")
 
-
     def get_updated_events(self) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
         updated_min = max(self.calendar_db.last_processed.replace(tzinfo=datetime.timezone.utc),
@@ -546,41 +545,39 @@ class GoogleCalendarWrapper:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
         return counter_event_changed
 
+    def solve_update_in_calendar(self, preloaded_events: list[GoogleEvent] = None) -> int:
+        """ Called when we receive a webhook event saying the calendar requires an update """
+        sync_rules = list(get_sync_rules_from_source(self.calendar_db))
 
-def solve_update_in_calendar(self, preloaded_events: list[GoogleEvent] = None) -> int:
-    """ Called when we receive a webhook event saying the calendar requires an update """
-    sync_rules = list(get_sync_rules_from_source(self.calendar_db))
+        logger.info(f"Found {(n_sync := len(sync_rules))} active SyncRules for {self.calendar_db.uuid}")
+        if n_sync == 0:
+            return 0
 
-    logger.info(f"Found {(n_sync := len(sync_rules))} active SyncRules for {self.calendar_db.uuid}")
-    if n_sync == 0:
-        return 0
+        events = self.get_updated_events()
+        events = [event for event in events if len(event.extendedProperties.private) == 0]
+        if preloaded_events:
+            events.extend(preloaded_events)
 
-    events = self.get_updated_events()
-    events = [event for event in events if len(event.extendedProperties.private) == 0]
-    if preloaded_events:
-        events.extend(preloaded_events)
+        logger.info(f"Found events to update: {len(events)}")
+        if not events:
+            logger.info(f"No updates found for channel {self.calendar_db.channel_id}")
+            return 0
 
-    logger.info(f"Found events to update: {len(events)}")
-    if not events:
-        logger.info(f"No updates found for channel {self.calendar_db.channel_id}")
-        return 0
+        # sorts them so that even that have a recurrence are handled first
+        events.sort(key=lambda x: x.recurrence is None)
+        for event in events:
+            push_update_event_to_queue(event, [sr.id for sr in sync_rules], False, self.session, self.db)
 
-    # sorts them so that even that have a recurrence are handled first
-    events.sort(key=lambda x: x.recurrence is None)
-    for event in events:
-        push_update_event_to_queue(event, [sr.id for sr in sync_rules], False, self.session, self.db)
+        return len(events)
 
-    return len(events)
-
-
-@classmethod
-def from_channel_id(cls, channel_id: str):
-    calendars = peewee.prefetch(
-        Calendar.select().join(CalendarAccount).join(User).where(Calendar.channel_id == channel_id),
-        CalendarAccount.select(), User.select())
-    assert len(calendars) == 1
-    calendar = calendars[0]
-    return cls(calendar)
+    @classmethod
+    def from_channel_id(cls, channel_id: str):
+        calendars = peewee.prefetch(
+            Calendar.select().join(CalendarAccount).join(User).where(Calendar.channel_id == channel_id),
+            CalendarAccount.select(), User.select())
+        assert len(calendars) == 1
+        calendar = calendars[0]
+        return cls(calendar)
 
 
 def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue=True):
