@@ -109,10 +109,10 @@ def test_solve_update_tentative(db, account1_1, calendar1_1, account1_2, calenda
 def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1, account1_2, calendar1_2, boto_session,
                                                     queue_url):
     service = MockedService()
-    real_push_event_to_rules = GoogleCalendarWrapper.push_event_to_rule
+    real_push_event_to_rule = GoogleCalendarWrapper.push_event_to_rule
     with (
         patch("calensync.gwrapper.GoogleCalendarWrapper.service", service),
-        patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules
+        patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rule") as push_event_to_rule
     ):
         gcalendar1_1 = GoogleCalendarWrapper(calendar1_1, session=boto_session)
         gcalendar1_2 = GoogleCalendarWrapper(calendar1_2, session=boto_session)
@@ -133,10 +133,10 @@ def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1,
         gcalendar1_1.solve_update_in_calendar()
         counter = [0]
 
-        def _push_event_to_rules_side_effect(*args, **kwargs):
-            counter[0] += real_push_event_to_rules(*args, **kwargs)
+        def _push_event_to_rule_side_effect(*args, **kwargs):
+            counter[0] += real_push_event_to_rule(*args, **kwargs)
 
-        push_event_to_rules.side_effect = _push_event_to_rules_side_effect
+        push_event_to_rule.side_effect = _push_event_to_rule_side_effect
 
         simulate_sqs_receiver(boto_session, queue_url, db)
         assert counter[0] == 1
