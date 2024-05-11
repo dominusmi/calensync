@@ -109,7 +109,7 @@ def test_solve_update_tentative(db, account1_1, calendar1_1, account1_2, calenda
 def test_solve_update_two_active_calendar_confirmed(db, account1_1, calendar1_1, account1_2, calendar1_2, boto_session,
                                                     queue_url):
     service = MockedService()
-    real_push_event_to_rules = GoogleCalendarWrapper.push_event_to_rules
+    real_push_event_to_rules = GoogleCalendarWrapper.push_event_to_rule
     with (
         patch("calensync.gwrapper.GoogleCalendarWrapper.service", service),
         patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules
@@ -160,7 +160,7 @@ class TestPushEventToRules:
             patch("calensync.gwrapper.insert_event") as insert_event
         ):
             get_events.return_value = []
-            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            GoogleCalendarWrapper.push_event_to_rule(event, rule)
             assert get_events.call_count == 1
             assert insert_event.call_count == 1
 
@@ -189,7 +189,7 @@ class TestPushEventToRules:
                     )
                 )
             ]
-            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            GoogleCalendarWrapper.push_event_to_rule(event, rule)
             assert get_events.call_count == 1
             assert insert_event.call_count == 0
             assert update_event.call_count == 1
@@ -211,7 +211,7 @@ class TestPushEventToRules:
             patch("calensync.gwrapper.update_event") as update_event
         ):
             get_events.return_value = []
-            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            GoogleCalendarWrapper.push_event_to_rule(event, rule)
             assert get_events.call_count == 1
             assert insert_event.call_count == 1
             assert update_event.call_count == 0
@@ -235,7 +235,7 @@ class TestPushEventToRules:
         ):
             get_events.return_value = []
             with pytest.raises(PushToQueueException):
-                GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+                GoogleCalendarWrapper.push_event_to_rule(event, rule)
             assert get_events.call_count == 2
             assert insert_event.call_count == 0
             assert update_event.call_count == 0
@@ -272,7 +272,7 @@ class TestPushEventToRules:
                     raise RuntimeError("Shouldn't happen in this test")
 
             get_events.side_effect = simulate_get_events
-            GoogleCalendarWrapper.push_event_to_rules(recurrent_instance, [rule])
+            GoogleCalendarWrapper.push_event_to_rule(recurrent_instance, rule)
             assert get_events.call_count == 2
             assert insert_event.call_count == 1
             assert update_event.call_count == 0
@@ -309,7 +309,7 @@ class TestPushEventToRules:
                     raise RuntimeError("Shouldn't happen in this test")
 
             get_events.side_effect = simulate_get_events
-            GoogleCalendarWrapper.push_event_to_rules(recurrent_instance, [rule])
+            GoogleCalendarWrapper.push_event_to_rule(recurrent_instance, rule)
             assert get_events.call_count == 1
             assert insert_event.call_count == 0
             assert update_event.call_count == 1
@@ -347,7 +347,7 @@ class TestPushEventToRules:
                     raise RuntimeError("Shouldn't happen in this test")
 
             get_events.side_effect = simulate_get_events
-            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            GoogleCalendarWrapper.push_event_to_rule(event, rule)
             assert get_events.call_count == 1
             assert insert_event.call_count == 0
             assert update_event.call_count == 0
@@ -385,7 +385,7 @@ class TestPushEventToRules:
                     raise RuntimeError("Shouldn't happen in this test")
 
             get_events.side_effect = simulate_get_events
-            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            GoogleCalendarWrapper.push_event_to_rule(event, rule)
             assert get_events.call_count == 1
             assert insert_event.call_count == 0
             assert update_event.call_count == 0
@@ -425,7 +425,7 @@ class TestPushEventToRules:
                     raise RuntimeError("Shouldn't happen in this test")
 
             get_events.side_effect = simulate_get_events
-            GoogleCalendarWrapper.push_event_to_rules(event, [rule])
+            GoogleCalendarWrapper.push_event_to_rule(event, rule)
             assert get_events.call_count == 1
             assert insert_event.call_count == 0
             assert update_event.call_count == 0

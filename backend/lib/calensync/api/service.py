@@ -75,7 +75,7 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
     events.sort(key=lambda x: x.recurrence is None)
     logger.info(f"Found {len(events)} events, pushing to queue")
     for event in events:
-        push_update_event_to_queue(event, [sync_rule.id], False, session, db)
+        push_update_event_to_queue(event, sync_rule.id, False, session, db)
 
     source.last_processed = utcnow()
     source.save()
@@ -218,18 +218,18 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
         try:
             handle_updated_event(e)
         except BackoffException as exc:
-            logger.info(f"Back-off: retrying event {e.event.id} for rules {e.rule_ids}")
+            logger.info(f"Back-off: retrying event {e.event.id} for rules {e.rule_id}")
             raise exc
         except PushToQueueException as exc:
             logger.warn(f"An event was signalled as missing: {exc.event.id}. Adding to queue")
-            push_update_event_to_queue(exc.event, e.rule_ids, e.delete, boto_session, db)
+            raise RuntimeError("Event missing, trying again later")
 
     else:
         logger.error("Unknown event type")
 
 
 def handle_updated_event(e: UpdateGoogleEvent):
-    rules = list(SyncRule.select().where(SyncRule.id << e.rule_ids))
+    rules = list(SyncRule.select().where(SyncRule.id << e.rule_id))
     if len(rules) == 0:
         logger.warn(f"No rules found for update event: {e.dict()}")
 
@@ -240,5 +240,5 @@ def handle_updated_event(e: UpdateGoogleEvent):
         # is handled in the same function and makes things simpler
         event.status = EventStatus.cancelled
 
-    GoogleCalendarWrapper.push_event_to_rules(event, rules)
+    GoogleCalendarWrapper.push_event_to_rule(event, rules[0])
 
