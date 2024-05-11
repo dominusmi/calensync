@@ -21,7 +21,8 @@ class AbstractGoogleDate(BaseModel):
     def to_datetime(self) -> datetime.datetime:
         raise NotImplementedError()
 
-    def from_google_dict(self, body):
+    @classmethod
+    def from_google_dict(cls, body):
         if date := body.get("date"):
             return GoogleDate(date=date)
         else:
@@ -195,7 +196,7 @@ class DeleteSyncRuleEvent(BaseModel):
 
 class UpdateGoogleEvent(BaseModel):
     event: GoogleEvent
-    rule_ids: list[int]
+    rule_id: list[int]
     # this is only to be used for the case where we delete a sync rule, not
     # if the event is of type "cancelled". That would be handled in the
     # "normal" flow
