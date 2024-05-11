@@ -426,10 +426,15 @@ class GoogleCalendarWrapper:
             logger.info(f"Found event to delete")
             c = GoogleCalendarWrapper(rule.destination)
             if event.recurringEventId is not None:
+                logger.info("Event part of recurrent sequence")
                 fetched_events = c.get_events(
                     private_extended_properties=EventExtendedProperty.for_source_id(
                         event.recurringEventId).to_google_dict()
                 )
+                if len(fetched_events) == 0:
+                    logger.info(f"Did not find recurrent source with source id {event.recurringEventId}")
+                    raise PushToQueueException(event)
+
                 for fetched_event in fetched_events:
                     if "_" in fetched_event.id:
                         # for events with _R, you don't want to try and delete id_R{date}_{date},
@@ -442,9 +447,14 @@ class GoogleCalendarWrapper:
                     c.delete_events()
                     counter_event_changed += 1
             else:
+                logger.info("Event not part of recurring sequence")
                 fetched_events = c.get_events(
                     private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
                 )
+                if len(fetched_events) == 0:
+                    logger.info(f"Did not find source with source id {event.id}")
+                    raise PushToQueueException(event)
+
                 c.events_handler.delete(fetched_events)
                 c.delete_events()
                 counter_event_changed += 1
