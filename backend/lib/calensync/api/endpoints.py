@@ -16,11 +16,12 @@ import calensync.sqs
 from calensync import dataclass
 from calensync.api.common import ApiError, RedirectResponse, encode_query_message
 from calensync.api.response import PostMagicLinkResponse
-from calensync.api.service import verify_valid_sync_rule, merge_users, handle_refresh_existing_calendar, handle_delete_sync_rule_event
+from calensync.api.service import verify_valid_sync_rule, merge_users, handle_refresh_existing_calendar, \
+    handle_delete_sync_rule_event
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB, \
     MagicLinkDB
-from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent, DeleteSyncRuleEvent
-from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
+from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent
+from calensync.gwrapper import get_google_email, get_google_calendars
 from calensync.log import get_logger
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
     get_paddle_token, prefetch_get_or_none, replace_timezone
