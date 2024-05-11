@@ -379,12 +379,6 @@ class GoogleCalendarWrapper:
     def delete_events(self):
         """
         Calls google API to delete events stored in self.events_handler.
-         :param include_database:
-            the event can be either completely deleted, or marked in the
-            database as deleted. The reason to allow both is that when a calendar is
-            deactivated, we can safely delete all the events. However, if the
-            event is "deleted" (as in the original event is deleted), we want to
-            keep track of it to avoid trying to delete it multiple times in a row.
         """
         if self.calendar_db.is_read_only:
             return
@@ -415,7 +409,7 @@ class GoogleCalendarWrapper:
         return events
 
     @staticmethod
-    def push_event_to_rules(event: GoogleEvent, sync_rules: List[SyncRule]) -> int:
+    def push_event_to_rule(event: GoogleEvent, rule: SyncRule) -> int:
         """
         Solves a single event update (by updating all other calendars where this event exists)
         """
@@ -430,31 +424,30 @@ class GoogleCalendarWrapper:
         elif event.status == EventStatus.cancelled:
             # need to delete
             logger.info(f"Found event to delete")
-            for rule in sync_rules:
-                c = GoogleCalendarWrapper(rule.destination)
-                if event.recurringEventId is not None:
-                    fetched_events = c.get_events(
-                        private_extended_properties=EventExtendedProperty.for_source_id(
-                            event.recurringEventId).to_google_dict()
-                    )
-                    for fetched_event in fetched_events:
-                        if "_" in fetched_event.id:
-                            # for events with _R, you don't want to try and delete id_R{date}_{date},
-                            # so we re-write the event correctly
-                            event_id_to_delete = f'{fetched_event.id.split("_")[0]}_{event.id.split("_")[1]}'
-                        else:
-                            event_id_to_delete = f'{fetched_event.id}_{event.id.split("_")[1]}'
-                        fetched_event.id = event_id_to_delete
-                        c.events_handler.delete([fetched_event])
-                        c.delete_events()
-                        counter_event_changed += 1
-                else:
-                    fetched_events = c.get_events(
-                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
-                    )
-                    c.events_handler.delete(fetched_events)
+            c = GoogleCalendarWrapper(rule.destination)
+            if event.recurringEventId is not None:
+                fetched_events = c.get_events(
+                    private_extended_properties=EventExtendedProperty.for_source_id(
+                        event.recurringEventId).to_google_dict()
+                )
+                for fetched_event in fetched_events:
+                    if "_" in fetched_event.id:
+                        # for events with _R, you don't want to try and delete id_R{date}_{date},
+                        # so we re-write the event correctly
+                        event_id_to_delete = f'{fetched_event.id.split("_")[0]}_{event.id.split("_")[1]}'
+                    else:
+                        event_id_to_delete = f'{fetched_event.id}_{event.id.split("_")[1]}'
+                    fetched_event.id = event_id_to_delete
+                    c.events_handler.delete([fetched_event])
                     c.delete_events()
                     counter_event_changed += 1
+            else:
+                fetched_events = c.get_events(
+                    private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                )
+                c.events_handler.delete(fetched_events)
+                c.delete_events()
+                counter_event_changed += 1
         # for some reason the created and updated time are not exactly the same, even when the event is new
         # it looks like google doesn't use a transaction. Bad google. So 1 second threshold for equality
         elif (
@@ -465,21 +458,17 @@ class GoogleCalendarWrapper:
             # new event, we don't need to check anything more
             logger.info(f"Potential new event")
 
-            if len(sync_rules) > 0:
-                # sync_rules[0] because all the sources are the same
-                # (given that it's dependent on the calendar of the event)
-                source_calendar_uuid = str(sync_rules[0].source.uuid)
-                for rule in sync_rules:
-                    c = GoogleCalendarWrapper(rule.destination)
-                    c.get_events(
-                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
-                    )
+            source_calendar_uuid = str(rule.source.uuid)
+            c = GoogleCalendarWrapper(rule.destination)
+            c.get_events(
+                private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+            )
 
-                    if len(c.events) > 0:
-                        continue
-                    c.events_handler.add([source_event_tuple(event, source_calendar_uuid)], rule)
-                    if c.insert_events():
-                        counter_event_changed += 1
+            if len(c.events) > 0:
+                return 0
+            c.events_handler.add([source_event_tuple(event, source_calendar_uuid)], rule)
+            if c.insert_events():
+                counter_event_changed += 1
         else:
             if event.status == EventStatus.confirmed:
                 # This means it's an updated events. Therefore, all the user-associated calendars
@@ -488,53 +477,52 @@ class GoogleCalendarWrapper:
                 logger.info(f"Found confirmed event, updating")
                 is_recurrence_instance = event.recurringEventId is not None
 
-                for rule in sync_rules:
-                    c = GoogleCalendarWrapper(rule.destination)
-                    events = c.get_events(
-                        private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                c = GoogleCalendarWrapper(rule.destination)
+                events = c.get_events(
+                    private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
+                )
+
+                if events:
+                    # normal update
+                    c.events_handler.update([(event, to_update) for to_update in events], rule)
+                    c.update_events()
+                    counter_event_changed += 1
+                    return counter_event_changed
+
+                elif not is_recurrence_instance:
+                    logger.info(f"In update but need to create event")
+                    c.events_handler.add([source_event_tuple(event, str(rule.source.uuid))], rule)
+                    c.insert_events()
+                    counter_event_changed += 1
+
+                else:
+                    # i.e. is_recurrence_instance == True
+                    logger.info("Verifying that recurrence root exists")
+                    recurrence_source_exists = c.get_events(
+                        private_extended_properties=EventExtendedProperty.for_source_id(
+                            event.recurringEventId).to_google_dict()
                     )
+                    if not recurrence_source_exists:
+                        # This signals that the root recurrence is missing, and so the instance of the
+                        # recurrence update can't be correctly handled
+                        missing_recurrence = copy(event)
+                        missing_recurrence.id = missing_recurrence.id.split("_")[0]
+                        raise PushToQueueException(event)
 
-                    if events:
-                        # normal update
-                        c.events_handler.update([(event, to_update) for to_update in events], rule)
-                        c.update_events()
-                        counter_event_changed += 1
-                        continue
-
-                    elif not is_recurrence_instance:
-                        logger.info(f"In update but need to create event")
-                        c.events_handler.add([source_event_tuple(event, str(sync_rules[0].source.uuid))], rule)
-                        c.insert_events()
-                        counter_event_changed += 1
-
-                    else:
-                        # i.e. is_recurrence_instance == True
-                        logger.info("Verifying that recurrence root exists")
-                        recurrence_source_exists = c.get_events(
-                            private_extended_properties=EventExtendedProperty.for_source_id(
-                                event.recurringEventId).to_google_dict()
-                        )
-                        if not recurrence_source_exists:
-                            # This signals that the root recurrence is missing, and so the instance of the
-                            # recurrence update can't be correctly handled
-                            missing_recurrence = copy(event)
-                            missing_recurrence.id = missing_recurrence.id.split("_")[0]
-                            raise PushToQueueException(event)
-
-                        recurrence_source: GoogleEvent = recurrence_source_exists[0]
-                        existing_event = copy(event)
-                        existing_event.recurringEventId = recurrence_source.id
-                        originalStartTime = copy(recurrence_source.start)
-                        originalStartTime = originalStartTime.dateTime.replace(
-                            day=event.originalStartTime.dateTime.day,
-                            hour=event.originalStartTime.dateTime.hour,
-                            minute=event.originalStartTime.dateTime.minute
-                        )
-                        existing_event.originalStartTime = GoogleDatetime(dateTime=originalStartTime,
-                                                                          timeZone=recurrence_source.start.timeZone)
-                        c.events_handler.add([source_event_tuple(existing_event, str(sync_rules[0].source.uuid))], rule)
-                        c.insert_events()
-                        counter_event_changed += 1
+                    recurrence_source: GoogleEvent = recurrence_source_exists[0]
+                    existing_event = copy(event)
+                    existing_event.recurringEventId = recurrence_source.id
+                    originalStartTime = copy(recurrence_source.start)
+                    originalStartTime = originalStartTime.dateTime.replace(
+                        day=event.originalStartTime.dateTime.day,
+                        hour=event.originalStartTime.dateTime.hour,
+                        minute=event.originalStartTime.dateTime.minute
+                    )
+                    existing_event.originalStartTime = GoogleDatetime(dateTime=originalStartTime,
+                                                                      timeZone=recurrence_source.start.timeZone)
+                    c.events_handler.add([source_event_tuple(existing_event, str(rule.source.uuid))], rule)
+                    c.insert_events()
+                    counter_event_changed += 1
 
             else:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
@@ -561,7 +549,9 @@ class GoogleCalendarWrapper:
         # sorts them so that even that have a recurrence are handled first
         events.sort(key=lambda x: x.recurrence is None)
         for event in events:
-            push_update_event_to_queue(event, [sr.id for sr in sync_rules], False, self.session, self.db)
+            # go towards a really micro-service architecture: sync rules are handled separately
+            for sr in sync_rules:
+                push_update_event_to_queue(event, sr.id, False, self.session, self.db)
 
         return len(events)
 
@@ -592,6 +582,6 @@ def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue
         event.extendedProperties = ExtendedProperties()
         event.status = EventStatus.cancelled
         if use_queue:
-            push_update_event_to_queue(event, rule_ids=[sync_rule.id], delete=True, session=boto_session, db=db)
+            push_update_event_to_queue(event, rule_id=sync_rule.id, delete=True, session=boto_session, db=db)
         else:
-            GoogleCalendarWrapper.push_event_to_rules(event, [sync_rule])
+            GoogleCalendarWrapper.push_event_to_rule(event, sync_rule)
