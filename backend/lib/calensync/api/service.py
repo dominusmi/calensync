@@ -229,7 +229,7 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
 
 
 def handle_updated_event(e: UpdateGoogleEvent):
-    rules = list(SyncRule.select().where(SyncRule.id << e.rule_id))
+    rules = list(SyncRule.select().where(SyncRule.id == e.rule_id))
     if len(rules) == 0:
         logger.warn(f"No rules found for update event: {e.dict()}")
 

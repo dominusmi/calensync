@@ -196,7 +196,7 @@ class DeleteSyncRuleEvent(BaseModel):
 
 class UpdateGoogleEvent(BaseModel):
     event: GoogleEvent
-    rule_id: list[int]
+    rule_id: int
     # this is only to be used for the case where we delete a sync rule, not
     # if the event is of type "cancelled". That would be handled in the
     # "normal" flow

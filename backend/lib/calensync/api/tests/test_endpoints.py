@@ -74,7 +74,7 @@ class TestDeleteSyncRule:
     @staticmethod
     def test_delete_watch_with_other_source(db, user, account1_1, calendar1_1, calendar1_2, boto_session, queue_url):
         with (
-            patch("calensync.api.endpoints.GoogleCalendarWrapper") as gwrapper,
+            patch("calensync.api.service.GoogleCalendarWrapper") as MockGoogleCalendarWrapper,
             patch("calensync.gwrapper.delete_event") as delete_event
         ):
             rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
@@ -85,7 +85,7 @@ class TestDeleteSyncRule:
             delete_sync_rule(user, str(rule.uuid), boto_session, db)
 
             simulate_sqs_receiver(boto_session, queue_url, db)
-            assert gwrapper.return_value.delete_watch.call_count == 0
+            assert MockGoogleCalendarWrapper.return_value.delete_watch.call_count == 0
             assert SyncRule.get_or_none(id=rule.id) is None
             assert SyncRule.get_or_none(id=rule2.id) is not None
 

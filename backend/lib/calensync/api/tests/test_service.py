@@ -164,20 +164,24 @@ class TestReceiveUpdateEvent:
         SyncRule(source=calendar1_2_2, destination=calendar1_1).save_new()
         event = GoogleEvent(id="123", status=EventStatus.confirmed)
 
-        sqs_event = SQSEvent(
-            kind=QueueEvent.UPDATED_EVENT,
-            data=UpdateGoogleEvent(event=event, rule_ids=[rule1.id, rule2.id], delete=False).dict(),
-            delete=False
-        )
-        with patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules:
-            handle_sqs_event(sqs_event, db, boto3.Session())
-            assert push_event_to_rules.call_count == 1
-            arg_event, sync_rules = push_event_to_rules.call_args_list[0].args
-            assert arg_event.id == event.id
-            assert arg_event.status == event.status
+        with patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rule") as push_event_to_rule:
+            for rule in [rule1, rule2]:
+                sqs_event = SQSEvent(
+                    kind=QueueEvent.UPDATED_EVENT,
+                    data=UpdateGoogleEvent(event=event, rule_id=rule.id, delete=False).dict(),
+                    delete=False
+                )
+                handle_sqs_event(sqs_event, db, boto3.Session())
+            assert push_event_to_rule.call_count == 2
+            argument_sync_rules = []
+            for i in range(2):
+                arg_event, sync_rule = push_event_to_rule.call_args_list[i].args
+                assert arg_event.id == event.id
+                assert arg_event.status == EventStatus.confirmed
+                argument_sync_rules.append(sync_rule)
+            assert len(argument_sync_rules) == 2
+            assert {sr.id for sr in argument_sync_rules} == {rule1.id, rule2.id}
 
-            assert len(sync_rules) == 2
-            assert {sr.id for sr in sync_rules} == {rule1.id, rule2.id}
 
     @staticmethod
     @mock_aws
@@ -191,62 +195,19 @@ class TestReceiveUpdateEvent:
         sqs = boto_session.client('sqs')
         sqs_event = SQSEvent(
             kind=QueueEvent.UPDATED_EVENT,
-            data=UpdateGoogleEvent(event=event, rule_ids=[rule1.id], delete=False).dict(),
+            data=UpdateGoogleEvent(event=event, rule_id=rule1.id, delete=False).dict(),
             delete=False
         )
 
         with (
-            patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rule") as push_event_to_rule,
         ):
             def _raise_backoff(*args, **kwargs):
                 raise BackoffException(60)
 
-            push_event_to_rules.side_effect = _raise_backoff
+            push_event_to_rule.side_effect = _raise_backoff
             with pytest.raises(BackoffException):
                 handle_sqs_event(sqs_event, db, boto_session)
-
-            # assert push_event_to_rules.call_count == 1
-            # response = sqs.receive_message(
-            #     QueueUrl=queue_url,
-            #     AttributeNames=[
-            #         'SentTimestamp'
-            #     ],
-            #     MaxNumberOfMessages=1,
-            #     MessageAttributeNames=[
-            #         'All'
-            #     ],
-            #     VisibilityTimeout=0,
-            #     WaitTimeSeconds=0
-            # )
-            # assert len(response["Messages"]) == 1
-            # sqs.delete_message(
-            #     QueueUrl=queue_url,
-            #     ReceiptHandle=response["Messages"][0]['ReceiptHandle']
-            # )
-            #
-            # # do again, but this time with `delete` flag. Check if flag is passed over
-            # sqs_event = SQSEvent(
-            #     kind=QueueEvent.UPDATED_EVENT,
-            #     data=UpdateGoogleEvent(event=event, rule_ids=[rule1.id], delete=True).dict(),
-            #     delete=False
-            # )
-            # handle_sqs_event(sqs_event, db, boto_session)
-            #
-            # response = sqs.receive_message(
-            #     QueueUrl=queue_url,
-            #     AttributeNames=[
-            #         'SentTimestamp'
-            #     ],
-            #     MaxNumberOfMessages=1,
-            #     MessageAttributeNames=[
-            #         'All'
-            #     ],
-            #     VisibilityTimeout=0,
-            #     WaitTimeSeconds=0
-            # )
-            # parsed_sqs = SQSEvent.parse_raw(response["Messages"][0]['Body'])
-            # update_event = UpdateGoogleEvent.parse_obj(parsed_sqs.data)
-            # assert update_event.delete
 
     @staticmethod
     @mock_aws
@@ -258,20 +219,23 @@ class TestReceiveUpdateEvent:
         SyncRule(source=calendar1_2_2, destination=calendar1_1).save_new()
         event = GoogleEvent(id="123", status=EventStatus.confirmed)
 
-        sqs_event = SQSEvent(
-            kind=QueueEvent.UPDATED_EVENT,
-            data=UpdateGoogleEvent(event=event, rule_ids=[rule1.id, rule2.id], delete=True).dict(),
-            delete=False
-        )
-        with patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rules") as push_event_to_rules:
-            handle_sqs_event(sqs_event, db, boto3.Session())
-            assert push_event_to_rules.call_count == 1
-            arg_event, sync_rules = push_event_to_rules.call_args_list[0].args
-            assert arg_event.id == event.id
-            assert arg_event.status == EventStatus.cancelled
-
-            assert len(sync_rules) == 2
-            assert {sr.id for sr in sync_rules} == {rule1.id, rule2.id}
+        with patch("calensync.gwrapper.GoogleCalendarWrapper.push_event_to_rule") as push_event_to_rule:
+            for rule in [rule1, rule2]:
+                sqs_event = SQSEvent(
+                    kind=QueueEvent.UPDATED_EVENT,
+                    data=UpdateGoogleEvent(event=event, rule_id=rule.id, delete=True).dict(),
+                    delete=False
+                )
+                handle_sqs_event(sqs_event, db, boto3.Session())
+            assert push_event_to_rule.call_count == 2
+            argument_sync_rules = []
+            for i in range(2):
+                arg_event, sync_rule = push_event_to_rule.call_args_list[i].args
+                assert arg_event.id == event.id
+                assert arg_event.status == EventStatus.cancelled
+                argument_sync_rules.append(sync_rule)
+            assert len(argument_sync_rules) == 2
+            assert {sr.id for sr in argument_sync_rules} == {rule1.id, rule2.id}
 
 
 class TestReceiveCreateRuleEvent:
