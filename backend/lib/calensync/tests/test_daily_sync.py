@@ -215,7 +215,7 @@ class TestUpdateWatches:
             def side_effect(*args, **kwargs):
                 raise Exception("error")
 
-            delete_watch.side_effect = lambda *args, **kwargs: side_effect(v, *args, **kwargs)
+            delete_watch.side_effect = lambda *args, **kwargs: side_effect(*args, **kwargs)
             update_watches(db)
             assert create_watch.call_count == 1
             assert delete_watch.call_count == 1

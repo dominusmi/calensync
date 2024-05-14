@@ -16,11 +16,12 @@ import calensync.sqs
 from calensync import dataclass
 from calensync.api.common import ApiError, RedirectResponse, encode_query_message
 from calensync.api.response import PostMagicLinkResponse
-from calensync.api.service import verify_valid_sync_rule, merge_users, handle_refresh_existing_calendar
+from calensync.api.service import verify_valid_sync_rule, merge_users, handle_refresh_existing_calendar, \
+    handle_delete_sync_rule_event
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB, \
     MagicLinkDB
-from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent, DeleteSyncRuleEvent
-from calensync.gwrapper import get_google_email, get_google_calendars, GoogleCalendarWrapper
+from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent
+from calensync.gwrapper import get_google_email, get_google_calendars
 from calensync.log import get_logger
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
     get_paddle_token, prefetch_get_or_none, replace_timezone
@@ -372,6 +373,38 @@ def get_calendar(user: User, calendar_id: str, db: peewee.Database) -> Calendar:
     return calendars[0]
 
 
+def resync_calendar(user: User, calendar_uuid: str, boto_session: boto3.Session, db: peewee.Database):
+    calendar = list(
+        peewee.prefetch(
+            Calendar.select()
+            .join(CalendarAccount)
+            .join(SyncRule, on=(SyncRule.source_id == Calendar.id))
+            .where(
+                Calendar.uuid == calendar_uuid,
+                CalendarAccount.user_id == user.id
+            )
+            .limit(1),
+            SyncRule.select()
+        )
+    )
+    if not calendar:
+        raise ApiError("Calendar doesn't exist or is not owned by you", 404)
+    calendar = calendar[0]
+
+    if calendar.last_resync is not None and (utcnow() - replace_timezone(calendar.last_resync)).total_seconds() / 60 < 30:
+        raise ApiError("Syncing can take a few minutes time! You can only trigger a manual re-sync once every 30 "
+                       "minutes", 429)
+
+    logger.info(f"Found {len(calendar.source_rules)} to resync")
+    for sync_rule in calendar.source_rules:
+        event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
+        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
+        if is_local():
+            calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
+        else:
+            calensync.sqs.send_event(boto3.Session(), sqs_event.json())
+
+
 def refresh_calendars(user: User, account_uuid: str, db: peewee.Database):
     """
     Gets all the calendars for the account, and saves the new one to the db.
@@ -506,12 +539,8 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, boto_session: boto3.
         source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
         sync_rule = SyncRule(source=source, destination=destination, summary=payload.summary,
                              description=payload.description).save_new()
-        event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
-        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
-        if is_local():
-            calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
-        else:
-            calensync.sqs.send_event(boto3.Session(), sqs_event.json())
+
+        calensync.api.service.run_initial_sync(sync_rule.id, boto_session, db)
 
 
 def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
@@ -528,12 +557,7 @@ def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
             raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
         sync_rule: SyncRule = sync_rules[0]
 
-        event = DeleteSyncRuleEvent(sync_rule_id=sync_rule.id)
-        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.DELETE_SYNC_RULE, data=event)
-        if is_local() and os.getenv("SQS_QUEUE_URL") is None:
-            calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
-        else:
-            calensync.sqs.send_event(boto_session, sqs_event.json())
+        handle_delete_sync_rule_event(sync_rule.id, boto_session, db)
 
 
 def get_sync_rules(user: User):

@@ -21,7 +21,8 @@ class AbstractGoogleDate(BaseModel):
     def to_datetime(self) -> datetime.datetime:
         raise NotImplementedError()
 
-    def from_google_dict(self, body):
+    @classmethod
+    def from_google_dict(cls, body):
         if date := body.get("date"):
             return GoogleDate(date=date)
         else:
@@ -108,6 +109,13 @@ class EventStatus(Enum):
 class ExtendedProperties(BaseModel):
     private: Optional[Dict[str, str]] = dict()
 
+    @classmethod
+    def from_sources(cls, source_event_id, source_calendar_id):
+        result = cls()
+        result.private[EventExtendedProperty.get_source_id_key()] = source_event_id
+        result.private[EventExtendedProperty.get_calendar_id_key()] = source_calendar_id
+        return result
+
 
 class GoogleEvent(BaseModel):
     id: str
@@ -123,6 +131,7 @@ class GoogleEvent(BaseModel):
     summary: str = None
     htmlLink: Optional[str] = None
     visibility: str = "public"
+    recurringEventId: str = None
 
     @staticmethod
     def parse_event_list_response(response: Dict) -> List[GoogleEvent]:
@@ -187,7 +196,7 @@ class DeleteSyncRuleEvent(BaseModel):
 
 class UpdateGoogleEvent(BaseModel):
     event: GoogleEvent
-    rule_ids: list[int]
+    rule_id: int
     # this is only to be used for the case where we delete a sync rule, not
     # if the event is of type "cancelled". That would be handled in the
     # "normal" flow

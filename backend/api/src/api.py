@@ -105,6 +105,14 @@ def post__refresh_calendars(calendar_account_id: str, authorization: Annotated[U
         return refresh_calendars(user, calendar_account_id, db)
 
 
+@app.post('/calendars/{calendar_uuid}/resync')
+@format_response
+def post__resync_calendar(calendar_uuid: str, authorization: Annotated[Union[str, None], Cookie()] = None):
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = verify_session(authorization)
+        return resync_calendar(user, calendar_uuid, boto3.Session(), db)
+
+
 @app.post('/tos')
 @format_response
 def post__tos(authorization: Annotated[Union[str, None], Cookie()] = None):
@@ -140,7 +148,7 @@ def delete__sync_rule(sync_id: str, authorization: Annotated[Union[str, None], C
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = verify_session(authorization)
-        delete_sync_rule(user, sync_id, db)
+        delete_sync_rule(user, sync_id, boto3.Session(), db)
 
 
 @app.delete('/calendars/{account_id}')

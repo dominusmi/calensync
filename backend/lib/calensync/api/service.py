@@ -10,8 +10,9 @@ import peewee
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
 from calensync.database.model import Calendar, User, SyncRule, EmailDB, CalendarAccount, Session
 from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, GoogleCalendar, SQSEvent, QueueEvent, \
-    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent, EventStatus
-from calensync.gwrapper import GoogleCalendarWrapper
+    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent, EventStatus, ExtendedProperties
+from calensync.gwrapper import GoogleCalendarWrapper, delete_events_for_sync_rule
+from calensync.libcalendar import PushToQueueException
 from calensync.log import get_logger
 from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait, push_update_event_to_queue
 from calensync.utils import utcnow, BackoffException
@@ -52,6 +53,7 @@ def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_ca
 
 
 def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
+    logger.info(f"Running first sync on {sync_rule_id}")
     sync_rule = list(peewee.prefetch(
         SyncRule.select().where(SyncRule.id == sync_rule_id).limit(1),
         Calendar.select()
@@ -71,9 +73,9 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
 
     # sorts them so that even that have a recurrence are handled first
     events.sort(key=lambda x: x.recurrence is None)
-
+    logger.info(f"Found {len(events)} events, pushing to queue")
     for event in events:
-        push_update_event_to_queue(event, [sync_rule.id], False, session, db)
+        push_update_event_to_queue(event, sync_rule.id, False, session, db)
 
     source.last_processed = utcnow()
     source.save()
@@ -159,32 +161,25 @@ def delete_calensync_events(destination_wrapper: 'GoogleCalendarWrapper', source
     destination_wrapper.delete_events()
 
 
-def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session, db):
+def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session, db, keep_rule_in_db: bool = False):
     sync_rule = SyncRule.get_or_none(id=sync_rule_id)
     if sync_rule is None:
         logger.warning(f"Sync rule {sync_rule_id} doesn't exist")
         return
 
-    destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
     try:
-        events = destination_wrapper.get_events(
-            private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
-            start_date=datetime.datetime.now(),
-            end_date=datetime.datetime.now() + datetime.timedelta(days=number_of_days_to_sync_in_advance()),
-            showDeleted=False
-        )
-        for event in events:
-            push_update_event_to_queue(event, rule_ids=[sync_rule.id], delete=True, session=boto_session, db=db)
+        delete_events_for_sync_rule(sync_rule, boto_session, db)
     except Exception as e:
         logger.error(f"Failed to delete events for sync rule {sync_rule}: {e}\n\n{traceback.format_exc()}")
 
     # check if calendar has other rule sync rules, otherwise delete watch
     other_rules_same_source = list(
         SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
-    if not other_rules_same_source:
+    if not other_rules_same_source and not keep_rule_in_db:
         GoogleCalendarWrapper(sync_rule.source).delete_watch()
 
-    sync_rule.delete_instance()
+    if not keep_rule_in_db:
+        sync_rule.delete_instance()
 
 
 def handle_refresh_existing_calendar(calendar: GoogleCalendar, calendar_db: Calendar, name: str):
@@ -224,14 +219,18 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
         try:
             handle_updated_event(e)
         except BackoffException as exc:
-            push_update_event_to_queue(e.event, e.rule_ids, e.delete, boto_session, db)
+            logger.info(f"Back-off: retrying event {e.event.id} for rules {e.rule_id}")
+            raise exc
+        except PushToQueueException as exc:
+            logger.warn(f"An event was signalled as missing: {exc.event.id}. Adding to queue")
+            raise RuntimeError(f"Event {exc.event.id} missing, trying again later")
 
     else:
         logger.error("Unknown event type")
 
 
 def handle_updated_event(e: UpdateGoogleEvent):
-    rules = list(SyncRule.select().where(SyncRule.id << e.rule_ids))
+    rules = list(SyncRule.select().where(SyncRule.id == e.rule_id))
     if len(rules) == 0:
         logger.warn(f"No rules found for update event: {e.dict()}")
 
@@ -242,5 +241,5 @@ def handle_updated_event(e: UpdateGoogleEvent):
         # is handled in the same function and makes things simpler
         event.status = EventStatus.cancelled
 
-    GoogleCalendarWrapper.push_event_to_rules(event, rules)
+    GoogleCalendarWrapper.push_event_to_rule(event, rules[0])
 

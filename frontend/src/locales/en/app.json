@@ -24,6 +24,7 @@
         "one-account": "One account connected",
         "second-account": "87% of people connect a second account, go ahead and click the button below",
         "refresh-calendars": "Refresh Calendars",
+        "refresh-events": "Refresh events",
         "connect-google": "Connect a Google Calendar",
         "sync": {
             "draft": {
