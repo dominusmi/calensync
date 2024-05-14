@@ -496,15 +496,15 @@ class GoogleCalendarWrapper:
                 )
 
                 found_event = None
+                skip_normal_update = False
                 if len(events) > 0:
                     found_event = events[0]
 
-                # Sometimes, when recurrent events are changed, depending on the exact manipulation
-                # the event may become cancelled, but later updated. In that case, it will be found
-                # by get_events. This case needs to be handled exactly as if it was never inserted and cancelled
-                skip_normal_update = False
-                if event.recurringEventId is not None and found_event.status == EventStatus.cancelled:
-                    skip_normal_update = True
+                    # Sometimes, when recurrent events are changed, depending on the exact manipulation
+                    # the event may become cancelled, but later updated. In that case, it will be found
+                    # by get_events. This case needs to be handled exactly as if it was never inserted and cancelled
+                    if event.recurringEventId is not None and found_event.status == EventStatus.cancelled:
+                        skip_normal_update = True
 
                 if found_event and not skip_normal_update:
                     # normal update
