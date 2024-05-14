@@ -413,8 +413,10 @@ class GoogleCalendarWrapper:
         """
         Solves a single event update (by updating all other calendars where this event exists)
         """
+        logger.info(f"Pushing event {event.id} to rule {rule.id}")
         counter_event_changed = 0
         if len(event.extendedProperties.private) > 0:
+            logger.info("Found private extended properties, ignoring")
             return 0
 
         if event.status == EventStatus.tentative:
