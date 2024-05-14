@@ -161,7 +161,7 @@ def delete_calensync_events(destination_wrapper: 'GoogleCalendarWrapper', source
     destination_wrapper.delete_events()
 
 
-def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session, db):
+def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session, db, keep_rule_in_db: bool = False):
     sync_rule = SyncRule.get_or_none(id=sync_rule_id)
     if sync_rule is None:
         logger.warning(f"Sync rule {sync_rule_id} doesn't exist")
@@ -175,10 +175,11 @@ def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session
     # check if calendar has other rule sync rules, otherwise delete watch
     other_rules_same_source = list(
         SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
-    if not other_rules_same_source:
+    if not other_rules_same_source and not keep_rule_in_db:
         GoogleCalendarWrapper(sync_rule.source).delete_watch()
 
-    sync_rule.delete_instance()
+    if not keep_rule_in_db:
+        sync_rule.delete_instance()
 
 
 def handle_refresh_existing_calendar(calendar: GoogleCalendar, calendar_db: Calendar, name: str):
@@ -222,7 +223,7 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
             raise exc
         except PushToQueueException as exc:
             logger.warn(f"An event was signalled as missing: {exc.event.id}. Adding to queue")
-            raise RuntimeError("Event missing, trying again later")
+            raise RuntimeError(f"Event {exc.event.id} missing, trying again later")
 
     else:
         logger.error("Unknown event type")
