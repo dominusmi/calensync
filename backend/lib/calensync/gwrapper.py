@@ -107,7 +107,7 @@ def get_events(service, google_id: str, start_date: datetime.datetime, end_date:
     events_service = service.events()
     request = events_service.list(
         calendarId=google_id, timeMin=start_date_str, timeMax=end_date_str, timeZone="UCT",
-        privateExtendedProperty=privateExtendedProperty,
+        privateExtendedProperty=privateExtendedProperty, maxResults=2500,
         **kwargs
     )
     events = []
@@ -116,6 +116,8 @@ def get_events(service, google_id: str, start_date: datetime.datetime, end_date:
         logger.debug(f"{google_id}: {response.get('items', [])}")
         events.extend(GoogleEvent.parse_event_list_response(response))
         request = events_service.list_next(request, response)
+        logger.info(f"Fetched {len(events)}")
+
     return events
 
 
