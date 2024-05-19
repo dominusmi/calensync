@@ -46,13 +46,13 @@ def check_if_should_run_time_or_wait(calendar_db: Calendar, first_received: date
         return SQSEventRun.DELETE
 
 
-def push_update_event_to_queue(events: List[GoogleEvent], rule_id: int, delete: bool, session: boto3.Session, db):
-    prepared_sqs_events = []
-    for event in events:
-        event = UpdateGoogleEvent(event=event, rule_id=rule_id, delete=delete)
-        sqs_event = SQSEvent(kind=QueueEvent.UPDATED_EVENT, data=event.dict(), first_received=utcnow())
-        prepared_sqs_events.append(sqs_event)
+def prepare_event_to_push(event: GoogleEvent, rule_id: int, delete: bool) -> SQSEvent:
+    event = UpdateGoogleEvent(event=event, rule_id=rule_id, delete=delete)
+    sqs_event = SQSEvent(kind=QueueEvent.UPDATED_EVENT, data=event.dict(), first_received=utcnow())
+    return sqs_event
 
+
+def push_update_event_to_queue(prepared_sqs_events: List[SQSEvent], session: boto3.Session, db):
     if is_local() and os.getenv("SQS_QUEUE_URL") is None:
         from calensync.api.service import handle_sqs_event
         for sqs_event in prepared_sqs_events:
