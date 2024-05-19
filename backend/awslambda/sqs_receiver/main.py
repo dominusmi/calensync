@@ -37,6 +37,6 @@ def handler(event, context):
                 batch_item_failures.append({"itemIdentifier": record['messageId']})
 
         sqs_batch_response["batchItemFailures"] = batch_item_failures
-        if sqs_batch_response:
+        if len(batch_item_failures) > 0:
             logger.warning(f"Returning SQS Batch response: {sqs_batch_response}")
         return sqs_batch_response
