@@ -389,7 +389,7 @@ class GoogleCalendarWrapper:
                 if google_error_handling_with_backoff(inner, self.calendar_db):
                     deleted_events += 1
             except Exception as e:
-                logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}")
+                logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
         logger.info(f"Deleted {deleted_events} events")
 
     def get_updated_events(self) -> List[GoogleEvent]:
