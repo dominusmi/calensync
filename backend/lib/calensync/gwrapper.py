@@ -22,7 +22,7 @@ from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCal
 from calensync.libcalendar import EventsModificationHandler, PushToQueueException
 from calensync.log import get_logger
 from calensync.queries.common import get_sync_rules_from_source
-from calensync.sqs import push_update_event_to_queue
+from calensync.sqs import push_update_event_to_queue, prepare_event_to_push
 from calensync.utils import get_api_url, utcnow, datetime_to_google_time, format_calendar_text, \
     google_error_handling_with_backoff
 
@@ -97,17 +97,23 @@ def get_events(service, google_id: str, start_date: datetime.datetime, end_date:
                private_extended_properties: Optional[Dict] = None, **kwargs):
     start_date_str = datetime_to_google_time(start_date) if start_date is not None else start_date
     end_date_str = datetime_to_google_time(end_date) if end_date is not None else end_date
+
     if "updatedMin" in kwargs:
         kwargs["updatedMin"] = datetime_to_google_time(kwargs["updatedMin"])
 
+    if 'maxResults' not in kwargs:
+        kwargs['maxResults'] = 2500
+
     if private_extended_properties is None:
         private_extended_properties = {}
+
     privateExtendedProperty = [f"{k}={v}" for k, v in private_extended_properties.items()]
     # "UCT" is not a spelling mistake, it's the same as UTC
+
     events_service = service.events()
     request = events_service.list(
         calendarId=google_id, timeMin=start_date_str, timeMax=end_date_str, timeZone="UCT",
-        privateExtendedProperty=privateExtendedProperty, maxResults=2500,
+        privateExtendedProperty=privateExtendedProperty,
         **kwargs
     )
     events = []
@@ -570,10 +576,14 @@ class GoogleCalendarWrapper:
 
         # sorts them so that even that have a recurrence are handled first
         events.sort(key=lambda x: x.recurrence is None)
+        prepared_events = []
         for event in events:
             # go towards a really micro-service architecture: sync rules are handled separately
             for sr in sync_rules:
-                push_update_event_to_queue(event, sr.id, False, self.session, self.db)
+                prepared_events.append(
+                    prepare_event_to_push(event, sr.id, False)
+                )
+        push_update_event_to_queue(prepared_events, self.session, self.db)
 
         return len(events)
 
@@ -596,14 +606,34 @@ def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue
         end_date=datetime.datetime.now() + datetime.timedelta(days=number_of_days_to_sync_in_advance()),
         showDeleted=False
     )
-    for event in events:
-        if (source_event_id := event.extendedProperties.private.get(EventExtendedProperty.get_source_id_key())) is None:
-            logger.warn("Shouldn't be possible to have a copied event without source id")
-            continue
-        event.id = source_event_id
-        event.extendedProperties = ExtendedProperties()
-        event.status = EventStatus.cancelled
-        if use_queue:
-            push_update_event_to_queue(event, rule_id=sync_rule.id, delete=True, session=boto_session, db=db)
-        else:
-            GoogleCalendarWrapper.push_event_to_rule(event, sync_rule)
+    logger.info(f"Setting {len(events)} for deletion")
+
+    if use_queue:
+        prepared_events = []
+        for event in events:
+            if (source_event_id := event.extendedProperties.private.get(EventExtendedProperty.get_source_id_key())) is None:
+                logger.warn("Shouldn't be possible to have a copied event without source id")
+                continue
+
+            event.id = source_event_id
+            event.extendedProperties = ExtendedProperties()
+            event.status = EventStatus.cancelled
+            prepared_events.append(
+                prepare_event_to_push(event, sync_rule.id, True)
+            )
+
+        push_update_event_to_queue(prepared_events, session=boto_session, db=db)
+    else:
+        # for i, event in enumerate(events):
+        def _inner(event):
+            try:
+                GoogleCalendarWrapper.push_event_to_rule(event, sync_rule)
+            except Exception as e:
+                logger.error(e)
+
+        for i, event in enumerate(events):
+            if i % 50 == 0:
+                logger.info(f"Sent {i}/{len(event)} events")
+            _inner(event)
+        # with ThreadPool(8) as p:
+        #     print(p.map(_inner, events))
