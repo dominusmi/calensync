@@ -42,7 +42,7 @@ class GoogleDate(AbstractGoogleDate):
         return datetime.datetime(self.date.year, self.date.month, self.date.day)
 
     def clone(self):
-        return GoogleDatetime(dateTime=self.date)
+        return GoogleDate(date=self.date)
 
 
 class GoogleDatetime(AbstractGoogleDate):
