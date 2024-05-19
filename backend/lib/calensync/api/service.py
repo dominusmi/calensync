@@ -14,7 +14,8 @@ from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, Goog
 from calensync.gwrapper import GoogleCalendarWrapper, delete_events_for_sync_rule
 from calensync.libcalendar import PushToQueueException
 from calensync.log import get_logger
-from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait, push_update_event_to_queue
+from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait, push_update_event_to_queue, \
+    prepare_event_to_push
 from calensync.utils import utcnow, BackoffException
 
 logger = get_logger(__file__)
@@ -74,7 +75,8 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
     # sorts them so that even that have a recurrence are handled first
     events.sort(key=lambda x: x.recurrence is None)
     logger.info(f"Found {len(events)} events, pushing to queue")
-    push_update_event_to_queue(events, sync_rule.id, False, session, db)
+    prepared_events = [prepare_event_to_push(e, sync_rule.id, False) for e in events]
+    push_update_event_to_queue(prepared_events, session, db)
 
     source.last_processed = utcnow()
     source.save()
