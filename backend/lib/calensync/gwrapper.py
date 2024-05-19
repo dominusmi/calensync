@@ -43,15 +43,9 @@ def service_from_account(account: CalendarAccount):
 
 
 def delete_event(service, calendar_id: str, event_id: str):
-    try:
-        # todo: handle correctly
-        service.events().delete(calendarId=calendar_id, eventId=event_id, sendNotifications=None,
-                                sendUpdates=None).execute()
-    except Exception as e:
-        logger.warn(f"Failed to delete event: {e}")
-        return False
-
-    return True
+    # todo: handle correctly
+    service.events().delete(calendarId=calendar_id, eventId=event_id, sendNotifications=None,
+                            sendUpdates=None).execute()
 
 
 def insert_event(service, calendar_id: str, start: GoogleDatetime, end: GoogleDatetime,
