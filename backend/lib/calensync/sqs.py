@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import enum
 import os
+from typing import List
 
 import boto3
 
@@ -18,6 +19,12 @@ def send_event(session, content: str):
     queue_url = os.environ["SQS_QUEUE_URL"]
     client = session.client("sqs")
     client.send_message(QueueUrl=queue_url, MessageBody=content)
+
+
+def send_batched_events(session, contents: List[str]):
+    queue_url = os.environ["SQS_QUEUE_URL"]
+    client = session.client("sqs")
+    client.send_message_batch(QueueUrl=queue_url, Entries=[{"Id": str(i), "MessageBody": content} for i, content in enumerate(contents)])
 
 
 class SQSEventRun(enum.IntEnum):
@@ -39,11 +46,21 @@ def check_if_should_run_time_or_wait(calendar_db: Calendar, first_received: date
         return SQSEventRun.DELETE
 
 
-def push_update_event_to_queue(event: GoogleEvent, rule_id: int, delete: bool, session: boto3.Session, db):
-    event = UpdateGoogleEvent(event=event, rule_id=rule_id, delete=delete)
-    sqs_event = SQSEvent(kind=QueueEvent.UPDATED_EVENT, data=event.dict(), first_received=utcnow())
+def push_update_event_to_queue(events: List[GoogleEvent], rule_id: int, delete: bool, session: boto3.Session, db):
+    prepared_sqs_events = []
+    for event in events:
+        event = UpdateGoogleEvent(event=event, rule_id=rule_id, delete=delete)
+        sqs_event = SQSEvent(kind=QueueEvent.UPDATED_EVENT, data=event.dict(), first_received=utcnow())
+        prepared_sqs_events.append(sqs_event)
+
     if is_local() and os.getenv("SQS_QUEUE_URL") is None:
         from calensync.api.service import handle_sqs_event
-        handle_sqs_event(sqs_event=sqs_event, db=db, boto_session=session)
+        for sqs_event in prepared_sqs_events:
+            handle_sqs_event(sqs_event=sqs_event, db=db, boto_session=session)
     else:
-        send_event(session, sqs_event.json())
+        batch_size = 10
+        batches = [prepared_sqs_events[i:i + batch_size] for i in range(0, len(prepared_sqs_events), batch_size)]
+        for batch_idx, batched_events in enumerate(batches):
+            batched_events: List[GoogleEvent]
+            logger.info(f"Sending batch {batch_idx} of {len(batches)}")
+            send_batched_events(session, [b.json() for b in batched_events])
