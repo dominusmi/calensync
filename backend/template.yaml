@@ -34,8 +34,8 @@ Resources:
     Properties:
       QueueName: !Sub "Calensync-${Env}-queue"
       DelaySeconds: 0
-      VisibilityTimeout: 61
-      MessageRetentionPeriod: 601
+      VisibilityTimeout: 120
+      MessageRetentionPeriod: 6001
 
   GetSecretsPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -137,7 +137,7 @@ Resources:
       Runtime: python3.9
       CodeUri: awslambda/sqs_receiver/
       Handler: main.handler
-      Timeout: 60
+      Timeout: 1200
       MemorySize: 512
       Policies:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
