@@ -534,6 +534,8 @@ class GoogleCalendarWrapper:
                     existing_event.recurringEventId = recurrence_source.id
                     originalStartTime = copy(recurrence_source.start)
                     originalStartTime = originalStartTime.dateTime.replace(
+                        year=event.originalStartTime.dateTime.year,
+                        month=event.originalStartTime.dateTime.month,
                         day=event.originalStartTime.dateTime.day,
                         hour=event.originalStartTime.dateTime.hour,
                         minute=event.originalStartTime.dateTime.minute
