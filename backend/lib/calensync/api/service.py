@@ -74,8 +74,7 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
     # sorts them so that even that have a recurrence are handled first
     events.sort(key=lambda x: x.recurrence is None)
     logger.info(f"Found {len(events)} events, pushing to queue")
-    for event in events:
-        push_update_event_to_queue(event, sync_rule.id, False, session, db)
+    push_update_event_to_queue(events, sync_rule.id, False, session, db)
 
     source.last_processed = utcnow()
     source.save()
