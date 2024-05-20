@@ -34,8 +34,8 @@ Resources:
     Properties:
       QueueName: !Sub "Calensync-${Env}-queue"
       DelaySeconds: 0
-      VisibilityTimeout: 120
-      MessageRetentionPeriod: 6001
+      VisibilityTimeout: 200
+      MessageRetentionPeriod: 1001
 
   GetSecretsPolicy:
     Type: AWS::IAM::ManagedPolicy
