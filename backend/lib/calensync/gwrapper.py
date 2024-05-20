@@ -43,7 +43,6 @@ def service_from_account(account: CalendarAccount):
 
 
 def delete_event(service, calendar_id: str, event_id: str):
-    # todo: handle correctly
     service.events().delete(calendarId=calendar_id, eventId=event_id, sendNotifications=None,
                             sendUpdates=None).execute()
 
@@ -61,7 +60,7 @@ def insert_event(service, calendar_id: str, start: GoogleDatetime, end: GoogleDa
         "reminders": {"useDefault": False},
         **kwargs
     }
-    logger.info(f"Sending {event}")
+    logger.debug(f"Sending {event}")
     return service.events().insert(calendarId=calendar_id, body=event).execute()
 
 
