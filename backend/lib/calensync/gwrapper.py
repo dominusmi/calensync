@@ -632,7 +632,7 @@ def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue
 
         for i, event in enumerate(events):
             if i % 50 == 0:
-                logger.info(f"Sent {i}/{len(event)} events")
+                logger.info(f"Sent {i}/{len(events)} events")
             _inner(event)
         # with ThreadPool(8) as p:
         #     print(p.map(_inner, events))
