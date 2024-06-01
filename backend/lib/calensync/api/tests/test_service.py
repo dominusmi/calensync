@@ -29,9 +29,11 @@ class TestVerifySyncRule:
             verify_valid_sync_rule(user, str(calendar1_1.uuid), str(calendar1_1.uuid))
 
     @staticmethod
-    def test_user_doesnt_own_calendar(user, calendar1_1):
+    def test_user_doesnt_own_calendar(user, calendar1_1, boto_session):
         user2 = User(email="test@test.com").save_new()
-        account1_21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
+        account1_21 = CalendarAccount(
+            user=user2, key="key2",
+            encrypted_credentials=encrypt_credentials({"key": "value"}, boto_session)).save_new()
         calendar1_21 = Calendar(account=account1_21, platform_id="platform_id21", name="name21", active=True,
                                 last_processed=utcnow(), last_inserted=utcnow()).save_new()
 

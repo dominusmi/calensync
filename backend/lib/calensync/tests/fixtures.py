@@ -15,6 +15,10 @@ from moto import mock_aws
 from calensync.database.model import User, CalendarAccount, Calendar, EmailDB
 from calensync.database.utils import reset_db, DatabaseSession
 from calensync.dataclass import GoogleEvent
+from calensync.secure import encrypt_credentials
+
+os.environ["ENV"] = "test"
+os.environ["AWS_ACCESS_KEY_ID"] = "123"
 
 
 def wrap_reset_db(func):
@@ -45,7 +49,8 @@ def email1_1(user):
 
 @fixture
 def account1_1(db, user, email1_1):
-    return CalendarAccount(user=user, key=email1_1.email, credentials={}).save_new()
+    return CalendarAccount(user=user, key=email1_1.email,
+                           encrypted_credentials=encrypt_credentials({}, None)).save_new()
 
 
 @fixture
@@ -55,7 +60,7 @@ def calendar1_1(db, account1_1):
 
 @fixture
 def account1_2(db, user):
-    return CalendarAccount(user=user, key="test2", credentials={}).save_new()
+    return CalendarAccount(user=user, key="test2", encrypted_credentials=encrypt_credentials({}, None)).save_new()
 
 
 @fixture
@@ -70,7 +75,7 @@ def user2(db):
 
 @fixture
 def account1_1_2(db, user):
-    return CalendarAccount(user=user, key="test2_1", credentials={}).save_new()
+    return CalendarAccount(user=user, key="test2_1", encrypted_credentials=encrypt_credentials({}, None)).save_new()
 
 
 @fixture
@@ -80,7 +85,7 @@ def calendar1_1_2(db, account1_1):
 
 @fixture
 def account1_1_3(db, user):
-    return CalendarAccount(user=user, key="test2_2", credentials={}).save_new()
+    return CalendarAccount(user=user, key="test2_2", encrypted_credentials=encrypt_credentials({}, None)).save_new()
 
 
 @fixture

@@ -75,11 +75,12 @@ def test_get_events_pagination(db, calendar1_1, events_fixture):
     assert len(events) > 1
 
 
-def test_from_channel_id():
+def test_from_channel_id(boto_session):
     with DatabaseSession("test"):
         reset_db()
         user = User(email="test1@test.com").save_new()
-        account = CalendarAccount(user=user, key="test1", credentials={}).save_new()
+        account = CalendarAccount(user=user, key="test1",
+                                  encrypted_credentials=encrypt_credentials({}, boto_session)).save_new()
         calendar1_1 = Calendar(account=account, platform_id="platform1", name="name1").save_new()
 
         wrapper = GoogleCalendarWrapper.from_channel_id(calendar1_1.channel_id.__str__())

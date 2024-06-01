@@ -24,9 +24,10 @@ class MockEvent:
     status = EventStatus.confirmed
 
 
-def test_get_users_query_with_active_calendar(user, account1_1, calendar1_1, calendar1_2):
+def test_get_users_query_with_active_calendar(user, account1_1, calendar1_1, calendar1_2, boto_session):
     user2 = User().save_new()
-    user2_account = CalendarAccount(key="whauh", credentials="", user=user2).save_new()
+    user2_account = CalendarAccount(
+        key="whauh", encrypted_credentials=encrypt_credentials({}, boto_session), user=user2).save_new()
     Calendar(account=user2_account, platform_id="platform2_1", name="name2", active=False).save_new()
 
     query = get_users_query_with_active_sync_rules()
@@ -41,7 +42,7 @@ def test_get_users_query_with_active_calendar(user, account1_1, calendar1_1, cal
     assert result[0].id == user.id
 
 
-def test_daily_sync(db, user, account1_1, calendar1_1: Calendar, account1_2, calendar1_2: Calendar):
+def test_daily_sync(db, user, account1_1, calendar1_1: Calendar, account1_2, calendar1_2: Calendar, boto_session):
     with (
         patch("calensync.gwrapper.insert_event") as insert_event,
         patch("calensync.gwrapper.get_events") as get_events,
@@ -100,7 +101,7 @@ def test_daily_sync(db, user, account1_1, calendar1_1: Calendar, account1_2, cal
 
         get_events.side_effect = mock_get_events
 
-        sync_user_calendars_by_date(db)
+        sync_user_calendars_by_date(db, boto_session)
 
         # events = list(Event.select().where(Event.calendar_id == calendar1_1.id, Event.source.is_null(False)))
         # assert len(events) == 2
@@ -130,9 +131,10 @@ def test_daily_sync(db, user, account1_1, calendar1_1: Calendar, account1_2, cal
 
 
 def test_sync_user_calendars_by_date_multiple_users(db, user, account1_1, calendar1_1: Calendar, account1_2,
-                                                    calendar1_2: Calendar):
+                                                    calendar1_2: Calendar, boto_session):
     user2 = User(email="tes@t.io", is_admin=True, tos=datetime.datetime.now()).save_new()
-    account1_2_1 = CalendarAccount(user=user2, key="wat", credentials={}).save_new()
+    account1_2_1 = CalendarAccount(user=user2, key="wat",
+                                   encrypted_credentials=encrypt_credentials({}, boto_session)).save_new()
     c2_1 = Calendar(account=account1_2_1, platform_id="platform2_1", name="name2_1").save_new()
     c2_2 = Calendar(account=account1_2_1, platform_id="platform2_2", name="name2_2").save_new()
     SyncRule(source=c2_1, destination=c2_2, private=True).save_new()
@@ -143,7 +145,7 @@ def test_sync_user_calendars_by_date_multiple_users(db, user, account1_1, calend
         patch("calensync.awslambda.daily_sync.GoogleCalendarWrapper") as wrapper
     ):
         load_calendars.return_value = []
-        sync_user_calendars_by_date(db)
+        sync_user_calendars_by_date(db, boto_session)
         assert load_calendars.call_count == 2
         assert wrapper.call_count == 0
 

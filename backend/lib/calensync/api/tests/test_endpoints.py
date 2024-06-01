@@ -1,10 +1,7 @@
-import os
 from typing import List
 from unittest.mock import patch
 
-import boto3
 import starlette.responses
-from moto import mock_aws
 
 from calensync.api import endpoints
 from calensync.api.common import ApiError, RedirectResponse
@@ -13,8 +10,8 @@ from calensync.api.endpoints import delete_sync_rule, get_oauth_token, get_front
 from calensync.api.tests.util import simulate_sqs_receiver
 from calensync.database.model import Session
 from calensync.database.model import SyncRule, OAuthState, OAuthKind
-from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty, GoogleCalendar, \
-    PostSyncRuleEvent
+from calensync.dataclass import (GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty,
+                                 GoogleCalendar, PostSyncRuleEvent)
 from calensync.libcalendar import EventsModificationHandler
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
@@ -101,13 +98,15 @@ class TestDeleteSyncRule:
 
 class TestGetSyncRules:
     @staticmethod
-    def test_get_rules(user, calendar1_1, calendar1_2):
+    def test_get_rules(user, calendar1_1, calendar1_2, boto_session):
         SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
         SyncRule(source=calendar1_2, destination=calendar1_1, private=True).save_new()
 
         # add rules of other user
         user2 = User(email="test@test.com").save_new()
-        account1_21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
+        account1_21 = CalendarAccount(
+            user=user2, key="key2",
+            encrypted_credentials=encrypt_credentials({"key": "value"}, boto_session)).save_new()
         calendar1_21 = Calendar(account=account1_21, platform_id="platform_id21", name="name21", active=True,
                                 last_processed=utcnow(), last_inserted=utcnow()).save_new()
         calendar1_22 = Calendar(account=account1_21, platform_id="platform_id22", name="name22", active=True,
@@ -123,7 +122,7 @@ class TestGetSyncRules:
 
 class TestGetOauthToken:
     @staticmethod
-    def test_new_user_through_add_account(db):
+    def test_new_user_through_add_account(db, boto_session):
         with (
             patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
@@ -143,7 +142,7 @@ class TestGetOauthToken:
             email = "test@test.com"
             get_google_email.return_value = email
             credentials_to_dict.return_value = {"email": email}
-            get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, boto_session=boto_session)
 
             assert (email_db := EmailDB.get_or_none(email=email)) is not None
             assert email_db.user == user_db
@@ -152,7 +151,7 @@ class TestGetOauthToken:
             assert session.user == user_db
 
     @staticmethod
-    def test_normal_login(db):
+    def test_normal_login(db, boto_session):
         with (
             patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
@@ -169,7 +168,8 @@ class TestGetOauthToken:
             state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.GOOGLE_SSO).save_new()
             get_google_email.return_value = email
             credentials_to_dict.return_value = {"email": email}
-            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db,
+                                     boto_session=boto_session)
 
             assert OAuthState.get_or_none(id=state_db.id) is None
             assert result.location == f"{get_frontend_env()}/dashboard"
@@ -178,7 +178,7 @@ class TestGetOauthToken:
             assert isinstance(authorization, str)
 
     @staticmethod
-    def test_login_user_doesnt_exist(db):
+    def test_login_user_doesnt_exist(db, boto_session):
         with (
             patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
@@ -193,7 +193,8 @@ class TestGetOauthToken:
             state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.GOOGLE_SSO).save_new()
             get_google_email.return_value = email
             credentials_to_dict.return_value = {"email": email}
-            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db,
+                                     boto_session=boto_session)
 
             assert EmailDB.get_or_none(email=email) is not None
             assert OAuthState.get_or_none(id=state_db.id) is None
@@ -202,7 +203,7 @@ class TestGetOauthToken:
             assert result.cookie is not None
 
     @staticmethod
-    def test_signin_statedb_user_is_none_email_exists(db, user):
+    def test_signin_statedb_user_is_none_email_exists(db, user, boto_session):
         with (
             patch("calensync.api.endpoints.get_client_secret") as get_client_secret,
             patch("calensync.api.endpoints.google_auth_oauthlib") as google_auth_oauthlib,
@@ -218,7 +219,8 @@ class TestGetOauthToken:
             state_db = OAuthState(state=str(uuid4()), kind=OAuthKind.GOOGLE_SSO).save_new()
             get_google_email.return_value = email
             credentials_to_dict.return_value = {"email": email}
-            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db,
+                                     boto_session=boto_session)
 
             assert EmailDB.get_or_none(email=email) is not None
             assert OAuthState.get_or_none(id=state_db.id) is None
@@ -230,7 +232,7 @@ class TestGetOauthToken:
             assert isinstance(authorization, str)
 
     @staticmethod
-    def test_email_already_associated(db, user, user2, email1_1):
+    def test_email_already_associated(db, user, user2, email1_1, boto_session):
         """
         Basically a temporary state used with a know email
         """
@@ -248,12 +250,13 @@ class TestGetOauthToken:
             get_google_email.return_value = email1_1.email
             credentials_to_dict.return_value = {"email": email1_1.email}
 
-            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db,
+                                     boto_session=boto_session)
             assert "error_msg" not in result.location
             assert User.get_or_none(id=user2.id) is None
 
     @staticmethod
-    def test_email_already_associated_but_not_state(db, user, user2):
+    def test_email_already_associated_but_not_state(db, user, user2, boto_session):
         """
         Can happen if a user has created two accounts (mistakenly) and is now trying
         to add the account of one email, due the other
@@ -273,11 +276,12 @@ class TestGetOauthToken:
             get_google_email.return_value = email
             credentials_to_dict.return_value = {"email": email}
 
-            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            result = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db,
+                                     boto_session=boto_session)
             assert User.get_or_none(id=user2.id) is None
 
     @staticmethod
-    def test_add_account_user_did_not_give_permissions(db, user, user2):
+    def test_add_account_user_did_not_give_permissions(db, user, user2, boto_session):
         """
         If a new user has a permission issue when adding an account, we need to
         delete the authorization cookie otherwise they may get stuck in a "Session expired" loop
@@ -301,18 +305,21 @@ class TestGetOauthToken:
             get_google_email.return_value = email
             credentials_to_dict.return_value = {"email": email}
 
-            response = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            response = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db,
+                                       boto_session=boto_session)
             assert isinstance(response, starlette.responses.Response)
             assert "Max-Age=-1" in response.headers["set-cookie"]
 
             EmailDB(email=email, user=user).save_new()
-            response = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db, session=None)
+            response = get_oauth_token(state=str(state_db.state), code="123", error=None, db=db,
+                                       boto_session=boto_session)
             assert "Max-Age=-1" not in response.headers.get("set-cookie", "")
 
 
 class TestResetUser:
     @staticmethod
-    def test_valid(db, user, account1_1, calendar1_1, calendar1_2, user2, calendar1_1_2, calendar1_2_2, boto_session, queue_url):
+    def test_valid(db, user, account1_1, calendar1_1, calendar1_2, user2, calendar1_1_2, calendar1_2_2, boto_session,
+                   queue_url):
         with (
             patch("calensync.api.endpoints.delete_sync_rule") as delete_sync_rule,
         ):
@@ -323,7 +330,9 @@ class TestResetUser:
             SyncRule(source=calendar1_1_2, destination=calendar1_2_2, private=True).save_new()
             SyncRule(source=calendar1_2_2, destination=calendar1_1_2, private=True).save_new()
 
-            account2_1 = CalendarAccount(user=user2, key="test3", credentials={}).save_new()
+            account2_1 = CalendarAccount(
+                user=user2, key="test3",
+                encrypted_credentials=encrypt_credentials({"key": "value"}, boto_session)).save_new()
             calendar2_1 = Calendar(account=account2_1, platform_id="platform2_1", name="name1", active=False).save_new()
             calendar2_2 = Calendar(account=account2_1, platform_id="platform2_2", name="name1", active=False).save_new()
 
@@ -346,12 +355,12 @@ class TestResetUser:
 
 class TestHandleAddCalendar():
     @staticmethod
-    def test_state_exists_email_not(db, user, account1_1, email1_1):
+    def test_state_exists_email_not(db, user, account1_1, email1_1, boto_session):
         with (
             patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
         ):
             state_db = OAuthState(user=user, state="", kind=OAuthKind.ADD_GOOGLE_ACCOUNT).save_new()
-            handle_add_calendar(state_db, "random@email.com", {}, db)
+            handle_add_calendar(state_db, "random@email.com", {}, db, boto_session)
 
         emails = list(EmailDB.select().where(EmailDB.user == user))
         assert len(emails) == 2
@@ -362,18 +371,22 @@ class TestHandleAddCalendar():
         assert "random@email.com" in {acc.key for acc in accounts}
 
     @staticmethod
-    def test_state_and_email_user_not_the_same(db, user, email1_1, account1_1):
+    def test_state_and_email_user_not_the_same(db, user, email1_1, account1_1, boto_session):
         with (
             patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
         ):
             other_user = User().save_new()
             other_user_email1 = EmailDB(email="test2", user=other_user).save_new()
             other_user_email2 = EmailDB(email="test3", user=other_user).save_new()
-            other_user_account1 = CalendarAccount(user=other_user, key="test2", credentials={}).save_new()
-            other_user_account2 = CalendarAccount(user=other_user, key="test3", credentials={}).save_new()
+            other_user_account1 = CalendarAccount(
+                user=other_user, key="test2",
+                encrypted_credentials=encrypt_credentials({"key": "value"}, boto_session)).save_new()
+            other_user_account2 = CalendarAccount(
+                user=other_user, key="test3",
+                encrypted_credentials=encrypt_credentials({"key": "value"}, boto_session)).save_new()
 
             state_db = OAuthState(user=other_user, state="", kind=OAuthKind.ADD_GOOGLE_ACCOUNT).save_new()
-            handle_add_calendar(state_db, email1_1.email, {}, db)
+            handle_add_calendar(state_db, email1_1.email, {}, db, boto_session)
 
             emails = list(EmailDB.select().where(EmailDB.user == user))
             assert len(emails) == 3
@@ -388,19 +401,19 @@ class TestHandleAddCalendar():
             assert User.get_or_none(id=other_user.id) is None
 
     @staticmethod
-    def test_state_user_and_email_dont_exist(db, user):
+    def test_state_user_and_email_dont_exist(db, user, boto_session):
         with (
             patch("calensync.api.endpoints.refresh_calendars") as refresh_calendars
         ):
             state_db = OAuthState(user=None, state="", kind=OAuthKind.ADD_GOOGLE_ACCOUNT).save_new()
             with pytest.raises(RedirectResponse):
-                handle_add_calendar(state_db, "testing@email.com", {}, db)
+                handle_add_calendar(state_db, "testing@email.com", {}, db, boto_session)
 
 
-class TestRefreshCalendars():
+class TestRefreshCalendars:
     @staticmethod
     @patch("calensync.api.endpoints.google.oauth2.credentials.Credentials.from_authorized_user_info", return_value=None)
-    def test_normal(db, user, account1_1, calendar1_1, calendar1_1_2):
+    def test_normal(db, user, account1_1, calendar1_1, calendar1_1_2, boto_session):
         with patch("calensync.api.endpoints.get_google_calendars") as patch_get_google_calendars:
             patch_get_google_calendars.return_value = [
                 GoogleCalendar(
@@ -431,7 +444,7 @@ class TestRefreshCalendars():
                     primary=False
                 )
             ]
-            endpoints.refresh_calendars(user, account1_1.uuid, db)
+            endpoints.refresh_calendars(user, account1_1.uuid, db, boto_session)
 
             c1 = Calendar.get_by_id(calendar1_1.id)
             c2 = Calendar.get_by_id(calendar1_1_2.id)
