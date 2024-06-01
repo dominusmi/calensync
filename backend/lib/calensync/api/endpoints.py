@@ -23,6 +23,7 @@ from calensync.database.model import User, OAuthState, Calendar, OAuthKind, Cale
 from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent
 from calensync.gwrapper import get_google_email, get_google_calendars
 from calensync.log import get_logger
+from calensync.secure import encrypt_credentials, decrypt_credentials
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
     get_paddle_token, prefetch_get_or_none, replace_timezone
 
@@ -136,7 +137,7 @@ def handle_signin_signup(state_db: OAuthState, email: str):
                 return RedirectResponse(location=f"{get_frontend_env()}/dashboard", cookie=cookie)
 
 
-def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict, db):
+def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict, db, boto_session: boto3.Session):
     """
     This function create the CalendarAccount object for a new email, as well as calling refresh_calendars.
     There are a couple of tricky cases:
@@ -148,6 +149,8 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
     :param state_db: database model for the Google OAuth State
     :param email: email connected to the Google account which made the OAuth request
     :param credentials_dict: credentials for calendar permissions related to this email
+    :param db: database connection
+    :param boto_session: boto3 session, used to get the secret key to decrypt credentials
     """
     email_db = prefetch_get_or_none(
         EmailDB.select().where(EmailDB.email == email),
@@ -199,20 +202,22 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
 
     account_added = False
     account: Optional[CalendarAccount] = CalendarAccount.get_or_none(key=email)
+
+    encrypted_credentials = encrypt_credentials(credentials_dict, boto_session)
     if account is None:
-        account = CalendarAccount(credentials=credentials_dict, user=main_user, key=email)
+        account = CalendarAccount(encrypted_credentials=encrypted_credentials, user=main_user, key=email)
         account.save()
         account_added = True
 
     else:
-        account.credentials = credentials_dict
+        account.encrypted_credentials = encrypted_credentials
         account.save()
 
     state_db.delete_instance()
     if delete_secondary_user and other_user is not None:
         other_user.delete_instance()
 
-    refresh_calendars(main_user, account.uuid, db)
+    refresh_calendars(main_user, account.uuid, db, boto_session)
 
     Session(session_id=state_db.session_id, user=main_user).save_new()
 
@@ -222,7 +227,7 @@ def handle_add_calendar(state_db: OAuthState, email: str, credentials_dict: dict
     return RedirectResponse(location=redirect)
 
 
-def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Database, session):
+def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Database, boto_session: boto3.Session):
     state_db: OAuthState = OAuthState.get_or_none(state=state)
     if state_db is None:
         raise ApiError("Invalid state")
@@ -232,7 +237,7 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
         state_db.delete_instance()
         return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg.decode('utf-8')}")
 
-    client_secret = get_client_secret(session)
+    client_secret = get_client_secret(boto_session)
 
     is_login = (state_db.kind == OAuthKind.GOOGLE_SSO)
     logger.info(f"OAuth of kind {state_db.kind}, is_login: {is_login}")
@@ -267,7 +272,7 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
     if is_login:
         return handle_signin_signup(state_db, email)
     else:
-        return handle_add_calendar(state_db, email, credentials_dict, db)
+        return handle_add_calendar(state_db, email, credentials_dict, db, boto_session)
 
 
 def prepare_calendar_oauth_without_user(db: peewee.Database, session):
@@ -405,7 +410,7 @@ def resync_calendar(user: User, calendar_uuid: str, boto_session: boto3.Session,
             calensync.sqs.send_event(boto3.Session(), sqs_event.json())
 
 
-def refresh_calendars(user: User, account_uuid: str, db: peewee.Database):
+def refresh_calendars(user: User, account_uuid: str, db: peewee.Database, boto_session: boto3.Session):
     """
     Gets all the calendars for the account, and saves the new one to the db.
     Returns a list of the calendars
@@ -418,7 +423,8 @@ def refresh_calendars(user: User, account_uuid: str, db: peewee.Database):
     if account is None:
         raise ApiError("Account doesn't exist or user doesn't have access to it")
 
-    credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(account.credentials)
+    credentials_dict = decrypt_credentials(account.encrypted_credentials, boto_session)
+    credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(credentials_dict)
     calendars = get_google_calendars(credentials)
 
     calendars_db: List[Calendar] = list(

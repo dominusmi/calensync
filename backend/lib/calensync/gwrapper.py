@@ -6,6 +6,7 @@ import traceback
 from copy import copy
 from typing import List, Dict, Any, Optional
 
+import boto3
 import google.oauth2.credentials
 import google_auth_httplib2
 import googleapiclient
@@ -22,6 +23,7 @@ from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCal
 from calensync.libcalendar import EventsModificationHandler, PushToQueueException
 from calensync.log import get_logger
 from calensync.queries.common import get_sync_rules_from_source
+from calensync.secure import decrypt_credentials
 from calensync.sqs import push_update_event_to_queue, prepare_event_to_push
 from calensync.utils import get_api_url, utcnow, datetime_to_google_time, format_calendar_text, \
     google_error_handling_with_backoff
@@ -29,9 +31,10 @@ from calensync.utils import get_api_url, utcnow, datetime_to_google_time, format
 logger = get_logger(__file__)
 
 
-def service_from_account(account: CalendarAccount):
+def service_from_account(account: CalendarAccount, boto_session: boto3.Session):
+    credentials = decrypt_credentials(account.encrypted_credentials, boto_session)
     creds = google.oauth2.credentials.Credentials.from_authorized_user_info(
-        account.credentials
+        credentials
     )
 
     def build_request(http, *args, **kwargs):
@@ -218,7 +221,7 @@ class GoogleCalendarWrapper:
     def service(self):
         """ Lazy service loader with cache """
         if self._service is None:
-            self._service = service_from_account(self.calendar_db.account)
+            self._service = service_from_account(self.calendar_db.account, self.session)
         return self._service
 
     @property
