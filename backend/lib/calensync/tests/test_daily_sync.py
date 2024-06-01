@@ -12,7 +12,7 @@ from calensync.awslambda.daily_sync import sync_user_calendars_by_date, update_w
 from calensync.database.model import SyncRule
 from calensync.dataclass import GoogleDatetime, AbstractGoogleDate, EventStatus
 from calensync.tests.fixtures import *
-from calensync.utils import utcnow
+from calensync.utils import utcnow, INVALID_GRANT_ERROR
 
 
 @dataclasses.dataclass
@@ -221,6 +221,23 @@ class TestUpdateWatches:
             update_watches(db)
             assert create_watch.call_count == 1
             assert delete_watch.call_count == 1
+
+    @staticmethod
+    def test_do_not_update_invalid_grant_calendar(db, calendar1_1: Calendar, calendar1_2: Calendar):
+        calendar1_2.expiration = utcnow() + datetime.timedelta(hours=35)
+        calendar1_2.paused = utcnow()
+        calendar1_2.paused_reason = INVALID_GRANT_ERROR
+        calendar1_2.save()
+
+        SyncRule(source=calendar1_2, destination=calendar1_1, private=True).save_new()
+
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.create_watch") as create_watch,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.delete_watch") as delete_watch,
+        ):
+            update_watches(db)
+            assert create_watch.call_count == 0
+            assert delete_watch.call_count == 0
 
 
 class TestTrialEmail:

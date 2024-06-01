@@ -113,7 +113,7 @@ def update_watches(db: peewee.Database):
         .where(
             Calendar.expiration.is_null(False),
             Calendar.expiration <= now + datetime.timedelta(hours=36),
-            Calendar.paused_reason != INVALID_GRANT_ERROR
+            (Calendar.paused_reason.is_null(True) | (Calendar.paused_reason != INVALID_GRANT_ERROR))
         ),
         CalendarAccount.select(),
         User.select()
@@ -129,20 +129,18 @@ def update_watches(db: peewee.Database):
 
                 try:
                     if not deleted:
+                        deleted = True
                         gcalendar.delete_watch()
                         logger.info("Watch deleted")
-                        deleted = True
 
                     gcalendar.create_watch()
+                    break
                 except google.auth.exceptions.RefreshError as e:
                     reason = e.args[1]['error']
                     logger.error(f"Putting calendar on pause: {reason}")
                     calendar_db.paused = True
                     calendar_db.paused_reason = reason
                     calendar_db.save()
-            except google.auth.exceptions.RefreshError as e:
-                if len(e.args) < 2 or e.args[1]:
-                    raise e
             except Exception as e:
                 logger.error(
                     f"Error occured while updating calendar {calendar_db.uuid}: {e}\n\n{traceback.format_exc()}")
