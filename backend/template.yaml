@@ -16,6 +16,8 @@ Parameters:
     Type: String
   EmailARN:
     Type: String
+  EncryptionKeyARN:
+    Type: String
 
 Resources:
   Api:
@@ -92,6 +94,7 @@ Resources:
           FRONTEND: !Ref FrontendUri
           API_ENDPOINT: !Ref ApiEndpoint
           SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
+          ENCRYPTION_KEY_ARN: !Ref EncryptionKeyARN
       Events:
         read:
           Type: HttpApi
@@ -130,6 +133,7 @@ Resources:
           ENV: !Ref Env
           API_ENDPOINT: !Ref ApiEndpoint
           SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
+          ENCRYPTION_KEY_ARN: !Ref EncryptionKeyARN
       Events:
         DailySyncEvent:
           Type: Schedule
@@ -168,6 +172,7 @@ Resources:
           ENV: !Ref Env
           API_ENDPOINT: !Ref ApiEndpoint
           SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
+          ENCRYPTION_KEY_ARN: !Ref EncryptionKeyARN
       Events:
         SQSPutVisit:
           Type: SQS
