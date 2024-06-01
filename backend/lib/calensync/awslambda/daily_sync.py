@@ -4,6 +4,7 @@ import traceback
 from typing import Iterable, List
 
 import boto3
+import google.auth.exceptions
 import peewee
 
 from calensync.api.service import run_initial_sync, delete_calensync_events
@@ -12,19 +13,19 @@ from calensync.database.model import User, Calendar, CalendarAccount, SyncRule, 
 from calensync.libemail import send_trial_ending_email, send_account_to_be_deleted_email
 from calensync.gwrapper import GoogleCalendarWrapper, service_from_account
 from calensync.log import get_logger
-from calensync.utils import utcnow
+from calensync.utils import utcnow, INVALID_GRANT_ERROR
 
 logger = get_logger("daily_sync.main")
 
 
-def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetime, end_date: datetime.datetime
-                   ) -> list[GoogleCalendarWrapper]:
+def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetime, end_date: datetime.datetime,
+                   boto_session: boto3.Session) -> list[GoogleCalendarWrapper]:
     calendars = []
     for account in accounts:
         for calendar in account.calendars:
             # setting this avoid having to re-fetch it from the database to get the credentials
-            service = service_from_account(account)
-            calendars.append(GoogleCalendarWrapper(calendar, service=service))
+            service = service_from_account(account, boto_session)
+            calendars.append(GoogleCalendarWrapper(calendar, service=service, session=boto_session))
 
     for cal in calendars:
         try:
@@ -82,7 +83,7 @@ def hard_sync(db):
             time.sleep(1)
 
 
-def sync_user_calendars_by_date(db):
+def sync_user_calendars_by_date(db, boto_session):
     users_query = get_users_query_with_active_sync_rules()
     start: datetime.datetime = datetime.datetime.today() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
     start_date = datetime.datetime.fromtimestamp(start.timestamp())
@@ -96,11 +97,11 @@ def sync_user_calendars_by_date(db):
     for user in users_query:
         try:
             logger.info(f"Syncing {user.uuid}")
-            calendar_wrappers = load_calendars(user.accounts, start_date, end_date)
+            calendar_wrappers = load_calendars(user.accounts, start_date, end_date, boto_session)
             for wrapper in calendar_wrappers:
                 wrapper.solve_update_in_calendar(wrapper.events)
         except Exception as e:
-            logger.error(f"Error occured while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
+            logger.error(f"Error occurred while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
             time.sleep(1)
 
 
@@ -111,7 +112,9 @@ def update_watches(db: peewee.Database):
         .join(SyncRule, on=(Calendar.id == SyncRule.source))
         .where(
             Calendar.expiration.is_null(False),
-            Calendar.expiration <= now + datetime.timedelta(hours=36)),
+            Calendar.expiration <= now + datetime.timedelta(hours=36),
+            Calendar.paused_reason != INVALID_GRANT_ERROR
+        ),
         CalendarAccount.select(),
         User.select()
     )
@@ -127,14 +130,19 @@ def update_watches(db: peewee.Database):
                 try:
                     if not deleted:
                         gcalendar.delete_watch()
-                    deleted = True
-                except Exception as e:
-                    logger.error(
-                        f"Failed to delete watch of {calendar_db.uuid}: {e}")
+                        logger.info("Watch deleted")
+                        deleted = True
 
-                gcalendar.create_watch()
-                break
-
+                    gcalendar.create_watch()
+                except google.auth.exceptions.RefreshError as e:
+                    reason = e.args[1]['error']
+                    logger.error(f"Putting calendar on pause: {reason}")
+                    calendar_db.paused = True
+                    calendar_db.paused_reason = reason
+                    calendar_db.save()
+            except google.auth.exceptions.RefreshError as e:
+                if len(e.args) < 2 or e.args[1]:
+                    raise e
             except Exception as e:
                 logger.error(
                     f"Error occured while updating calendar {calendar_db.uuid}: {e}\n\n{traceback.format_exc()}")
