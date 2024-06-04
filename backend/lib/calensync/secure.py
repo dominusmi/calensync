@@ -21,7 +21,9 @@ def fetch_ssm_parameter(session: boto3.Session, parameter_arn: str):
     """
     # Create an SSM client
     ssm = session.client('ssm')  # Specify your AWS region
-    parameter_name = parameter_arn.split('/')[-1]
+    post_colon = parameter_arn.split(':')[-1]
+    # need to skip the prefix "parameter" which is assigned to all parameters
+    parameter_name = post_colon[len('parameter'):]
 
     try:
         # Get the parameter
@@ -47,7 +49,8 @@ def get_encryption_key(boto3_session: boto3.Session):
             return b'q'*32
 
     if ENCRYPTION_KEY is None:
-        ENCRYPTION_KEY = fetch_ssm_parameter(boto3_session, os.environ['ENCRYPTION_KEY_ARN'])
+        secret_string = fetch_ssm_parameter(boto3_session, os.environ['ENCRYPTION_KEY_ARN'])
+        ENCRYPTION_KEY = base64.b64decode(secret_string)
 
     return ENCRYPTION_KEY
 
