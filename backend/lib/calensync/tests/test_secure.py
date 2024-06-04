@@ -11,14 +11,14 @@ from calensync.tests.fixtures import *
 def with_encryption_key(boto_session):
     ssm = boto_session.client('ssm')
     response = ssm.put_parameter(
-        Name='encryption-key',
+        Name='/encryption-key/name',
         Description='description of parameter',
         Type='String',
         Overwrite=True,
         Value='1234' * 8
     )
     account_id = boto_session.client('sts', region_name='us-east-1').get_caller_identity().get('Account')
-    arn = f"arn:aws:ssm:{boto_session.region_name}:{account_id}:parameter/encryption-key"
+    arn = f"arn:aws:ssm:{boto_session.region_name}:{account_id}:parameter/encryption-key/name"
     os.environ['ENCRYPTION_KEY_ARN'] = arn
 
 
