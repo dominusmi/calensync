@@ -389,16 +389,23 @@ class TestSessionCorrectlySet:
             patch("calensync.gwrapper.insert_event") as insert_event,
             patch("calensync.secure.fetch_ssm_parameter") as fetch_ssm_parameter
         ):
-            os.environ['ENV'] = 'test-2'
-            os.environ['ENCRYPTION_KEY_ARN'] = '1234'
-            os.environ['AWS_DEFAULT_REGION'] = 'eu-north-1'
-            get_events.return_value = []
-            with pytest.raises(TypeError):
-                # TypeError comes from decoding. The main check of this test is that the session is not None
-                handle_sqs_event(sqs_event, db, boto_session)
+            try:
+                os.environ['ENV'] = 'test-2'
+                os.environ['ENCRYPTION_KEY_ARN'] = '1234'
+                os.environ['AWS_DEFAULT_REGION'] = 'eu-north-1'
+                get_events.return_value = []
+                with pytest.raises(TypeError):
+                    # TypeError comes from decoding. The main check of this test is that the session is not None
+                    handle_sqs_event(sqs_event, db, boto_session)
 
-            fetch_ssm_parameter.return_value = base64.b64encode(b"q"*32)
-            os.environ['AWS_EXECUTION_ENV'] = "123"
-            handle_sqs_event(sqs_event, db, boto_session)
-            assert get_events.call_count == 1
-            assert insert_event.call_count == 1
+                fetch_ssm_parameter.return_value = base64.b64encode(b"q"*32)
+                os.environ['AWS_EXECUTION_ENV'] = "123"
+                handle_sqs_event(sqs_event, db, boto_session)
+                assert get_events.call_count == 1
+                assert insert_event.call_count == 1
+            finally:
+                os.environ['ENV'] = 'test'
+                os.environ.pop('ENCRYPTION_KEY_ARN')
+                os.environ.pop('AWS_DEFAULT_REGION')
+                if os.getenv('AWS_EXECUTION_ENV'):
+                    os.environ.pop('AWS_EXECUTION_ENV')
