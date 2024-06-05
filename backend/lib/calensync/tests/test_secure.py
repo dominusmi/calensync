@@ -1,9 +1,8 @@
-from calensync.secure import decrypt_credentials
-
 from unittest.mock import patch
 
 import cryptography.exceptions
 
+from calensync.secure import decrypt_credentials
 from calensync.tests.fixtures import *
 
 
@@ -28,3 +27,4 @@ class TestEncryptDecryptCredentials:
         ciphertext = encrypt_credentials({"test": "123", "of": "321"}, boto_session)
         decrypted = decrypt_credentials(ciphertext, boto_session)
         assert decrypted == {"test": "123", "of": "321"}
+
