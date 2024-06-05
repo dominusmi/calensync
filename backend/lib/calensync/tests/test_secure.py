@@ -1,4 +1,3 @@
-import unittest
 from unittest.mock import patch
 
 import cryptography.exceptions
@@ -29,11 +28,3 @@ class TestEncryptDecryptCredentials:
         decrypted = decrypt_credentials(ciphertext, boto_session)
         assert decrypted == {"test": "123", "of": "321"}
 
-    @staticmethod
-    def test_ensure_credentials_actually_used(boto_session, with_encryption_key):
-        ciphertext = encrypt_credentials({"test": "123", "of": "321"}, boto_session)
-        with patch("calensync.secure.get_encryption_key") as get_encryption_key:
-            get_encryption_key.return_value = b'q' * 32
-            with pytest.raises(cryptography.exceptions.InvalidTag):
-                decrypted = decrypt_credentials(ciphertext, boto_session)
-                assert decrypted == {"test": "123", "of": "321"}

@@ -57,6 +57,10 @@ Resources:
               - !Ref GoogleSecretArn
               - !Ref DatabaseSecretArn
               - !Ref PaddleSecretArn
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+            Resource: !Ref EncryptionKeyARN
 
   CalensyncLayer:
     Type: AWS::Serverless::LayerVersion
