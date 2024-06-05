@@ -407,5 +407,6 @@ class TestSessionCorrectlySet:
                 os.environ['ENV'] = 'test'
                 os.environ.pop('ENCRYPTION_KEY_ARN')
                 os.environ.pop('AWS_DEFAULT_REGION')
+                os.environ.pop('SQS_QUEUE_URL')
                 if os.getenv('AWS_EXECUTION_ENV'):
                     os.environ.pop('AWS_EXECUTION_ENV')
