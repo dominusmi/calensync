@@ -209,13 +209,26 @@ class GoogleCalendarWrapper:
         self.calendar_db = calendar_db
         self.user_db = calendar_db.account.user
         self.db = db
-        self.session = session
+        self._session = session
 
         if service:
             self._service = service
 
         self.events_handler = EventsModificationHandler()
         self.events = []
+
+    @property
+    def session(self):
+        if self._session is not None:
+            return self._session
+
+        if os.getenv('AWS_EXECUTION_ENV', None) is not None:
+            self._session = boto3.Session()
+            return self._session
+
+        else:
+            logger.info("No boto3 session found for calendar wrapper, returning None")
+            return None
 
     @property
     def service(self):
