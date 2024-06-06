@@ -1,3 +1,4 @@
+import base64
 import datetime
 import os
 from unittest.mock import patch
@@ -29,9 +30,11 @@ class TestVerifySyncRule:
             verify_valid_sync_rule(user, str(calendar1_1.uuid), str(calendar1_1.uuid))
 
     @staticmethod
-    def test_user_doesnt_own_calendar(user, calendar1_1):
+    def test_user_doesnt_own_calendar(user, calendar1_1, boto_session):
         user2 = User(email="test@test.com").save_new()
-        account1_21 = CalendarAccount(user=user2, key="key2", credentials={"key": "value"}).save_new()
+        account1_21 = CalendarAccount(
+            user=user2, key="key2",
+            encrypted_credentials=encrypt_credentials({"key": "value"}, boto_session)).save_new()
         calendar1_21 = Calendar(account=account1_21, platform_id="platform_id21", name="name21", active=True,
                                 last_processed=utcnow(), last_inserted=utcnow()).save_new()
 
@@ -181,7 +184,6 @@ class TestReceiveUpdateEvent:
                 argument_sync_rules.append(sync_rule)
             assert len(argument_sync_rules) == 2
             assert {sr.id for sr in argument_sync_rules} == {rule1.id, rule2.id}
-
 
     @staticmethod
     @mock_aws
@@ -360,3 +362,51 @@ class TestReceiveCreateRuleEvent:
                 ids.remove(update_event.event.id)
 
             assert len(ids) == 0
+
+
+class TestSessionCorrectlySet:
+    @staticmethod
+    @mock_aws
+    def test_update(db, calendar1_1, calendar1_2, calendar1_2_2):
+        rule1 = SyncRule(source=calendar1_1, destination=calendar1_2).save_new()
+
+        event = GoogleEvent(id="1", status=EventStatus.confirmed, summary="Test1")
+
+        sqs_event = SQSEvent(
+            kind=QueueEvent.UPDATED_EVENT,
+            data=UpdateGoogleEvent(event=event, rule_id=rule1.id, delete=False).dict(),
+        )
+
+        boto_session = boto3.Session(aws_secret_access_key="123", aws_access_key_id="123", region_name='eu-north-1')
+        sqs = boto_session.client('sqs')
+        response = sqs.create_queue(QueueName='Test')
+        queue_url = response["QueueUrl"]
+        os.environ["SQS_QUEUE_URL"] = queue_url
+
+        with (
+            patch("calensync.gwrapper.get_events") as get_events,
+            patch("calensync.gwrapper.google.oauth2.credentials.Credentials.from_authorized_user_info"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.secure.fetch_ssm_parameter") as fetch_ssm_parameter
+        ):
+            try:
+                os.environ['ENV'] = 'test-2'
+                os.environ['ENCRYPTION_KEY_ARN'] = '1234'
+                os.environ['AWS_DEFAULT_REGION'] = 'eu-north-1'
+                get_events.return_value = []
+                with pytest.raises(TypeError):
+                    # TypeError comes from decoding. The main check of this test is that the session is not None
+                    handle_sqs_event(sqs_event, db, boto_session)
+
+                fetch_ssm_parameter.return_value = base64.b64encode(b"q"*32)
+                os.environ['AWS_EXECUTION_ENV'] = "123"
+                handle_sqs_event(sqs_event, db, boto_session)
+                assert get_events.call_count == 1
+                assert insert_event.call_count == 1
+            finally:
+                os.environ['ENV'] = 'test'
+                os.environ.pop('ENCRYPTION_KEY_ARN')
+                os.environ.pop('AWS_DEFAULT_REGION')
+                os.environ.pop('SQS_QUEUE_URL')
+                if os.getenv('AWS_EXECUTION_ENV'):
+                    os.environ.pop('AWS_EXECUTION_ENV')

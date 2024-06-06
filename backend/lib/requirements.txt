@@ -13,3 +13,4 @@ pydantic==1.9.2
 python-dotenv==1.0.0
 requests==2.31.0
 moto==5.0.2
+cryptography==42.0.4

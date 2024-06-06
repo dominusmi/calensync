@@ -109,7 +109,8 @@ class EmailDB(BaseModel):
 class CalendarAccount(UUIDBaseModel):
     user = ForeignKeyField(User, backref='accounts')
     key = CharField()
-    credentials = JSONField()
+    credentials = JSONField(null=True)
+    encrypted_credentials = peewee.TextField()
 
     class Meta:
         constraints = [peewee.SQL('UNIQUE (user_id, key)')]

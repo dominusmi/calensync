@@ -16,6 +16,8 @@ Parameters:
     Type: String
   EmailARN:
     Type: String
+  EncryptionKeyARN:
+    Type: String
 
 Resources:
   Api:
@@ -55,6 +57,10 @@ Resources:
               - !Ref GoogleSecretArn
               - !Ref DatabaseSecretArn
               - !Ref PaddleSecretArn
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+            Resource: !Ref EncryptionKeyARN
 
   CalensyncLayer:
     Type: AWS::Serverless::LayerVersion
@@ -92,6 +98,7 @@ Resources:
           FRONTEND: !Ref FrontendUri
           API_ENDPOINT: !Ref ApiEndpoint
           SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
+          ENCRYPTION_KEY_ARN: !Ref EncryptionKeyARN
       Events:
         read:
           Type: HttpApi
@@ -130,6 +137,7 @@ Resources:
           ENV: !Ref Env
           API_ENDPOINT: !Ref ApiEndpoint
           SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
+          ENCRYPTION_KEY_ARN: !Ref EncryptionKeyARN
       Events:
         DailySyncEvent:
           Type: Schedule
@@ -168,6 +176,7 @@ Resources:
           ENV: !Ref Env
           API_ENDPOINT: !Ref ApiEndpoint
           SQS_QUEUE_URL: !GetAtt SQSQueue.QueueUrl
+          ENCRYPTION_KEY_ARN: !Ref EncryptionKeyARN
       Events:
         SQSPutVisit:
           Type: SQS
