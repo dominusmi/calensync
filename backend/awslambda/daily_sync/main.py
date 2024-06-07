@@ -15,7 +15,8 @@ def handler(event, context):
     the event for the furthest in the future, and synchronizes them
     """
     with DatabaseSession(get_env()) as db:
-        daily_sync.sync_user_calendars_by_date(db)
+        boto_session = boto3.Session()
+        daily_sync.sync_user_calendars_by_date(db, boto_session)
         daily_sync.update_watches(db)
 
         # send emails to people who are finishing their trial
@@ -25,5 +26,3 @@ def handler(event, context):
             send_trial_finishing_email(session, db)
         except Exception as e:
             logger.error(f"Something happened to email sending: {e}")
-
-

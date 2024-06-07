@@ -33,11 +33,14 @@ if os.environ.get("MOCK_GOOGLE"):
 
     google_auth_oauthlib = MagicMock()
 
-    get_google_email = lambda x: f"{uuid.uuid4()}@test.com"
+
+    get_google_email = lambda x: f"{uuid.uuid4()}@test.com" # noqa: disable=F811
 
     google.oauth2.credentials.Credentials = MagicMock()
     google.oauth2.credentials.Credentials.from_authorized_user_info.return_value = MagicMock()
-    get_google_calendars = lambda credentials: [
+
+
+    get_google_calendars = lambda credentials: [ # noqa: disable=F811
         GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}"),
         GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}")
     ]
@@ -520,7 +523,7 @@ def unsubscribe(user_id: str):
         return starlette.responses.HTMLResponse("""
                 <html>
                 <body>
-                    <h1>You have successfully been unsubscribed.</h1> 
+                    <h1>You have successfully been unsubscribed.</h1>
                     You should be redirected. If you're not, please <a href="https://calensync.live">click here</a>
                 </body>
                 <script>
