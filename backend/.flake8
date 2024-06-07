@@ -1,0 +1,4 @@
+[flake8]
+ignore = E203,W503,E501,F401,F541,F841,E126,E226,E303,E131
+plugins = pyflakes
+exclude = */tests/*, .aws-sam/*, .pytest_cache/*, scripts/*, **/build/*

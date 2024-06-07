@@ -46,7 +46,7 @@ def get_encryption_key(boto3_session: boto3.Session):
     global ENCRYPTION_KEY
     if is_local():
         if not os.getenv('ENCRYPTION_KEY_ARN'):
-            return b'q'*32
+            return b'q' * 32
 
     if ENCRYPTION_KEY is None:
         secret_string = fetch_ssm_parameter(boto3_session, os.environ['ENCRYPTION_KEY_ARN'])
