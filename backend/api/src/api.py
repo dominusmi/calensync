@@ -1,19 +1,24 @@
 from typing import Annotated, Union, Dict
 
 import boto3
+import starlette.responses
 from fastapi import FastAPI, Request, Query, Body, Cookie, Header
+from fastapi.middleware.cors import CORSMiddleware
+
 from mangum import Mangum
 
 import calensync.api.service
 from calensync import sqs
 from calensync.api import endpoints
-from calensync.api.common import format_response
-from calensync.api.endpoints import *
+from calensync.api.common import format_response, ApiError
+import calensync.api.endpoints as edp
 from calensync.api.response import PostMagicLinkResponse
 from calensync.database.utils import DatabaseSession
 from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PostSyncRuleBody
 from calensync.log import get_logger
-from calensync.utils import get_env
+from calensync.utils import get_env, utcnow
+
+import os
 
 app = FastAPI(title="Calensync")  # Here is the magic
 logger = get_logger("api")
@@ -40,8 +45,8 @@ def post__webhook(event: Request):
 def post__paddle_verify_transaction(authorization: Annotated[Union[str, None], Cookie()] = None,
                                     transaction_id: str = Query()):
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        paddle_verify_transaction(user, transaction_id, boto3.Session())
+        user = edp.verify_session(authorization)
+        edp.paddle_verify_transaction(user, transaction_id, boto3.Session())
 
 
 @app.get('/oauth2')
@@ -51,7 +56,7 @@ def get__oauth2(state: str = Query(), code: str = Query(None), error: str = Quer
     Process new OAuth request. Can be either login or add calendar. See `OAuthKind`
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        return get_oauth_token(state, code, error, db, boto3.Session())
+        return edp.get_oauth_token(state, code, error, db, boto3.Session())
 
 
 @app.get("/google/sso/prepare")
@@ -62,7 +67,7 @@ def get__prepare_google_sso_oauth(tos: int = Query(0)):
     todo: only signin/signup or also for calendar?
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        return prepare_google_sso_oauth(tos, db, boto3.Session())
+        return edp.prepare_google_sso_oauth(tos, db, boto3.Session())
 
 
 @app.get('/google/calendar/prepare')
@@ -74,26 +79,26 @@ def get__prepare_google_calendar_oauth(authorization: Annotated[Union[str, None]
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         if authorization:
-            user = verify_session(authorization)
-            return prepare_calendar_oauth(user, db, boto3.Session())
+            user = edp.verify_session(authorization)
+            return edp.prepare_calendar_oauth(user, db, boto3.Session())
         else:
-            return prepare_calendar_oauth_without_user(db, boto3.Session())
+            return edp.prepare_calendar_oauth_without_user(db, boto3.Session())
 
 
 @app.get('/accounts')
 @format_response
 def get__calendar_accounts(authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        return get_calendar_accounts(user, db)
+        user = edp.verify_session(authorization)
+        return edp.get_calendar_accounts(user, db)
 
 
 @app.get('/accounts/{calendar_account_id}/calendars')
 @format_response
 def get__calendars(calendar_account_id: str, authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        calendars = get_calendars(user, calendar_account_id, db)
+        user = edp.verify_session(authorization)
+        calendars = edp.get_calendars(user, calendar_account_id, db)
         return [{"uuid": c.uuid, "name": c.friendly_name, "readonly": c.readonly} for c in calendars]
 
 
@@ -101,31 +106,31 @@ def get__calendars(calendar_account_id: str, authorization: Annotated[Union[str,
 @format_response
 def post__refresh_calendars(calendar_account_id: str, authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        return refresh_calendars(user, calendar_account_id, db)
+        user = edp.verify_session(authorization)
+        return edp.refresh_calendars(user, calendar_account_id, db, boto3.Session())
 
 
 @app.post('/calendars/{calendar_uuid}/resync')
 @format_response
 def post__resync_calendar(calendar_uuid: str, authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        return resync_calendar(user, calendar_uuid, boto3.Session(), db)
+        user = edp.verify_session(authorization)
+        return edp.resync_calendar(user, calendar_uuid, boto3.Session(), db)
 
 
 @app.post('/tos')
 @format_response
 def post__tos(authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        return accept_tos(user, db)
+        user = edp.verify_session(authorization)
+        return edp.accept_tos(user, db)
 
 
 @app.get('/sync')
 @format_response
 def get__sync_rules(authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
+        user = edp.verify_session(authorization)
         return endpoints.get_sync_rules(user)
 
 
@@ -136,8 +141,8 @@ def post__sync_rule(body: PostSyncRuleBody, authorization: Annotated[Union[str, 
     Create a sync rule
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        create_sync_rule(body, user, boto3.Session(), db)
+        user = edp.verify_session(authorization)
+        edp.create_sync_rule(body, user, boto3.Session(), db)
 
 
 @app.delete('/sync/{sync_id}')
@@ -147,8 +152,8 @@ def delete__sync_rule(sync_id: str, authorization: Annotated[Union[str, None], C
     Update a calendar. Used to set a calendar as active.
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        delete_sync_rule(user, sync_id, boto3.Session(), db)
+        user = edp.verify_session(authorization)
+        edp.delete_sync_rule(user, sync_id, boto3.Session(), db)
 
 
 @app.delete('/calendars/{account_id}')
@@ -159,16 +164,16 @@ def delete__calendar(account_id: str, authorization: Annotated[Union[str, None],
     Update a calendar. Used to set a calendar as active.
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        return delete_account(user, account_id)
+        user = edp.verify_session(authorization)
+        return edp.delete_account(user, account_id)
 
 
 @app.get('/calendars/{calendar_id}')
 @format_response
 def get__calendar(calendar_id: str, authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        c = get_calendar(user, calendar_id, db)
+        user = edp.verify_session(authorization)
+        c = edp.get_calendar(user, calendar_id, db)
         return {"uuid": c.uuid, "name": c.friendly_name, "active": c.active}
 
 
@@ -180,7 +185,7 @@ def get__whoami(authorization: Annotated[Union[str, None], Cookie()] = None):
     the session
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
+        user = edp.verify_session(authorization)
         if user.tos is None:
             raise ApiError('', code=309)
         return {"customer_id": user.customer_id, "date_created": user.date_created,
@@ -208,9 +213,9 @@ def get__paddle_subscription(authorization: Annotated[Union[str, None], Cookie()
     the session
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
+        user = edp.verify_session(authorization)
 
-        return get_paddle_subscription(user, boto3.Session())
+        return edp.get_paddle_subscription(user, boto3.Session())
 
 
 @app.put('/console-error')
@@ -231,18 +236,7 @@ def get__unsubscribe(user_id: str):
     the session
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        return unsubscribe(user_id)
-
-
-@app.get('/user/{user_id}/unsubscribe')
-@format_response
-def get__unsubscribe(user_id: str):
-    """
-    Should return profile information, right now only checks
-    the session
-    """
-    with DatabaseSession(os.environ["ENV"]) as db:
-        return unsubscribe(user_id)
+        return edp.unsubscribe(user_id)
 
 
 @app.get('/user/{user_id}/reset')
@@ -254,8 +248,8 @@ def reset__user(user_uuid: str, session_id: str = Header(None),
         if auth is None:
             raise ApiError("Forbidden", 403)
 
-        caller = verify_session(auth)
-        reset_user(caller, user_uuid, boto3.Session(), db)
+        caller = edp.verify_session(auth)
+        edp.reset_user(caller, user_uuid, boto3.Session(), db)
 
 
 @app.post('/magic-link', response_model=PostMagicLinkResponse)
@@ -265,22 +259,19 @@ def post__magic_link(authorization: Annotated[Union[str, None], Cookie()] = None
     Returns a magic link
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        user = verify_session(authorization)
-        return handle_post_magic_link(user)
+        user = edp.verify_session(authorization)
+        return edp.handle_post_magic_link(user)
 
 
 @app.get('/magic-link/{link_uuid}')
 @format_response
-def post__magic_link(link_uuid: str):
+def get__magic_link(link_uuid: str):
     """
     Returns a magic link
     """
     with DatabaseSession(os.environ["ENV"]) as db:
-        return handle_use_magic_link(link_uuid)
+        return edp.handle_use_magic_link(link_uuid)
 
-
-
-from fastapi.middleware.cors import CORSMiddleware
 
 origins = ["http://localhost:8000", "http://127.0.0.1:8080"]
 
@@ -309,7 +300,7 @@ if __name__ == "__main__":
     import uvicorn
     from pathlib import Path
 
-    dir = Path().expanduser().resolve().parent
-    env_path = dir.joinpath("../.env").resolve()
-    reload_dir = dir.joinpath("../").resolve()
+    dir_ = Path().expanduser().resolve().parent
+    env_path = dir_.joinpath("../.env").resolve()
+    reload_dir = dir_.joinpath("../").resolve()
     uvicorn.run(app, host="127.0.0.1", port=8000, env_file=str(env_path))

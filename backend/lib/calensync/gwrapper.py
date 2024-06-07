@@ -378,7 +378,7 @@ class GoogleCalendarWrapper:
 
                     summary, description = make_summary_and_description(source_event, rule)
 
-                    inner = lambda: update_event(service=self.service,
+                    inner = lambda: update_event(service=self.service,  # noqa: E731
                                                  calendar_id=self.google_id,
                                                  event_id=to_update.id,
                                                  start=start, end=end,
@@ -406,7 +406,7 @@ class GoogleCalendarWrapper:
             event_id = self.events_handler.events_to_delete.pop()
             try:
                 logger.info(f"Deleting event {event_id} in {self.google_id}")
-                inner = lambda: delete_event(self.service, self.google_id, event_id)
+                inner = lambda: delete_event(self.service, self.google_id, event_id)  # noqa: E731
                 if google_error_handling_with_backoff(inner, self.calendar_db):
                     deleted_events += 1
             except Exception as e:

@@ -74,7 +74,7 @@ def events_to_delete(events1: List[GoogleEvent], events2: List[GoogleEvent]) -> 
     cancelled_events1 = {event.id for event in events1 if event.status == EventStatus.cancelled}
 
     # get all generated events from events1 that are not cancelled
-    predicate = lambda e: e.source_id and e.status != EventStatus.cancelled
+    predicate = lambda e: e.source_id and e.status != EventStatus.cancelled  # noqa: E731
     confirmed_events2 = {event.source_id for event in events2 if predicate(event)}
 
     # the intersection is the events cancelled in events1 that are not cancelled in events2

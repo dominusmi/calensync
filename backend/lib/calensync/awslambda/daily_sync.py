@@ -151,20 +151,21 @@ def update_watches(db: peewee.Database):
 
 def get_trial_users_with_create_before_date(start: datetime.datetime):
     # Main query
-    user_ids = (User
-                .select(User.id).distinct()
-                .join(CalendarAccount)
-                .join(Calendar)
-                .join(SyncRule, on=(SyncRule.source == Calendar.id))
-                .where(
-        User.date_created < start,
-        User.subscription_id.is_null(True),
-        # If there were no previous email, or the previous email was sent earlier
-        (User.last_email_sent.is_null(True)) | (User.last_email_sent < start)
+    user_ids = (
+        User
+        .select(User.id).distinct()
+        .join(CalendarAccount)
+        .join(Calendar)
+        .join(SyncRule, on=(SyncRule.source == Calendar.id))
+        .where(
+            User.date_created < start,
+            User.subscription_id.is_null(True),
+            # If there were no previous email, or the previous email was sent earlier
+            (User.last_email_sent.is_null(True)) | (User.last_email_sent < start)
+        )
+        .group_by(User.id)
+        .having(peewee.fn.COUNT(SyncRule.id) > 0)
     )
-                .group_by(User.id)
-                .having(peewee.fn.COUNT(SyncRule.id) > 0)
-                )
 
     # Get oldest email for user
     EmailAlias = EmailDB.alias()
@@ -183,8 +184,8 @@ def get_trial_users_with_create_before_date(start: datetime.datetime):
         .join(User)
         .switch(EmailDB)
         .join(subquery, on=(
-                (EmailDB.date_created == subquery.c.min_created) &
-                (EmailDB.user == subquery.c.user_id)))
+                (EmailDB.date_created == subquery.c.min_created) & (EmailDB.user == subquery.c.user_id)
+        ))
         .where(EmailDB.user << user_ids)
     )
 

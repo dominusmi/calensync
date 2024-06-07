@@ -21,8 +21,8 @@ from calensync.utils import utcnow, BackoffException
 logger = get_logger(__file__)
 
 
-def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_calendar_uuid: str) -> Tuple[
-    Calendar, Calendar]:
+def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_calendar_uuid: str
+                           ) -> Tuple[Calendar, Calendar]:
     if source_calendar_uuid == destination_calendar_uuid:
         raise ApiError("Source and destination cannot be the same", code=400)
 
@@ -245,4 +245,3 @@ def handle_updated_event(e: UpdateGoogleEvent):
         event.status = EventStatus.cancelled
 
     GoogleCalendarWrapper.push_event_to_rule(event, rules[0])
-

@@ -122,7 +122,7 @@ class ApiError(Exception):
 
 
 def number_of_days_to_sync_in_advance() -> int:
-    return 5 if is_local() else 5*365
+    return 5 if is_local() else 5 * 365
 
 
 def encode_query_message(msg: str) -> str:

@@ -42,7 +42,6 @@ class DatabaseSession:
                 "port": 5432
             }
 
-
         elif env in ["dev", "prod"]:
             global CONFIG_CACHE
             if CONFIG_CACHE:
