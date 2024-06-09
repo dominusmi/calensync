@@ -79,7 +79,7 @@ def verify_session(session_id: Optional[str]) -> User:
     if session_id is None:
         raise ApiError("Credentials missing", 404)
 
-    elif session_id == 'null':
+    elif session_id in ('null', ''):
         raise ApiError("Credentials missing", 404)
 
     query = peewee.prefetch(Session.select().where(Session.session_id == session_id).limit(1), User.select())
@@ -263,6 +263,10 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
         if len(state_db.user.emails) == 0:
             response.set_cookie(key="authorization", max_age=-1)
         return response
+    except Exception as e:
+        logger.error(f"Error occurred: {e}")
+        msg = encode_query_message("Something went wrong with your grant")
+        return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}").to_response()
 
     credentials = flow.credentials
     if is_local():
