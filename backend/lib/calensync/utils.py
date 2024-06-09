@@ -5,6 +5,7 @@ import json
 import os
 import random
 from time import sleep
+import pathlib
 
 import boto3
 import googleapiclient.errors
@@ -21,7 +22,6 @@ def get_env():
 
 def get_client_secret(session=None):
     if is_local():
-        import pathlib
         path = pathlib.Path(__file__).parent.parent.parent.resolve()
         with open(path.joinpath("client_secret.json")) as f:
             return json.load(f)
@@ -54,7 +54,7 @@ def get_api_url() -> str:
 
 def is_local() -> bool:
     env = get_env()
-    if env == "local" or env == "test":
+    if env in ("local", "test"):
         return True
     return False
 
@@ -64,10 +64,10 @@ def utcnow():
 
 
 def get_paddle_token(session: boto3.Session = None):
-    env = get_env()
-    if env == "test" or env == "local":
+    if is_local():
         return os.environ["PADDLE_TOKEN"]
 
+    env = get_env()
     if (token := os.environ.get("PADDLE_TOKEN")) is not None:
         return token
     client = session.client("secretsmanager")
@@ -90,8 +90,7 @@ def prefetch_get_or_none(query, *sub_queries):
     result = peewee.prefetch(query.limit(1), *sub_queries)
     if result:
         return result[0]
-    else:
-        return None
+    return None
 
 
 def format_calendar_text(original, template):
@@ -129,8 +128,6 @@ def google_error_handling_with_backoff(function, calendar_db=None):
                 sleep_delay = 2 ** i + random.random()
                 logger.info(f"Sleeping for {sleep_delay} seconds")
                 sleep(sleep_delay)
-                continue
-
             else:
                 raise e
 

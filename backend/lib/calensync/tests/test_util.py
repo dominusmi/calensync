@@ -1,16 +1,14 @@
-import logging
 from unittest.mock import MagicMock, patch
 
 import googleapiclient.errors
 import pytest
 
-logging.root.setLevel(logging.DEBUG)
-import peewee
-
-peewee.logger.setLevel(logging.DEBUG)
-from calensync.tests.fixtures import db, user
+import google.auth.exceptions
+from calensync.tests.fixtures import db
 from calensync.database.model import User, EmailDB
-from calensync.utils import prefetch_get_or_none, google_error_handling_with_backoff, BackoffException
+from calensync.utils import prefetch_get_or_none, google_error_handling_with_backoff, BackoffException, \
+    INVALID_GRANT_ERROR
+from calensync.gwrapper import handle_refresh_error
 
 
 class TestPrefetchOrNone:

@@ -12,8 +12,7 @@ from calensync.utils import get_env
 def get_paddle_url():
     if get_env() != "prod":
         return "https://sandbox-api.paddle.com"
-    else:
-        return "https://api.paddle.com"
+    return "https://api.paddle.com"
 
 
 class PaddleSubscription(BaseModel):

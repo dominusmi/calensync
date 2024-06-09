@@ -11,8 +11,8 @@ import peewee
 import starlette.responses
 
 import calensync.api.service
-import calensync.paddle as paddle
 import calensync.sqs
+from calensync import paddle
 from calensync import dataclass
 from calensync.api.common import ApiError, RedirectResponse, encode_query_message
 from calensync.api.response import PostMagicLinkResponse
@@ -79,7 +79,7 @@ def verify_session(session_id: Optional[str]) -> User:
     if session_id is None:
         raise ApiError("Credentials missing", 404)
 
-    elif session_id == 'null':
+    elif session_id in ('null', ''):
         raise ApiError("Credentials missing", 404)
 
     query = peewee.prefetch(Session.select().where(Session.session_id == session_id).limit(1), User.select())
@@ -263,12 +263,18 @@ def get_oauth_token(state: str, code: str, error: Optional[str], db: peewee.Data
         if len(state_db.user.emails) == 0:
             response.set_cookie(key="authorization", max_age=-1)
         return response
+    except Exception as e:
+        logger.error(f"Error occurred: {e}")
+        msg = encode_query_message("Something went wrong with your grant")
+        return RedirectResponse(location=f"{get_frontend_env()}/dashboard?error_msg={msg}").to_response()
 
     credentials = flow.credentials
-    logger.info(credentials) if is_local() else None
+    if is_local():
+        logger.info(credentials)
 
     email = get_google_email(credentials)
-    logger.info(email) if is_local() else None
+    if is_local():
+        logger.info(email)
 
     credentials_dict = credentials_to_dict(credentials)
 
@@ -382,6 +388,7 @@ def get_calendar(user: User, calendar_id: str, db: peewee.Database) -> Calendar:
 
 
 def resync_calendar(user: User, calendar_uuid: str, boto_session: boto3.Session, db: peewee.Database):
+    # pylint: disable=no-member
     calendar = list(
         peewee.prefetch(
             Calendar.select()
@@ -418,6 +425,7 @@ def refresh_calendars(user: User, account_uuid: str, db: peewee.Database, boto_s
     Gets all the calendars for the account, and saves the new one to the db.
     Returns a list of the calendars
     """
+    # pylint: disable=no-member
     account: CalendarAccount = (
         CalendarAccount.select().join(User)
         .where(User.id == User.id, CalendarAccount.uuid == account_uuid)
@@ -459,6 +467,7 @@ def refresh_calendars(user: User, account_uuid: str, db: peewee.Database, boto_s
 
 
 def delete_account(user: User, account_id: str):
+    # pylint: disable=no-member
     calendars: List[Calendar] = list(Calendar.select()
                                      .join(CalendarAccount)
                                      .join(User)
@@ -471,7 +480,6 @@ def delete_account(user: User, account_id: str):
 def accept_tos(user: User, db: peewee.Database):
     user.tos = utcnow()
     user.save()
-    return
 
 
 def paddle_verify_transaction(user: User, transaction_id: str, session: boto3.Session):
@@ -507,7 +515,6 @@ def paddle_verify_transaction(user: User, transaction_id: str, session: boto3.Se
     user.subscription_id = subscription_id
 
     user.save()
-    return
 
 
 def get_paddle_subscription(user: User, session: boto3.Session):

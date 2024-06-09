@@ -7,10 +7,10 @@ from typing import List
 
 import boto3
 
-from calensync.database.model import Calendar, SyncRule
+from calensync.database.model import Calendar
 from calensync.dataclass import UpdateGoogleEvent, GoogleEvent, QueueEvent, SQSEvent
 from calensync.log import get_logger
-from calensync.utils import utcnow, is_local, BackoffException
+from calensync.utils import utcnow, is_local
 
 logger = get_logger("sqs")
 

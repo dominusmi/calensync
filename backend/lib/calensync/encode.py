@@ -5,17 +5,17 @@ from uuid import UUID
 
 
 class AugmentedEncoder(json.JSONEncoder):
-    def default(self, obj: object):
-        if isinstance(obj, UUID):
-            return str(obj)
+    def default(self, o: object):
+        if isinstance(o, UUID):
+            return str(o)
 
-        if isinstance(obj, ISerializable):
-            return obj.serialize()
+        if isinstance(o, ISerializable):
+            return o.serialize()
 
-        if isinstance(obj, (datetime, date)):
-            return obj.isoformat()
+        if isinstance(o, (datetime, date)):
+            return o.isoformat()
 
-        return json.JSONEncoder.default(self, obj)
+        return json.JSONEncoder.default(self, o)
 
 
 class ISerializable:

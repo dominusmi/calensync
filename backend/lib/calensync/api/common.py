@@ -38,6 +38,7 @@ def format_response(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         try:
+            # pylint: disable=no-member
             result = f(*args, **kwargs)
 
             # avoid any potential null formatting related error
