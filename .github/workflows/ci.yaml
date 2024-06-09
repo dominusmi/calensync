@@ -63,7 +63,7 @@ jobs:
           pip install -e .
           pip install pytest pylint
 
-      - name: Run flake8
+      - name: Run pylint
         working-directory: backend/
         run: |
           python -m pylint **/*.py
