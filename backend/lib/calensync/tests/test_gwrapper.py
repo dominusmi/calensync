@@ -1,14 +1,16 @@
 from unittest.mock import patch, MagicMock
 
+import google.auth.exceptions
+
 from calensync.api.tests.util import simulate_sqs_receiver
 from calensync.database.model import SyncRule
 from calensync.dataclass import GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty
-from calensync.gwrapper import GoogleCalendarWrapper, make_summary_and_description
+from calensync.gwrapper import GoogleCalendarWrapper, make_summary_and_description, handle_refresh_error
 from calensync.libcalendar import PushToQueueException
 from calensync.log import get_logger
 from calensync.tests.fixtures import *
 from calensync.tests.mock_service import MockedService
-from calensync.utils import utcnow
+from calensync.utils import utcnow, INVALID_GRANT_ERROR
 
 logger = get_logger(__file__)
 
@@ -558,3 +560,12 @@ class TestMakeSummaryAndDescription:
         summary, description = make_summary_and_description(event, rule)
         assert summary == "Title"
         assert description == "Description"
+
+
+class TestHandleRefreshError:
+    @staticmethod
+    def test_normal(calendar1_1):
+        assert calendar1_1.paused is None
+        exc = google.auth.exceptions.RefreshError(None, {'error': INVALID_GRANT_ERROR})
+        handle_refresh_error(calendar1_1, exc)
+        assert calendar1_1.paused is not None

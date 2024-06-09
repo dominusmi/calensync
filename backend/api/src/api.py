@@ -1,4 +1,5 @@
 from typing import Annotated, Union, Dict
+import os
 
 import boto3
 import starlette.responses
@@ -9,7 +10,6 @@ from mangum import Mangum
 
 import calensync.api.service
 from calensync import sqs
-from calensync.api import endpoints
 from calensync.api.common import format_response, ApiError
 import calensync.api.endpoints as edp
 from calensync.api.response import PostMagicLinkResponse
@@ -18,7 +18,6 @@ from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PostSy
 from calensync.log import get_logger
 from calensync.utils import get_env, utcnow
 
-import os
 
 app = FastAPI(title="Calensync")  # Here is the magic
 logger = get_logger("api")
@@ -131,7 +130,7 @@ def post__tos(authorization: Annotated[Union[str, None], Cookie()] = None):
 def get__sync_rules(authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = edp.verify_session(authorization)
-        return endpoints.get_sync_rules(user)
+        return edp.get_sync_rules(user)
 
 
 @app.post('/sync')

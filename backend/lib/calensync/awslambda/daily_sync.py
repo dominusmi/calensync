@@ -11,7 +11,7 @@ from calensync.api.service import run_initial_sync, delete_calensync_events
 from calensync.api.common import number_of_days_to_sync_in_advance
 from calensync.database.model import User, Calendar, CalendarAccount, SyncRule, EmailDB
 from calensync.libemail import send_trial_ending_email, send_account_to_be_deleted_email
-from calensync.gwrapper import GoogleCalendarWrapper, service_from_account
+from calensync.gwrapper import GoogleCalendarWrapper, service_from_account, handle_refresh_error
 from calensync.log import get_logger
 from calensync.utils import utcnow, INVALID_GRANT_ERROR
 
@@ -50,6 +50,7 @@ def get_users_query_with_active_sync_rules():
 
 def hard_sync(db):
     """ Only to be used to fix user calendars having issues """
+    # pylint: disable=no-member
     users_query = get_users_query_with_active_sync_rules()
     # users_query = list(User.select().where(User.id == 1))
 
@@ -106,6 +107,7 @@ def sync_user_calendars_by_date(db, boto_session):
 
 
 def update_watches(db: peewee.Database):
+    # pylint: disable=no-member
     now = utcnow()
     calendars_db: Iterable[Calendar] = peewee.prefetch(
         Calendar.select()
@@ -136,11 +138,7 @@ def update_watches(db: peewee.Database):
                     gcalendar.create_watch()
                     break
                 except google.auth.exceptions.RefreshError as e:
-                    reason = e.args[1]['error']
-                    logger.error(f"Putting calendar on pause: {reason}")
-                    calendar_db.paused = True
-                    calendar_db.paused_reason = reason
-                    calendar_db.save()
+                    handle_refresh_error("calendar_db", e)
             except Exception as e:
                 logger.error(
                     f"Error occured while updating calendar {calendar_db.uuid}: {e}\n\n{traceback.format_exc()}")
@@ -150,6 +148,7 @@ def update_watches(db: peewee.Database):
 
 
 def get_trial_users_with_create_before_date(start: datetime.datetime):
+    # pylint: disable=no-member
     # Main query
     user_ids = (
         User
