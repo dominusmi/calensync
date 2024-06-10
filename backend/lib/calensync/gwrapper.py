@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import os
 import traceback
 from copy import copy
@@ -414,6 +415,15 @@ class GoogleCalendarWrapper:
                 inner = lambda: delete_event(self.service, self.google_id, event_id)  # noqa: E731
                 if google_error_handling_with_backoff(inner, self.calendar_db):
                     deleted_events += 1
+            except googleapiclient.errors.HttpError as e:
+                if (
+                        e.resp.get('content-type', '').startswith('application/json')
+                        and json.loads(e.content).get('error', {}).get('errors', {})[0].get('reason', '') == 'deleted'
+                ):
+                    # resource already deleted
+                    pass
+                else:
+                    logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
             except Exception as e:
                 logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
         logger.info(f"Deleted {deleted_events} events")
