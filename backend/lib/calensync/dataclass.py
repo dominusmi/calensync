@@ -107,7 +107,7 @@ class EventStatus(Enum):
 
 
 class ExtendedProperties(BaseModel):
-    private: Optional[Dict[str, str]] = dict()
+    private: Optional[Dict[str, str]] = {}
 
     @classmethod
     def from_sources(cls, source_event_id, source_calendar_id):

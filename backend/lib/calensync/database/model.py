@@ -3,7 +3,7 @@ from __future__ import annotations
 import enum
 import uuid
 from abc import ABC
-from typing import Type, TypeVar, Iterable, List
+from typing import Type, TypeVar, Iterable, List, Optional
 
 import peewee
 from peewee import Model, AutoField, CharField, DateTimeField, ForeignKeyField, UUIDField, IntegerField
@@ -27,9 +27,9 @@ class EnumField(IntegerField, ABC):
     This class enable an Enum like field for Peewee
     """
 
-    def __init__(self, enum: Type[enum.Enum], *args, **kwargs):
+    def __init__(self, enum_type: Type[enum.Enum], *args, **kwargs):
         super(IntegerField, self).__init__(*args, **kwargs)
-        self.enum = enum
+        self.enum = enum_type
 
     def db_value(self, value):
         return value.value
@@ -45,7 +45,7 @@ class BaseModel(Model, ISerializable):
 
     def save(self, *args, **kwargs):
         self.date_modified = utcnow()
-        return super(BaseModel, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     def save_new(self):
         super().save()
@@ -88,7 +88,7 @@ class User(UUIDBaseModel):
     email = CharField(null=True, default=None)
 
     @staticmethod
-    def from_email(email: str) -> User:
+    def from_email(email: str) -> Optional[User]:
         emails = list(
             EmailDB.select(User).join(User)
             .where(EmailDB.email == email)
@@ -96,9 +96,11 @@ class User(UUIDBaseModel):
         )
         if emails:
             return emails[0].user
+        return None
 
 
 class EmailDB(BaseModel):
+    user_id: int
     email = peewee.CharField(unique=True)
     user = peewee.ForeignKeyField(User, backref='emails')
 
@@ -107,6 +109,7 @@ class EmailDB(BaseModel):
 
 
 class CalendarAccount(UUIDBaseModel):
+    user_id: int
     user = ForeignKeyField(User, backref='accounts')
     key = CharField()
     credentials = JSONField(null=True)
@@ -117,6 +120,7 @@ class CalendarAccount(UUIDBaseModel):
 
 
 class Calendar(UUIDBaseModel):
+    account_id: int
     account = ForeignKeyField(CalendarAccount, backref='calendars')
     platform_id = CharField(help_text="This is the id provided by the service (e.g. the google id for the calendar)")
     name = CharField(null=True)
@@ -151,6 +155,7 @@ class Calendar(UUIDBaseModel):
 
 # deprecated
 class Event(BaseModel):
+    calendar_id: int
     calendar = ForeignKeyField(Calendar,
                                help_text="Calendar of this particular copy of the event (not the original calendar)",
                                backref="events")
@@ -175,6 +180,8 @@ class Event(BaseModel):
 
 
 class SyncRule(UUIDBaseModel):
+    source_id: int
+    destination_id: int
     source = ForeignKeyField(Calendar, backref="source_rules")
     destination = ForeignKeyField(Calendar, backref="destination_rules")
     summary = CharField(null=True, default=None)
@@ -185,19 +192,22 @@ class SyncRule(UUIDBaseModel):
 
 
 class OAuthState(BaseModel):
+    user_id: int
     user = ForeignKeyField(User, null=True)
     state = CharField()
-    kind = EnumField(enum=OAuthKind)
+    kind = EnumField(enum_type=OAuthKind)
     session_id = UUIDField(null=True, default=uuid.uuid4)
     tos = peewee.BooleanField(null=True)
 
 
 class Session(BaseModel):
+    user_id: int
     user = ForeignKeyField(User, null=True)
     session_id = UUIDField(null=True, unique=True, default=uuid.uuid4)
 
 
 class MagicLinkDB(UUIDBaseModel):
+    user_id: int
     user = ForeignKeyField(User)
     used = IntegerField(default=0)
 

@@ -38,8 +38,8 @@ def events_to_add(events1: List[GoogleEvent], events2: List[GoogleEvent]) -> Lis
     """
     event1_ids = {e.id for e in events1 if e.status != EventStatus.cancelled}
     event2_ids = {e.source_id for e in events2 if e.source_id is not None}
-    events_to_add = event1_ids.difference(event2_ids)
-    return [e for e in events1 if e.id in events_to_add]
+    events_to_add_list = event1_ids.difference(event2_ids)
+    return [e for e in events1 if e.id in events_to_add_list]
 
 
 def events_to_update(events1: List[GoogleEvent], events2: List[GoogleEvent]) -> List[GoogleEvent]:
@@ -78,8 +78,8 @@ def events_to_delete(events1: List[GoogleEvent], events2: List[GoogleEvent]) -> 
     confirmed_events2 = {event.source_id for event in events2 if predicate(event)}
 
     # the intersection is the events cancelled in events1 that are not cancelled in events2
-    events_to_delete = cancelled_events1.intersection(confirmed_events2)
-    return [e for e in events1 if e.id in events_to_delete]
+    events_to_delete_list = cancelled_events1.intersection(confirmed_events2)
+    return [e for e in events1 if e.id in events_to_delete_list]
 
 
 class EventsModificationHandler:

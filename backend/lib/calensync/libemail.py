@@ -45,7 +45,7 @@ def send_email(session, sender, recipient, aws_region, subject, body_html, base_
             )
             return True
         except ClientError as e:
-            logger.warn("Attempt {}: {}".format(i + 1, e.response['Error']['Message']))
+            logger.warn(f"Attempt {i + 1}: {e.response['Error']['Message']}")
             time.sleep(base_delay * 2 ** i)  # Exponential backoff
 
     logger.error(f"Failed to send email {subject}\n{body_html} to {sender}")

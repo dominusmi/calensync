@@ -7,6 +7,7 @@ from copy import copy
 from typing import List, Dict, Any, Optional
 
 import boto3
+import google.auth
 import google.oauth2.credentials
 import google_auth_httplib2
 import googleapiclient
@@ -15,9 +16,9 @@ import httplib2
 import peewee
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-
+import google.auth.exceptions
 from calensync.api.common import ApiError, number_of_days_to_sync_in_advance
-from calensync.database.model import Calendar, CalendarAccount, db, User, SyncRule
+from calensync.database.model import Calendar, CalendarAccount, User, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus, \
     ExtendedProperties
 from calensync.libcalendar import EventsModificationHandler, PushToQueueException
@@ -26,7 +27,7 @@ from calensync.queries.common import get_sync_rules_from_source
 from calensync.secure import decrypt_credentials
 from calensync.sqs import push_update_event_to_queue, prepare_event_to_push
 from calensync.utils import get_api_url, utcnow, datetime_to_google_time, format_calendar_text, \
-    google_error_handling_with_backoff
+    google_error_handling_with_backoff, is_local
 
 logger = get_logger(__file__)
 
@@ -82,17 +83,19 @@ def get_google_email(credentials):
         'oauth2', 'v2',
         credentials=credentials)
 
+    # pylint: disable-next=no-member
     return oauth2_client.userinfo().get().execute()["email"]
 
 
 def get_google_calendars(credentials) -> List[GoogleCalendar]:
     service = build('calendar', 'v3', credentials=credentials)
     try:
+        # pylint: disable-next=no-member
         items = service.calendarList().list().execute()["items"]
         return [GoogleCalendar.parse_obj(item) for item in items]
     except HttpError as e:
         logger.error(e)
-        raise ApiError("Failed to process request due to Google credentials error")
+        raise ApiError("Failed to process request due to Google credentials error") from e
 
 
 def get_events(service, google_id: str, start_date: datetime.datetime, end_date: datetime.datetime,
@@ -155,11 +158,11 @@ def source_event_tuple(source_event: GoogleEvent, source_calendar_id: str):
 
 def create_google_watch(service, calendar_db: Calendar):
     body = {
-        "id": calendar_db.channel_id.__str__(),
+        "id": str(calendar_db.channel_id),
         "address": (os.environ.get("WATCH_URL") or get_api_url()) + "/webhook",
         "expiration": int(calendar_db.expiration.timestamp() * 1000),
         "type": "webhook",
-        "token": calendar_db.token.__str__()
+        "token": str(calendar_db.token)
     }
     logger.info(body)
     response = service.events().watch(calendarId=str(calendar_db.platform_id), body=body).execute()
@@ -169,6 +172,7 @@ def create_google_watch(service, calendar_db: Calendar):
         calendar_db.resource_id = resource_id
         calendar_db.save()
         return resource_id
+    return None
 
 
 def make_summary_and_description(source_event: GoogleEvent, rule: SyncRule):
@@ -208,6 +212,9 @@ class GoogleCalendarWrapper:
         self._service = None
         self.calendar_db = calendar_db
         self.user_db = calendar_db.account.user
+        if db is None:
+            # this is really not great
+            from calensync.database.model import db
         self.db = db
         self._session = session
 
@@ -275,28 +282,25 @@ class GoogleCalendarWrapper:
         }
         return self.service.events().watch(calendarId=self.google_id, body=body).execute()
 
-    def get_user_calendars(self, active=None):
+    def get_user_calendars(self):
         query = (
             Calendar.select().join(CalendarAccount).join(User)
             .where(User.id == self.user_db.id, Calendar.id != self.calendar_db.id)
         )
-        if active is not None:
-            query = query.where(Calendar.active == active)
 
         return query
 
     def create_watch(self, expiration_minutes=60 * 24 * 14):
-        env = os.environ["ENV"]
-        if env == "local" or env == "test":
+        if is_local():
             expiration_minutes = 60
 
-        with db.atomic() as tx:
+        with self.db.atomic() as tx:
             new_expiration = datetime.datetime.now() + datetime.timedelta(minutes=expiration_minutes)
             self.calendar_db.expiration = new_expiration
             self.calendar_db.active = True
             self.calendar_db.save()
             if self.calendar_db.is_read_only:
-                return
+                return None
 
             create_google_watch(self.service, self.calendar_db)
         return None
@@ -309,9 +313,9 @@ class GoogleCalendarWrapper:
             logger.info(f"Couldn't delete watch for calendar {self.calendar_db.uuid} - resource_id is None")
             return
 
-        channel_id = self.calendar_db.channel_id.__str__()
+        channel_id = str(self.calendar_db.channel_id)
         resource_id = self.calendar_db.resource_id
-        with db.atomic() as tx:
+        with self.db.atomic() as tx:
             self.calendar_db.expiration = None
             self.calendar_db.active = False
             self.calendar_db.resource_id = None
@@ -320,10 +324,10 @@ class GoogleCalendarWrapper:
 
     def insert_events(self):
         if self.calendar_db.is_read_only:
-            return
+            return None
         elif self.calendar_db.paused is not None:
             logger.info(f"Skipping insert in calendar {self.calendar_db.uuid} due to paused")
-            return
+            return None
 
         self.calendar_db.last_inserted = utcnow()
         self.calendar_db.save()
@@ -358,6 +362,7 @@ class GoogleCalendarWrapper:
 
             except Exception as e:
                 logger.error(f"Failed to insert {event.id} with rule {rule.id}: {e}\n{traceback.format_exc()}")
+        return None
 
     def update_events(self):
         """ Only used to update start/end datetime"""
@@ -371,7 +376,7 @@ class GoogleCalendarWrapper:
             start = source_event.start.clone()
             end = source_event.end.clone()
             try:
-                with db.atomic():
+                with self.db.atomic():
                     if rule.destination.paused:
                         logger.warning(f"Skipping update on sync rule {rule.id} - paused calendar")
                         continue
@@ -652,3 +657,11 @@ def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue
             _inner(event)
         # with ThreadPool(8) as p:
         #     print(p.map(_inner, events))
+
+
+def handle_refresh_error(calendar_db: Calendar, exc: google.auth.exceptions.RefreshError):
+    reason = exc.args[1]['error']
+    logger.info(f"Putting calendar on pause: {reason}")
+    calendar_db.paused = utcnow()
+    calendar_db.paused_reason = reason
+    calendar_db.save()

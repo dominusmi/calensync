@@ -94,7 +94,7 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str,
 
     if calendar is None or str(calendar.token) != token:
         logger.warn(f"The token {token} does not match the database token {channel_id} ignoring.")
-        return
+        return None
 
     if resource_id is not None and resource_id != calendar.resource_id:
         calendar.resource_id = resource_id
@@ -103,11 +103,11 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str,
     if state == "sync":
         # This just means a channel was created
         logger.info("Sync signal")
-        return
+        return None
 
     if calendar is None:
         logger.warn(f"Received webhook for non-existent calendar with channel {channel_id}")
-        return
+        return None
 
     logger.info(f"Processing event first received at {(utcnow() - approximate_first_received).seconds} seconds ago")
 
@@ -128,6 +128,7 @@ def received_webhook(channel_id: str, state: str, resource_id: str, token: str,
             wrapper = GoogleCalendarWrapper(calendar, session=boto_session)
             wrapper.solve_update_in_calendar()
             calendar.save()
+    return None
 
 
 def merge_users(user1: User, user2: User, db) -> Tuple[User, User]:
@@ -226,7 +227,7 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
             raise exc
         except PushToQueueException as exc:
             logger.warn(f"An event was signalled as missing: {exc.event.id}. Adding to queue")
-            raise RuntimeError(f"Event {exc.event.id} missing, trying again later")
+            raise RuntimeError(f"Event {exc.event.id} missing, trying again later") from exc
 
     else:
         logger.error("Unknown event type")

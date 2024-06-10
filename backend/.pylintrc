@@ -1,0 +1,16 @@
+[MAIN]
+ignore-paths=^.*/tests/.*$,
+             ^.aws-sam/.*$,
+             ^scripts/.*$,
+             ^.pytest_cache/.*$,
+             ^.*/build/.*$,
+             ^.*/setup.py$
+
+[MESSAGES CONTROL]
+disable = missing-module-docstring, line-too-long, broad-exception-caught, trailing-newlines, unused-variable,
+    missing-class-docstring, superfluous-parens, trailing-whitespace, missing-function-docstring,
+    unspecified-encoding, no-name-in-module, missing-timeout, ungrouped-imports, too-few-public-methods,
+    unused-import, import-outside-toplevel, no-else-return, too-many-arguments, global-statement, unused-argument,
+    unnecessary-lambda-assignment, cyclic-import, too-many-statements, too-many-branches, invalid-name,
+    f-string-without-interpolation, cell-var-from-loop, too-many-locals, unnecessary-dunder-call, fixme,
+    no-else-raise, consider-using-f-string, too-many-return-statements
