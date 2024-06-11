@@ -165,7 +165,7 @@ def delete_calensync_events(destination_wrapper: 'GoogleCalendarWrapper', source
     destination_wrapper.delete_events()
 
 
-def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session, db, keep_rule_in_db: bool = True):
+def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session, db):
     sync_rule: SyncRule = SyncRule.get_or_none(id=sync_rule_id)
     if sync_rule is None:
         logger.warning(f"Sync rule {sync_rule_id} doesn't exist")
@@ -182,11 +182,8 @@ def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session
     if not other_rules_same_source:
         GoogleCalendarWrapper(sync_rule.source).delete_watch()
 
-    if not keep_rule_in_db:
-        sync_rule.delete_instance()
-    else:
-        sync_rule.deleted = True
-        sync_rule.save()
+    sync_rule.deleted = True
+    sync_rule.save()
 
 
 def handle_refresh_existing_calendar(calendar: GoogleCalendar, calendar_db: Calendar, name: str):
