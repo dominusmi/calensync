@@ -186,6 +186,7 @@ class SyncRule(UUIDBaseModel):
     destination = ForeignKeyField(Calendar, backref="destination_rules")
     summary = CharField(null=True, default=None)
     description = CharField(null=True, default=None)
+    deleted: bool = peewee.BooleanField(default=False)
 
     class Meta:
         constraints = [peewee.SQL('UNIQUE (source_id, destination_id)')]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import os
 import traceback
 from copy import copy
@@ -147,11 +148,12 @@ def delete_google_watch(service, resource_id: str, channel_id: str):
             raise e
 
 
-def source_event_tuple(source_event: GoogleEvent, source_calendar_id: str):
+def source_event_tuple(source_event: GoogleEvent, source_calendar_id: str, rule: SyncRule):
     return (
         source_event, [
             EventExtendedProperty.for_source_id(source_event.id),
-            EventExtendedProperty.for_calendar_id(source_calendar_id)
+            EventExtendedProperty.for_calendar_id(source_calendar_id),
+            EventExtendedProperty.for_rule_id(str(rule.uuid))
         ]
     )
 
@@ -414,6 +416,15 @@ class GoogleCalendarWrapper:
                 inner = lambda: delete_event(self.service, self.google_id, event_id)  # noqa: E731
                 if google_error_handling_with_backoff(inner, self.calendar_db):
                     deleted_events += 1
+            except googleapiclient.errors.HttpError as e:
+                if (
+                        e.resp.get('content-type', '').startswith('application/json')
+                        and json.loads(e.content).get('error', {}).get('errors', {})[0].get('reason', '') == 'deleted'
+                ):
+                    # resource already deleted
+                    pass
+                else:
+                    logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
             except Exception as e:
                 logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
         logger.info(f"Deleted {deleted_events} events")
@@ -501,7 +512,7 @@ class GoogleCalendarWrapper:
 
             if len(c.events) > 0:
                 return 0
-            c.events_handler.add([source_event_tuple(event, source_calendar_uuid)], rule)
+            c.events_handler.add([source_event_tuple(event, source_calendar_uuid, rule)], rule)
             if c.insert_events():
                 counter_event_changed += 1
         else:
@@ -537,7 +548,7 @@ class GoogleCalendarWrapper:
 
                 elif not is_recurrence_instance:
                     logger.info(f"In update but need to create event")
-                    c.events_handler.add([source_event_tuple(event, str(rule.source.uuid))], rule)
+                    c.events_handler.add([source_event_tuple(event, str(rule.source.uuid), rule)], rule)
                     c.insert_events()
                     counter_event_changed += 1
 
@@ -568,7 +579,7 @@ class GoogleCalendarWrapper:
                     )
                     existing_event.originalStartTime = GoogleDatetime(dateTime=originalStartTime,
                                                                       timeZone=recurrence_source.start.timeZone)
-                    c.events_handler.add([source_event_tuple(existing_event, str(rule.source.uuid))], rule)
+                    c.events_handler.add([source_event_tuple(existing_event, str(rule.source.uuid), rule)], rule)
                     c.insert_events()
                     counter_event_changed += 1
 

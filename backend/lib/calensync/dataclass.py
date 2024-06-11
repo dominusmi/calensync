@@ -91,6 +91,10 @@ class EventExtendedProperty(BaseModel):
     def for_calendar_id(cls, value):
         return cls(key=cls.get_calendar_id_key(), value=value)
 
+    @classmethod
+    def for_rule_id(cls, value):
+        return cls(key=cls.get_rule_id_key(), value=value)
+
     @staticmethod
     def get_source_id_key():
         return "source-id"
@@ -98,6 +102,10 @@ class EventExtendedProperty(BaseModel):
     @staticmethod
     def get_calendar_id_key():
         return "calendar-id"
+
+    @staticmethod
+    def get_rule_id_key():
+        return "csync-rule-id"
 
 
 class EventStatus(Enum):

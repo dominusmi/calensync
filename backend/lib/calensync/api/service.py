@@ -165,8 +165,8 @@ def delete_calensync_events(destination_wrapper: 'GoogleCalendarWrapper', source
     destination_wrapper.delete_events()
 
 
-def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session, db, keep_rule_in_db: bool = False):
-    sync_rule = SyncRule.get_or_none(id=sync_rule_id)
+def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session, db):
+    sync_rule: SyncRule = SyncRule.get_or_none(id=sync_rule_id)
     if sync_rule is None:
         logger.warning(f"Sync rule {sync_rule_id} doesn't exist")
         return
@@ -179,11 +179,11 @@ def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session
     # check if calendar has other rule sync rules, otherwise delete watch
     other_rules_same_source = list(
         SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
-    if not other_rules_same_source and not keep_rule_in_db:
+    if not other_rules_same_source:
         GoogleCalendarWrapper(sync_rule.source).delete_watch()
 
-    if not keep_rule_in_db:
-        sync_rule.delete_instance()
+    sync_rule.deleted = True
+    sync_rule.save()
 
 
 def handle_refresh_existing_calendar(calendar: GoogleCalendar, calendar_db: Calendar, name: str):
@@ -236,7 +236,7 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
 def handle_updated_event(e: UpdateGoogleEvent):
     rules = list(SyncRule.select().where(SyncRule.id == e.rule_id))
     if len(rules) == 0:
-        logger.warn(f"No rules found for update event: {e.dict()}")
+        logger.error(f"No rules found for update event: {e.dict()}")
 
     event = e.event
 

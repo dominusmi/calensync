@@ -8,7 +8,7 @@ import pytest
 from moto import mock_aws
 
 from calensync.api.common import ApiError
-from calensync.api.service import verify_valid_sync_rule, received_webhook, handle_sqs_event
+from calensync.api.service import verify_valid_sync_rule, received_webhook, handle_sqs_event, handle_updated_event
 from calensync.database.model import SyncRule
 from calensync.dataclass import SQSEvent, QueueEvent, UpdateGoogleEvent, EventStatus, PostSyncRuleEvent, \
     DeleteSyncRuleEvent, ExtendedProperties, EventExtendedProperty
@@ -328,7 +328,7 @@ class TestReceiveCreateRuleEvent:
             ]
             handle_sqs_event(sqs_event, db, boto_session)
 
-            assert SyncRule.get_or_none(id=rule1.id) is None
+            assert SyncRule.get(id=rule1.id).deleted == True
             assert GoogleCalendarWrapper.return_value.delete_watch.call_count == 0
 
             messages = []
@@ -360,6 +360,11 @@ class TestReceiveCreateRuleEvent:
                 assert update_event.delete
                 assert update_event.event.summary == f"Summary{update_event.event.id[-1]}"
                 ids.remove(update_event.event.id)
+                with patch("calensync.api.service.GoogleCalendarWrapper.push_event_to_rule") as mock_push_to_rule:
+                    handle_updated_event(update_event)
+                    mock_push_to_rule.assert_called_once()
+                    assert mock_push_to_rule.call_args_list[0].args[0].status == EventStatus.cancelled
+                    assert mock_push_to_rule.call_args_list[0].args[1] == SyncRule.get(id=rule1.id)
 
             assert len(ids) == 0
 
@@ -398,7 +403,7 @@ class TestSessionCorrectlySet:
                     # TypeError comes from decoding. The main check of this test is that the session is not None
                     handle_sqs_event(sqs_event, db, boto_session)
 
-                fetch_ssm_parameter.return_value = base64.b64encode(b"q"*32)
+                fetch_ssm_parameter.return_value = base64.b64encode(b"q" * 32)
                 os.environ['AWS_EXECUTION_ENV'] = "123"
                 handle_sqs_event(sqs_event, db, boto_session)
                 assert get_events.call_count == 1
