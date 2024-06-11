@@ -64,8 +64,8 @@ class TestDeleteSyncRule:
 
             simulate_sqs_receiver(boto_session, queue_url, db)
 
-            assert SyncRule.get_or_none(id=rule.id) is None
-            assert SyncRule.get_or_none(id=rule2.id) is not None
+            assert SyncRule.get(id=rule.id).deleted
+            assert not SyncRule.get(id=rule2.id).deleted
             assert gwrapper.return_value.delete_watch.call_count == 1
 
     @staticmethod
@@ -83,8 +83,8 @@ class TestDeleteSyncRule:
 
             simulate_sqs_receiver(boto_session, queue_url, db)
             assert MockGoogleCalendarWrapper.return_value.delete_watch.call_count == 0
-            assert SyncRule.get_or_none(id=rule.id) is None
-            assert SyncRule.get_or_none(id=rule2.id) is not None
+            assert SyncRule.get(id=rule.id).deleted
+            assert not SyncRule.get(id=rule2.id).deleted
 
     @staticmethod
     def test_user_doesnt_have_permission(db, user, calendar1_1, calendar1_2, boto_session, queue_url):
