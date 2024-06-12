@@ -21,7 +21,7 @@ import google.auth.exceptions
 from calensync.api.common import ApiError, number_of_days_to_sync_in_advance
 from calensync.database.model import Calendar, CalendarAccount, User, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus, \
-    ExtendedProperties
+    ExtendedProperties, GoogleDate
 from calensync.libcalendar import EventsModificationHandler, PushToQueueException
 from calensync.log import get_logger
 from calensync.queries.common import get_sync_rules_from_source
@@ -271,6 +271,9 @@ class GoogleCalendarWrapper:
                 self.calendar_db.paused = utcnow()
                 self.calendar_db.paused_reason = e.reason
                 self.calendar_db.save()
+            self.events = []
+        except google.auth.exceptions.RefreshError as e:
+            handle_refresh_error(self.calendar_db, e)
             self.events = []
         return self.events
 
@@ -570,15 +573,27 @@ class GoogleCalendarWrapper:
                     existing_event = copy(event)
                     existing_event.recurringEventId = recurrence_source.id
                     originalStartTime = copy(recurrence_source.start)
-                    originalStartTime = originalStartTime.dateTime.replace(
-                        year=event.originalStartTime.dateTime.year,
-                        month=event.originalStartTime.dateTime.month,
-                        day=event.originalStartTime.dateTime.day,
-                        hour=event.originalStartTime.dateTime.hour,
-                        minute=event.originalStartTime.dateTime.minute
-                    )
-                    existing_event.originalStartTime = GoogleDatetime(dateTime=originalStartTime,
-                                                                      timeZone=recurrence_source.start.timeZone)
+                    if isinstance(originalStartTime, GoogleDatetime):
+                        originalStartTime = originalStartTime.dateTime.replace(
+                            year=event.originalStartTime.dateTime.year,
+                            month=event.originalStartTime.dateTime.month,
+                            day=event.originalStartTime.dateTime.day,
+                            hour=event.originalStartTime.dateTime.hour,
+                            minute=event.originalStartTime.dateTime.minute
+                        )
+                        existing_event.originalStartTime = GoogleDatetime(dateTime=originalStartTime,
+                                                                          timeZone=recurrence_source.start.timeZone)
+                    elif isinstance(originalStartTime, GoogleDate):
+                        originalStartTime = originalStartTime.date.replace(
+                            year=event.originalStartTime.date.year,
+                            month=event.originalStartTime.date.month,
+                            day=event.originalStartTime.date.day
+                        )
+                        existing_event.originalStartTime = GoogleDate(date=originalStartTime)
+                    else:
+                        logger.error(f"originalStartTime is of type {type(originalStartTime)}")
+                        return 0
+
                     c.events_handler.add([source_event_tuple(existing_event, str(rule.source.uuid), rule)], rule)
                     c.insert_events()
                     counter_event_changed += 1
@@ -594,6 +609,9 @@ class GoogleCalendarWrapper:
         logger.info(f"Found {(n_sync := len(sync_rules))} active SyncRules for {self.calendar_db.uuid}")
         if n_sync == 0:
             return 0
+
+        if self.calendar_db.paused is not None:
+            logger.warn("Calendar is paused. Skipping update")
 
         events = self.get_updated_events()
         events = [event for event in events if len(event.extendedProperties.private) == 0]
@@ -642,7 +660,8 @@ def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue
     if use_queue:
         prepared_events = []
         for event in events:
-            if (source_event_id := event.extendedProperties.private.get(EventExtendedProperty.get_source_id_key())) is None:
+            if (
+            source_event_id := event.extendedProperties.private.get(EventExtendedProperty.get_source_id_key())) is None:
                 logger.warn("Shouldn't be possible to have a copied event without source id")
                 continue
 
@@ -672,7 +691,7 @@ def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue
 
 def handle_refresh_error(calendar_db: Calendar, exc: google.auth.exceptions.RefreshError):
     reason = exc.args[1]['error']
-    logger.info(f"Putting calendar on pause: {reason}")
+    logger.warn(f"Refresh error occurred. Putting calendar on pause: {reason}")
     calendar_db.paused = utcnow()
     calendar_db.paused_reason = reason
     calendar_db.save()

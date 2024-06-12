@@ -138,7 +138,8 @@ def update_watches(db: peewee.Database):
                     gcalendar.create_watch()
                     break
                 except google.auth.exceptions.RefreshError as e:
-                    handle_refresh_error("calendar_db", e)
+                    handle_refresh_error(calendar_db, e)
+                    break
             except Exception as e:
                 logger.error(
                     f"Error occured while updating calendar {calendar_db.uuid}: {e}\n\n{traceback.format_exc()}")
