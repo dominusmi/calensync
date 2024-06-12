@@ -220,14 +220,9 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
 
     elif sqs_event.kind == QueueEvent.UPDATED_EVENT:
         e: UpdateGoogleEvent = UpdateGoogleEvent.parse_obj(sqs_event.data)
-        try:
-            handle_updated_event(e)
-        except BackoffException as exc:
-            logger.info(f"Back-off: retrying event {e.event.id} for rules {e.rule_id}")
-            raise exc
-        except PushToQueueException as exc:
-            logger.warn(f"An event was signalled as missing: {exc.event.id}. Adding to queue")
-            raise RuntimeError(f"Event {exc.event.id} missing, trying again later") from exc
+
+        # error catching is handled in the lambda handler function
+        handle_updated_event(e)
 
     else:
         logger.error("Unknown event type")
