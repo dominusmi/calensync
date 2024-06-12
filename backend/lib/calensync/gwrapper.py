@@ -274,6 +274,7 @@ class GoogleCalendarWrapper:
             self.events = []
         except google.auth.exceptions.RefreshError as e:
             handle_refresh_error(self.calendar_db, e)
+            self.events = []
         return self.events
 
     def add_watch(self, watch_id: str, token: str, expiration: datetime.datetime, url: str):
