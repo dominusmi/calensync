@@ -1,3 +1,4 @@
+import json
 from unittest.mock import MagicMock, patch
 
 import googleapiclient.errors
@@ -44,15 +45,33 @@ class TestGoogleExceptionWithBackoff:
         assert i[0] == 1
 
     @staticmethod
-    def test_backoff():
+    def test_backoff_without_json():
         i = [0]
         resp = MagicMock()
         resp.status = 429
         resp.reason = 'Rate Limit Exceeded'
+        resp.get.return_value = ''
 
         def _inner():
             i[0] += 1
             raise googleapiclient.errors.HttpError(resp, content=b"")
+
+        with pytest.raises(BackoffException):
+            with patch("calensync.utils.sleep") as sleep:
+                google_error_handling_with_backoff(_inner)
+
+        assert i[0] == 4
+
+    @staticmethod
+    def test_backoff_with_json():
+        i = [0]
+        resp = MagicMock()
+        resp.status = 429
+        resp.get.return_value = 'application/json'
+
+        def _inner():
+            i[0] += 1
+            raise googleapiclient.errors.HttpError(resp, content=json.dumps({'error': {'errors': [{'reason': 'rateLimitExceeded'}]}}).encode())
 
         with pytest.raises(BackoffException):
             with patch("calensync.utils.sleep") as sleep:
@@ -66,6 +85,7 @@ class TestGoogleExceptionWithBackoff:
         resp = MagicMock()
         resp.status = 429
         resp.reason = 'Rate Limit Exceeded'
+        resp.get.return_value = ''
 
         def _inner():
             if i[0] == 1:
