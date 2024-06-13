@@ -108,6 +108,12 @@ def google_error_handling_with_backoff(function, calendar_db=None):
         try:
             return function()
         except googleapiclient.errors.HttpError as e:
+            # the reason is always set to something, but can be a text (why the fuck google?) or an enum like text
+            # normally there's always a json representation
+            reason = e.reason
+            if e.resp.get('content-type', '').startswith('application/json'):
+                reason = json.loads(e.content).get('error').get('errors')[0].get('reason')
+
             if e.status_code == 403:
                 if e.reason == "You need to have writer access to this calendar.":
                     if calendar_db:
@@ -120,15 +126,15 @@ def google_error_handling_with_backoff(function, calendar_db=None):
 
             if (
                     e.status_code == 429
-                    or (e.status_code == 403 and e.reason in ["userRateLimitExceeded", 'Rate Limit Exceeded',
-                                                              "rateLimitExceeded", "quotaExceeded",
-                                                              'Calendar usage limits exceeded.'])
+                    or (e.status_code == 403 and reason in ["userRateLimitExceeded", 'Rate Limit Exceeded',
+                                                            "rateLimitExceeded", "quotaExceeded",
+                                                            'Calendar usage limits exceeded.'])
             ):
-
                 sleep_delay = 2 ** i + random.random()
                 logger.info(f"Sleeping for {sleep_delay} seconds")
                 sleep(sleep_delay)
             else:
+                logger.info(f"Uncaught google error in backoff: {e}. Reason parsed: {reason}")
                 raise e
 
     raise BackoffException(60)
