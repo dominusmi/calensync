@@ -3,12 +3,9 @@ from unittest.mock import MagicMock, patch
 import googleapiclient.errors
 import pytest
 
-import google.auth.exceptions
-from calensync.tests.fixtures import db
 from calensync.database.model import User, EmailDB
-from calensync.utils import prefetch_get_or_none, google_error_handling_with_backoff, BackoffException, \
-    INVALID_GRANT_ERROR
-from calensync.gwrapper import handle_refresh_error
+from calensync.tests.fixtures import db
+from calensync.utils import prefetch_get_or_none, google_error_handling_with_backoff, BackoffException
 
 
 class TestPrefetchOrNone:
