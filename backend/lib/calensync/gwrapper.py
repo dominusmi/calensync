@@ -647,7 +647,7 @@ class GoogleCalendarWrapper:
 
 
 def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue=True):
-    destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination)
+    destination_wrapper = GoogleCalendarWrapper(calendar_db=sync_rule.destination, session=boto_session)
 
     events = destination_wrapper.get_events(
         private_extended_properties=EventExtendedProperty.for_calendar_id(str(sync_rule.source.uuid)).to_google_dict(),
