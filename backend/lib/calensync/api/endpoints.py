@@ -588,7 +588,8 @@ def get_sync_rules(user: User):
             Destination.name.alias("destination"),
             Destination.platform_id.alias("destination_id"),
             SyncRule.summary,
-            SyncRule.description
+            SyncRule.description,
+            SyncRule.deleted
         )
         .join(Source, on=(Source.id == SyncRule.source_id))
         .switch(SyncRule)
