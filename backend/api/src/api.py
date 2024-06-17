@@ -130,7 +130,7 @@ def post__tos(authorization: Annotated[Union[str, None], Cookie()] = None):
 def get__sync_rules(authorization: Annotated[Union[str, None], Cookie()] = None):
     with DatabaseSession(os.environ["ENV"]) as db:
         user = edp.verify_session(authorization)
-        return edp.get_sync_rules(user)
+        return [sr for sr in edp.get_sync_rules(user) if not sr.get('deleted', False)]
 
 
 @app.post('/sync')
