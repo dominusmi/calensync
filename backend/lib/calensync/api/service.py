@@ -180,7 +180,7 @@ def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session
     other_rules_same_source = list(
         SyncRule.select().where(SyncRule.source == sync_rule.source, SyncRule.id != sync_rule.id))
     if not other_rules_same_source:
-        GoogleCalendarWrapper(sync_rule.source).delete_watch()
+        GoogleCalendarWrapper(sync_rule.source, session=boto_session).delete_watch()
 
     sync_rule.deleted = True
     sync_rule.save()
