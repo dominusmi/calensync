@@ -66,7 +66,7 @@ const AppLayout: React.FC<LayoutProps> = ({ children, onlyRequired = false, dash
                                     </div>
                                     <Toast onReady={handleToastReady} />
                                 </div>
-                                <Footer onlyRequired={onlyRequired} />
+                                <Footer onlyRequired={true} />
                             </div>
                         </PlausibleProvider>
                     )}>
