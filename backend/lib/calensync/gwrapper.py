@@ -463,7 +463,7 @@ class GoogleCalendarWrapper:
             # this means an invitation was received, but not yet accepted, so nothing to do
             return 0
 
-        elif event.status == EventStatus.cancelled or event.status == EventStatus.declined:
+        elif event.status in [EventStatus.cancelled, EventStatus.declined]:
             # need to delete
             logger.info(f"Found event to delete")
             c = GoogleCalendarWrapper(rule.destination)
