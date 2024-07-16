@@ -112,6 +112,7 @@ class EventStatus(Enum):
     confirmed = 'confirmed'
     tentative = 'tentative'
     cancelled = 'cancelled'
+    declined = 'declined'
 
 
 class ExtendedProperties(BaseModel):
