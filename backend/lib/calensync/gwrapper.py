@@ -432,10 +432,13 @@ class GoogleCalendarWrapper:
                 logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
         logger.info(f"Deleted {deleted_events} events")
 
-    def get_updated_events(self) -> List[GoogleEvent]:
+    def get_updated_events(self, updated_min: int = None) -> List[GoogleEvent]:
         """ Returns the events updated since last_processed """
-        updated_min = max(self.calendar_db.last_processed.replace(tzinfo=datetime.timezone.utc),
-                          utcnow() - datetime.timedelta(days=3))
+        if updated_min is None:
+            updated_min = max(
+                self.calendar_db.last_processed.replace(tzinfo=datetime.timezone.utc),
+                utcnow() - datetime.timedelta(days=3)
+            )
 
         start_date = utcnow() - datetime.timedelta(days=30)
         end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
