@@ -31,8 +31,9 @@ const Footer: React.FC<{ onlyRequired?: boolean }> = ({ onlyRequired = false }) 
             <a href={`${PUBLIC_URL}/it`}>Italiano</a>
           </div>
           <div className="row">
-            <p>Calensync © 2023</p>
+            <p>Calensync © 2024</p>
           </div>
+          {onlyRequired && <p>📧 support@calensync.live</p>}
         </div>
           <div className="col-12 col-sm-6 col-xxl-4">
             <div className="row">
