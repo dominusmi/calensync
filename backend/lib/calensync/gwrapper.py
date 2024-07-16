@@ -463,7 +463,7 @@ class GoogleCalendarWrapper:
             # this means an invitation was received, but not yet accepted, so nothing to do
             return 0
 
-        elif event.status == EventStatus.cancelled:
+        elif event.status == EventStatus.cancelled or event.status == EventStatus.declined:
             # need to delete
             logger.info(f"Found event to delete")
             c = GoogleCalendarWrapper(rule.destination)
@@ -500,6 +500,7 @@ class GoogleCalendarWrapper:
                 c.events_handler.delete(fetched_events)
                 c.delete_events()
                 counter_event_changed += 1
+
         # for some reason the created and updated time are not exactly the same, even when the event is new
         # it looks like google doesn't use a transaction. Bad google. So 1 second threshold for equality
         elif (
