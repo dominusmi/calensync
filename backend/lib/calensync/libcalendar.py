@@ -141,3 +141,17 @@ class PushToQueueException(Exception):
     def __init__(self, event: GoogleEvent):
         super().__init__()
         self.event = event
+
+
+def set_declined_event_if_necessary(rule: SyncRule, event: GoogleEvent):
+    if len(declined_emails := event.get_declined_emails()) > 0:
+        # if there's any attendee that have declined, we need to check whether they're the main user
+        if rule.source.primary and rule.source.platform_id in declined_emails:
+            event.status = EventStatus.declined
+        else:
+            for calendar in rule.source.account.calendars:
+                if not calendar.primary:
+                    continue
+                if calendar.platform_id in declined_emails:
+                    event.status = EventStatus.declined
+                break
