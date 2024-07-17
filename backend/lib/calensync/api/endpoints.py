@@ -27,40 +27,41 @@ from calensync.secure import encrypt_credentials, decrypt_credentials
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
     get_paddle_token, prefetch_get_or_none, replace_timezone
 
-if os.environ.get("MOCK_GOOGLE"):
-    from unittest.mock import MagicMock
-    from calensync.dataclass import GoogleCalendar
-
-    google_auth_oauthlib = MagicMock()
-
-
-    get_google_email = lambda x: f"{uuid.uuid4()}@test.com" # noqa: disable=F811
-
-    google.oauth2.credentials.Credentials = MagicMock()
-    google.oauth2.credentials.Credentials.from_authorized_user_info.return_value = MagicMock()
-
-
-    get_google_calendars = lambda credentials: [ # noqa: disable=F811
-        GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}"),
-        GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}")
-    ]
-
-
-    def new_flow(*args, **kwargs):
-        flow_manager = MagicMock()
-        state = str(uuid.uuid4())
-        flow_manager.authorization_url.return_value = (f"http://127.0.0.1:8000/oauth2?state={state}", state)
-        # make it return something that has a to_dict() function that returns a dictionary of credentials
-        flow_manager.credentials.to_json.return_value = json.dumps({"whatever": "dummy"})
-
-        return flow_manager
-
-
-    google_auth_oauthlib.flow.Flow.from_client_config = new_flow
-
-
-else:
-    import google_auth_oauthlib.flow
+# if os.environ.get("MOCK_GOOGLE"):
+#     from unittest.mock import MagicMock
+#     from calensync.dataclass import GoogleCalendar
+#
+#     google_auth_oauthlib = MagicMock()
+#
+#
+#     get_google_email = lambda x: f"{uuid.uuid4()}@test.com" # noqa: disable=F811
+#
+#     google.oauth2.credentials.Credentials = MagicMock()
+#     google.oauth2.credentials.Credentials.from_authorized_user_info.return_value = MagicMock()
+#
+#
+#     get_google_calendars = lambda credentials: [ # noqa: disable=F811
+#         GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}"),
+#         GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}")
+#     ]
+#
+#
+#     def new_flow(*args, **kwargs):
+#         flow_manager = MagicMock()
+#         state = str(uuid.uuid4())
+#         flow_manager.authorization_url.return_value = (f"http://127.0.0.1:8000/oauth2?state={state}", state)
+#         # make it return something that has a to_dict() function that returns a dictionary of credentials
+#         flow_manager.credentials.to_json.return_value = json.dumps({"whatever": "dummy"})
+#
+#         return flow_manager
+#
+#
+#     google_auth_oauthlib.flow.Flow.from_client_config = new_flow
+#
+#
+# else:
+#     import google_auth_oauthlib.flow
+import google_auth_oauthlib.flow
 
 logger = get_logger(__file__)
 
