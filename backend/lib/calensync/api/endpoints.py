@@ -455,7 +455,7 @@ def refresh_calendars(user: User, account_uuid: str, db: peewee.Database, boto_s
         else:
             readonly = (calendar.accessRole == 'reader')
             new_calendars_db.append(
-                Calendar(account=account, platform_id=calendar.id, name=name, readonly=readonly)
+                Calendar(account=account, platform_id=calendar.id, name=name, readonly=readonly, primary=calendar.primary)
             )
 
     with db.atomic():
