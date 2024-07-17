@@ -126,6 +126,18 @@ class ExtendedProperties(BaseModel):
         return result
 
 
+class GoogleEventResponseStatus(Enum):
+    needsAction = "needsAction"
+    declined = "declined"
+    tentative = "tentative"
+    accepted = "accepted"
+
+
+class GoogleEventAttendee(BaseModel):
+    email: str
+    responseStatus: GoogleEventResponseStatus  # The attendee's response status. Possible values are:
+
+
 class GoogleEvent(BaseModel):
     id: str
     status: EventStatus
@@ -141,6 +153,7 @@ class GoogleEvent(BaseModel):
     htmlLink: Optional[str] = None
     visibility: str = "public"
     recurringEventId: str = None
+    attendees: list[GoogleEventAttendee] = Field(default_factory=lambda: [])
 
     @staticmethod
     def parse_event_list_response(response: Dict) -> List[GoogleEvent]:
@@ -158,6 +171,10 @@ class GoogleEvent(BaseModel):
         if self.extendedProperties:
             return self.extendedProperties.private.get("source-id")
         return None
+
+    def get_declined_emails(self) -> List[str]:
+        return [attendee.email for attendee in self.attendees
+                if attendee.responseStatus == GoogleEventResponseStatus.declined]
 
 
 def event_list_to_map(events: List[GoogleEvent]) -> Dict[str, GoogleEvent]:
