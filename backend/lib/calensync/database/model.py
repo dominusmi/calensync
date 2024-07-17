@@ -140,6 +140,7 @@ class Calendar(UUIDBaseModel):
     paused = DateTimeField(null=True, default=None)
     paused_reason = CharField(null=True, default=None)
     readonly = peewee.BooleanField(default=False)
+    primary = peewee.BooleanField(default=False)
 
     @property
     def friendly_name(self):
