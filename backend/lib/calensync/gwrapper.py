@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 
 import boto3
 import google.auth
+import google.auth.exceptions
 import google.oauth2.credentials
 import google_auth_httplib2
 import googleapiclient
@@ -17,12 +18,12 @@ import httplib2
 import peewee
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-import google.auth.exceptions
+
 from calensync.api.common import ApiError, number_of_days_to_sync_in_advance
 from calensync.database.model import Calendar, CalendarAccount, User, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus, \
     ExtendedProperties, GoogleDate
-from calensync.libcalendar import EventsModificationHandler, PushToQueueException
+from calensync.libcalendar import EventsModificationHandler, PushToQueueException, set_declined_event_if_necessary
 from calensync.log import get_logger
 from calensync.queries.common import get_sync_rules_from_source
 from calensync.secure import decrypt_credentials
@@ -459,6 +460,8 @@ class GoogleCalendarWrapper:
             logger.info("Found private extended properties, ignoring")
             return 0
 
+        set_declined_event_if_necessary(rule, event)
+
         if event.status == EventStatus.tentative:
             # this means an invitation was received, but not yet accepted, so nothing to do
             return 0
@@ -665,7 +668,8 @@ def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue
         prepared_events = []
         for event in events:
             if (
-            source_event_id := event.extendedProperties.private.get(EventExtendedProperty.get_source_id_key())) is None:
+                    source_event_id := event.extendedProperties.private.get(
+                        EventExtendedProperty.get_source_id_key())) is None:
                 logger.warn("Shouldn't be possible to have a copied event without source id")
                 continue
 
