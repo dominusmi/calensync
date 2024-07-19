@@ -428,9 +428,9 @@ class GoogleCalendarWrapper:
                     # resource already deleted
                     pass
                 else:
-                    logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
+                    logger.warn(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
             except Exception as e:
-                logger.error(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
+                logger.warn(f"Failed to delete event {event_id} in calendar {self.calendar_db.id}: {e}")
         logger.info(f"Deleted {deleted_events} events")
 
     def get_updated_events(self, updated_min: int = None) -> List[GoogleEvent]:
