@@ -609,7 +609,7 @@ class GoogleCalendarWrapper:
                 logger.error(f"Event status error, doesn't match any case: {event.status}, {event.id}")
         return counter_event_changed
 
-    def solve_update_in_calendar(self, preloaded_events: list[GoogleEvent] = None) -> int:
+    def solve_update_in_calendar(self, preloaded_events: list[GoogleEvent] = None, only_preloaded: bool = False) -> int:
         """ Called when we receive a webhook event saying the calendar requires an update """
         sync_rules = list(get_sync_rules_from_source(self.calendar_db))
 
@@ -620,8 +620,10 @@ class GoogleCalendarWrapper:
         if self.calendar_db.paused is not None:
             logger.warn("Calendar is paused. Skipping update")
 
-        events = self.get_updated_events()
-        events = [event for event in events if len(event.extendedProperties.private) == 0]
+        events = []
+        if not only_preloaded:
+            events = self.get_updated_events()
+            events = [event for event in events if len(event.extendedProperties.private) == 0]
         if preloaded_events:
             events.extend(preloaded_events)
 
