@@ -38,11 +38,14 @@
                 "to": "a",
                 "mark-busy": "Segna gli eventi come 'Busy'",
                 "are-you-sure": "Sei sicuro?",
-                "delete-info": "Ciò cancellerà la regola e rimuoverà anche tutti gli eventi sincronizzati da questa regola nei tuoi calendari Google."
+                "delete-info": "Ciò cancellerà la regola e rimuoverà anche tutti gli eventi sincronizzati da questa regola nei tuoi calendari Google.",
+                "update-info": "Ciò aggiornerà tutti gli event legati alla regola. La parola magica <b className='fw-bold'>%original%</b> può essere utilizzata per riferirsi al valore originale dell'evento"
             },
             "customize-event-template": "Personalizza il titolo e descrizione degli eventi sincronizzati",
             "example-title": "Un evento con titolo <b className='fw-bold'>\"Birthday party\"</b> sara sincronizzato come ",
-            "example-description": "Un evento con descrizione <b>\"Let's all meet together for Tom's birthday\"</b> sara sincronizzato come "
+            "example-description": "Un evento con descrizione <b>\"Let's all meet together for Tom's birthday\"</b> sara sincronizzato come ",
+            "label-custom-title": "Come sincronizzare il titolo",
+            "label-custom-description": "Come sincronizzare la descrizione"
         },
         "connect_from_other_device": "Il tuo calendario è su un altro dispositivo?",
         "connect_from_other_device_post": "Invia questo link al tuo dispositivo per connetterti facilmente!",
