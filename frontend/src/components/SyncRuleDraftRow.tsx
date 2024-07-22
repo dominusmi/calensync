@@ -124,10 +124,10 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], setState: (x: boolean) =
                             </Accordion.Body>
                         </Accordion.Item>
                     </Accordion>
-                    <div className="btn-group pe-lg-2 my-2 col-12 col-lg-1 my-lg-0 my-2" role="group" aria-label="Fourth group">
+                    <div className="btn-group pe-lg-2 my-2 col-12 col-lg-2 my-lg-0 my-2" role="group" aria-label="Fourth group">
                         <button type="button" className="btn btn-primary" onClick={createSyncRule}>{t("common.save")}</button>
                     </div>
-                    <div className="btn-group pe-lg-2 my-2 col-12 col-lg-1 my-lg-0 my-2" role="group" aria-label="Fourth group">
+                    <div className="btn-group pe-lg-2 my-2 col-12 col-lg-2 my-lg-0 my-2" role="group" aria-label="Fourth group">
                         <button type="button" className="btn btn-outline-primary" onClick={() => setState(false)}>{t("common.cancel")}</button>
                     </div>
                 </div>
