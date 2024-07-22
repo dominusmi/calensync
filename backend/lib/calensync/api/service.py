@@ -62,7 +62,7 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
     source: Calendar = sync_rule.source
     destination: Calendar = sync_rule.destination
 
-    source_wrapper = GoogleCalendarWrapper(calendar_db=source)
+    source_wrapper = GoogleCalendarWrapper(calendar_db=source, session=session)
     start_date = datetime.datetime.now()
 
     source.last_received = utcnow()
