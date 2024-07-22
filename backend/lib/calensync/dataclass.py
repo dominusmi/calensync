@@ -244,3 +244,8 @@ class PostSyncRuleBody(BaseModel):
     destination_calendar_id: str
     summary: str
     description: str
+
+
+class PatchSyncRuleBody(BaseModel):
+    summary: Optional[str] = None
+    description: Optional[str] = None
