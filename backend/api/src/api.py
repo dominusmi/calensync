@@ -14,7 +14,7 @@ from calensync.api.common import format_response, ApiError
 import calensync.api.endpoints as edp
 from calensync.api.response import PostMagicLinkResponse
 from calensync.database.utils import DatabaseSession
-from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PostSyncRuleBody
+from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PostSyncRuleBody, PatchSyncRuleBody
 from calensync.log import get_logger
 from calensync.utils import get_env, utcnow
 
@@ -153,6 +153,18 @@ def delete__sync_rule(sync_id: str, authorization: Annotated[Union[str, None], C
     with DatabaseSession(os.environ["ENV"]) as db:
         user = edp.verify_session(authorization)
         edp.delete_sync_rule(user, sync_id, boto3.Session(), db)
+
+
+@app.patch('/sync/{sync_id}')
+@format_response
+def patch__sync_rule(sync_id: str, payload: PatchSyncRuleBody, authorization: Annotated[Union[str, None], Cookie()] = None):
+    """
+    Update a calendar. Used to set a calendar as active.
+    """
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = edp.verify_session(authorization)
+        edp.patch_sync_rule(user, sync_id, payload, boto3.Session(), db)
+
 
 
 @app.delete('/calendars/{account_id}')
@@ -295,11 +307,3 @@ async def log_requests(request: Request, call_next):
 
 handler = Mangum(app, lifespan='off')
 
-if __name__ == "__main__":
-    import uvicorn
-    from pathlib import Path
-
-    dir_ = Path().expanduser().resolve().parent
-    env_path = dir_.joinpath("../.env").resolve()
-    reload_dir = dir_.joinpath("../").resolve()
-    uvicorn.run(app, host="127.0.0.1", port=8000, env_file=str(env_path))

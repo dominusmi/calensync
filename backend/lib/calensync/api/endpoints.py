@@ -17,51 +17,51 @@ from calensync import dataclass
 from calensync.api.common import ApiError, RedirectResponse, encode_query_message
 from calensync.api.response import PostMagicLinkResponse
 from calensync.api.service import verify_valid_sync_rule, merge_users, handle_refresh_existing_calendar, \
-    handle_delete_sync_rule_event
+    handle_delete_sync_rule_event, handle_update_sync_rule_event
 from calensync.database.model import User, OAuthState, Calendar, OAuthKind, CalendarAccount, Session, SyncRule, EmailDB, \
     MagicLinkDB
-from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent
+from calensync.dataclass import PostSyncRuleBody, PostSyncRuleEvent, PatchSyncRuleBody
 from calensync.gwrapper import get_google_email, get_google_calendars
 from calensync.log import get_logger
 from calensync.secure import encrypt_credentials, decrypt_credentials
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
     get_paddle_token, prefetch_get_or_none, replace_timezone
 
-# if os.environ.get("MOCK_GOOGLE"):
-#     from unittest.mock import MagicMock
-#     from calensync.dataclass import GoogleCalendar
-#
-#     google_auth_oauthlib = MagicMock()
-#
-#
-#     get_google_email = lambda x: f"{uuid.uuid4()}@test.com" # noqa: disable=F811
-#
-#     google.oauth2.credentials.Credentials = MagicMock()
-#     google.oauth2.credentials.Credentials.from_authorized_user_info.return_value = MagicMock()
-#
-#
-#     get_google_calendars = lambda credentials: [ # noqa: disable=F811
-#         GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}"),
-#         GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}")
-#     ]
-#
-#
-#     def new_flow(*args, **kwargs):
-#         flow_manager = MagicMock()
-#         state = str(uuid.uuid4())
-#         flow_manager.authorization_url.return_value = (f"http://127.0.0.1:8000/oauth2?state={state}", state)
-#         # make it return something that has a to_dict() function that returns a dictionary of credentials
-#         flow_manager.credentials.to_json.return_value = json.dumps({"whatever": "dummy"})
-#
-#         return flow_manager
-#
-#
-#     google_auth_oauthlib.flow.Flow.from_client_config = new_flow
-#
-#
-# else:
-#     import google_auth_oauthlib.flow
-import google_auth_oauthlib.flow
+if os.environ.get("MOCK_GOOGLE"):
+    from unittest.mock import MagicMock
+    from calensync.dataclass import GoogleCalendar
+
+    google_auth_oauthlib = MagicMock()
+
+
+    get_google_email = lambda x: f"{uuid.uuid4()}@test.com" # noqa: disable=F811
+
+    google.oauth2.credentials.Credentials = MagicMock()
+    google.oauth2.credentials.Credentials.from_authorized_user_info.return_value = MagicMock()
+
+
+    get_google_calendars = lambda credentials: [ # noqa: disable=F811
+        GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}"),
+        GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}")
+    ]
+
+
+    def new_flow(*args, **kwargs):
+        flow_manager = MagicMock()
+        state = str(uuid.uuid4())
+        flow_manager.authorization_url.return_value = (f"http://127.0.0.1:8000/oauth2?state={state}", state)
+        # make it return something that has a to_dict() function that returns a dictionary of credentials
+        flow_manager.credentials.to_json.return_value = json.dumps({"whatever": "dummy"})
+
+        return flow_manager
+
+
+    google_auth_oauthlib.flow.Flow.from_client_config = new_flow
+
+
+else:
+    import google_auth_oauthlib.flow
+# import google_auth_oauthlib.flow
 
 logger = get_logger(__file__)
 
@@ -557,7 +557,8 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, boto_session: boto3.
         sync_rule = SyncRule(source=source, destination=destination, summary=payload.summary,
                              description=payload.description).save_new()
 
-        calensync.api.service.run_initial_sync(sync_rule.id, boto_session, db)
+        if os.environ.get('MOCK_GOOGLE') is None:
+            calensync.api.service.run_initial_sync(sync_rule.id, boto_session, db)
 
 
 def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
@@ -575,6 +576,30 @@ def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
         sync_rule: SyncRule = sync_rules[0]
 
         handle_delete_sync_rule_event(sync_rule.id, boto_session, db)
+
+
+def patch_sync_rule(user: User, sync_uuid: str, payload: PatchSyncRuleBody, boto_session, db):
+    if payload.summary is None:
+        raise ApiError("Summary must be provided")
+
+    with db.atomic():
+        sync_rules = list(
+            SyncRule.select(SyncRule.id, SyncRule.source, Calendar, SyncRule.summary, SyncRule.description)
+            .join(Calendar, on=(SyncRule.destination_id == Calendar.id))
+            .join(CalendarAccount)
+            .join(User)
+            .where(SyncRule.uuid == sync_uuid, User.id == user.id)
+        )
+
+        if len(sync_rules) == 0:
+            raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
+        sync_rule: SyncRule = sync_rules[0]
+
+        if sync_rule.summary == payload.summary and sync_rule.description == payload.description:
+            logger.error("Received PatchSyncRuleBody with the same value as present on the db")
+            raise ApiError("Sync rule is identical as existing")
+
+        handle_update_sync_rule_event(sync_rule, payload, boto_session, db)
 
 
 def get_sync_rules(user: User):
