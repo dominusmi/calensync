@@ -552,13 +552,13 @@ def create_sync_rule(payload: PostSyncRuleBody, user: User, boto_session: boto3.
     """
     if len(payload.summary) == 0:
         raise ApiError("Title cannot be empty", 400)
-    with db.atomic():
-        source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
-        sync_rule = SyncRule(source=source, destination=destination, summary=payload.summary,
-                             description=payload.description).save_new()
 
-        if os.environ.get('MOCK_GOOGLE') is None:
-            calensync.api.service.run_initial_sync(sync_rule.id, boto_session, db)
+    source, destination = verify_valid_sync_rule(user, payload.source_calendar_id, payload.destination_calendar_id)
+    sync_rule = SyncRule(source=source, destination=destination, summary=payload.summary,
+                         description=payload.description).save_new()
+
+    if os.environ.get('MOCK_GOOGLE') is None:
+        calensync.api.service.run_initial_sync(sync_rule.id, boto_session, db)
 
 
 def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
