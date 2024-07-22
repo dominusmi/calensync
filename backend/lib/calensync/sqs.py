@@ -26,8 +26,7 @@ def send_batched_events(session, contents: List[str]):
     client = session.client("sqs")
     client.send_message_batch(
         QueueUrl=queue_url,
-        Entries=[{"Id": str(i), "MessageBody": content} for i, content in enumerate(contents)],
-        DelaySeconds='5'  # add a delay to avoid event being sent too early
+        Entries=[{"Id": str(i), "MessageBody": content, 'DelaySeconds': 3} for i, content in enumerate(contents)],
     )
 
 
