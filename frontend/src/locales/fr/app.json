@@ -37,11 +37,14 @@
                 "to": "à",
                 "mark-busy": "Marquer les événements comme 'Busy'",
                 "are-you-sure": "Êtes-vous sûr?",
-                "delete-info": "Cela supprimera la règle et également tous les événements synchronisés par cette règle dans vos agendas Google."
+                "delete-info": "Cela supprimera la règle et également tous les événements synchronisés par cette règle dans vos agendas Google.",
+                "update-info": "Ceci mettra à jour tous les événements synchronisés avec cette règle. Veuillez utiliser le mot magique <b className='fw-bold'>%original%</b> pour referencer la valeur d'origine."
             },
             "customize-event-template": "Modifier le titre et la description des événements synchronisés",
             "example-title": "Un événement avec titre <b className='fw-bold'>\"Birthday party\"</b> sera synchronisé comme ",
-            "example-description": "Un événement avec description <b>\"Let's all meet together for Tom's birthday\"</b> sera synchronisé comme "
+            "example-description": "Un événement avec description <b>\"Let's all meet together for Tom's birthday\"</b> sera synchronisé comme ",
+            "label-custom-title": "Modification du Titre",
+            "label-custom-description": "Modification de la Description"
         },
         "connect_from_other_device": "Votre compte est sur un autre appareil?",
         "connect_from_other_device_post": "Envoyer ce lien a votre appareil pour vous connecter simplement!",
