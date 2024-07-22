@@ -18,8 +18,12 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
   const { t } = useTranslation(['app']);
 
   const [clickedDelete, setClickedDelete] = useState(false);
+  const [clickedUpdate, setClickedUpdate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deletionInProcess, _] = useState(sessionStorage.getItem(`rule-delete-${rule.uuid}`) != null)
+  const [summary, setSummary] = useState(rule.summary);
+  const [description, setDescription] = useState(rule.description);
+
 
   async function deleteRule() {
     try {
@@ -49,6 +53,42 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
     }
   }
 
+  async function updateRule() {
+    if (rule.description == description && rule.summary == summary) {
+      return
+    }
+    try {
+      setLoading(true)
+      const response = await fetch(
+        `${API}/sync/${rule.uuid}`,
+        {
+          method: "PATCH",
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            summary: summary,
+            description: description
+          })
+        }
+      )
+      if (response.ok) {
+        createToast("Your rule is being updated. This can take a few minutes to complete.", MessageKind.Info)
+        onChange();
+      } else {
+        const data = await response.json();
+        if (data.detail) {
+          createToast(data.detail, MessageKind.Error)
+        } else {
+          createToast("Error while updating synchronization", MessageKind.Error)
+        }
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="card my-1">
       {loading && <LoadingOverlay />}
@@ -70,6 +110,11 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
           }
         </div>
         <div className="ms-md-auto my-sm-1">
+          <button type="button" className="btn btn-outline-primary me-1" onClick={() => setClickedUpdate(true)}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-tools" viewBox="0 0 16 16">
+              <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z" />
+            </svg>
+          </button>
           <button type="button" className="btn btn-outline-danger" onClick={() => setClickedDelete(true)}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash" viewBox="0 0 16 16">
               <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
@@ -100,7 +145,45 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
           <Button onClick={() => setClickedDelete(false)} variant='secondary'>Cancel</Button>
         </Modal.Footer>
       </Modal>
-    </div>
+      <Modal
+        show={clickedUpdate === true}
+        onHide={() => setClickedUpdate(false)}
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="contained-modal-title-vcenter">
+            {t("dashboard.sync.valid.are-you-sure")}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className=''>
+          <div>
+            <span dangerouslySetInnerHTML={{ "__html": t("dashboard.sync.valid.update-info") }}></span>
+            <div>
+              <div className="form-group my-3">
+                <label>{t("dashboard.sync.label-custom-title")}</label>
+                <div>
+                  <input type="text" className="form-control" id="exampleInputEmail1" value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="How to replace the title? use the magic word %original% to use the real event title" />
+                </div>
+                <small><span dangerouslySetInnerHTML={{ "__html": t("dashboard.sync.example-title") }}></span><span className='fw-bold'>{summary.replace("%original%", "Birthday party")}</span></small>
+              </div>
+            </div>
+            <div>
+              <div className="form-group my-3">
+                <label>{t("dashboard.sync.label-custom-description")}</label>
+                <input type="text" className="form-control" id="exampleInputEmail1" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="How to replace the description? use the magic word %original% to use the real event title" />
+                <small><span dangerouslySetInnerHTML={{ "__html": t("dashboard.sync.example-description") }}></span> <span className='fw-bold'>{description.replace("%original%", "Let's all meet together for Tom's birthday")}</span></small>
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={() => { setClickedUpdate(false); updateRule() }} variant='primary'>{t("common.save")}</Button>
+          <Button onClick={() => setClickedUpdate(false)} variant='secondary'>Cancel</Button>
+        </Modal.Footer>
+      </Modal>
+    </div >
   );
 };
 
