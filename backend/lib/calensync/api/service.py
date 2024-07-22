@@ -44,11 +44,12 @@ def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_ca
         .join(DestinationAlias, on=(DestinationAlias.id == SyncRule.destination_id))
         .where(
             SourceAlias.uuid == source_calendar_uuid,
-            DestinationAlias.uuid == destination_calendar_uuid
+            DestinationAlias.uuid == destination_calendar_uuid,
+            SyncRule.deleted == False
         ).count())
 
     if n_rules > 0:
-        raise ApiError("Sync rule for the same source and destination already exists", code=400)
+        raise ApiError("Sync rule for the same source and destination already exists")
 
     return source, destination
 
@@ -231,7 +232,7 @@ def handle_sqs_event(sqs_event: SQSEvent, db, boto_session: boto3.Session):
 def handle_updated_event(e: UpdateGoogleEvent):
     rules = list(SyncRule.select().where(SyncRule.id == e.rule_id))
     if len(rules) == 0:
-        logger.error(f"No rules found for update event: {e.dict()}")
+        logger.warn(f"No rules found for update event: {e.event.id} - rule id: {e.rule_id}")
 
     event = e.event
 

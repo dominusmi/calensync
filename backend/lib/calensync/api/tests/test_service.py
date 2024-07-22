@@ -51,6 +51,11 @@ class TestVerifySyncRule:
         SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save()
         assert verify_valid_sync_rule(user, str(calendar1_2.uuid), str(calendar1_1.uuid)) is not None
 
+    @staticmethod
+    def test_rule_already_exist_but_previous_deleted(user, calendar1_1, calendar1_2):
+        SyncRule(source=calendar1_1, destination=calendar1_2, private=True, deleted=True).save()
+        assert verify_valid_sync_rule(user, str(calendar1_1.uuid), str(calendar1_2.uuid)) is not None
+
 
 class TestReceivedWebhook:
     @staticmethod
