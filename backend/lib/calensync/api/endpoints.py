@@ -582,24 +582,23 @@ def patch_sync_rule(user: User, sync_uuid: str, payload: PatchSyncRuleBody, boto
     if payload.summary is None:
         raise ApiError("Summary must be provided")
 
-    with db.atomic():
-        sync_rules = list(
-            SyncRule.select(SyncRule.id, SyncRule.source, Calendar, SyncRule.summary, SyncRule.description)
-            .join(Calendar, on=(SyncRule.destination_id == Calendar.id))
-            .join(CalendarAccount)
-            .join(User)
-            .where(SyncRule.uuid == sync_uuid, User.id == user.id)
-        )
+    sync_rules = list(
+        SyncRule.select(SyncRule.id, SyncRule.source, Calendar, SyncRule.summary, SyncRule.description)
+        .join(Calendar, on=(SyncRule.destination_id == Calendar.id))
+        .join(CalendarAccount)
+        .join(User)
+        .where(SyncRule.uuid == sync_uuid, User.id == user.id)
+    )
 
-        if len(sync_rules) == 0:
-            raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
-        sync_rule: SyncRule = sync_rules[0]
+    if len(sync_rules) == 0:
+        raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
+    sync_rule: SyncRule = sync_rules[0]
 
-        if sync_rule.summary == payload.summary and sync_rule.description == payload.description:
-            logger.error("Received PatchSyncRuleBody with the same value as present on the db")
-            raise ApiError("Sync rule is identical as existing")
+    if sync_rule.summary == payload.summary and sync_rule.description == payload.description:
+        logger.error("Received PatchSyncRuleBody with the same value as present on the db")
+        raise ApiError("Sync rule is identical as existing")
 
-        handle_update_sync_rule_event(sync_rule, payload, boto_session, db)
+    handle_update_sync_rule_event(sync_rule, payload, boto_session, db)
 
 
 def get_sync_rules(user: User):
