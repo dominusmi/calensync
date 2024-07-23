@@ -8,10 +8,11 @@ import pytest
 from moto import mock_aws
 
 from calensync.api.common import ApiError
-from calensync.api.service import verify_valid_sync_rule, received_webhook, handle_sqs_event, handle_updated_event
+from calensync.api.service import verify_valid_sync_rule, received_webhook, handle_sqs_event, handle_updated_event, \
+    handle_update_sync_rule_event
 from calensync.database.model import SyncRule
 from calensync.dataclass import SQSEvent, QueueEvent, UpdateGoogleEvent, EventStatus, PostSyncRuleEvent, \
-    DeleteSyncRuleEvent, ExtendedProperties, EventExtendedProperty
+    DeleteSyncRuleEvent, ExtendedProperties, EventExtendedProperty, PatchSyncRuleBody
 from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow, BackoffException
@@ -320,11 +321,14 @@ class TestReceiveCreateRuleEvent:
 
             GoogleCalendarWrapper.return_value.get_events.return_value = [
                 GoogleEvent(id="1", status=EventStatus.confirmed, summary="Summary1",
-                            extendedProperties=ExtendedProperties.from_sources("Test1", str(calendar1_1.uuid))),
+                            extendedProperties=ExtendedProperties.from_sources("Test1", str(calendar1_1.uuid),
+                                                                               str(rule1.uuid))),
                 GoogleEvent(id="2", status=EventStatus.confirmed, summary="Summary2",
-                            extendedProperties=ExtendedProperties.from_sources("Test2", str(calendar1_1.uuid))),
+                            extendedProperties=ExtendedProperties.from_sources("Test2", str(calendar1_1.uuid),
+                                                                               str(rule1.uuid))),
                 GoogleEvent(id="3", status=EventStatus.cancelled, summary="Summary3",
-                            extendedProperties=ExtendedProperties.from_sources("Test3", str(calendar1_1.uuid))),
+                            extendedProperties=ExtendedProperties.from_sources("Test3", str(calendar1_1.uuid),
+                                                                               str(rule1.uuid))),
             ]
             handle_sqs_event(sqs_event, db, boto_session)
 
