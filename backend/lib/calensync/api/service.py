@@ -199,6 +199,15 @@ def handle_update_sync_rule_event(sync_rule: SyncRule, payload: PatchSyncRuleBod
     events = wrapper.get_events(start_date=start_date, end_date=end_date,
                                 private_extended_properties=private_extended_props)
 
+    double_check = []
+    for event in events:
+        if event.extendedProperties.private.get(EventExtendedProperty.get_rule_id_key()) == str(sync_rule.uuid):
+            double_check.append(event)
+
+    if len(double_check) != len(events):
+        logger.warn(f"wrapper.get_events with private extended properties filter failed: "
+                    f"{len(events)} vs {len(double_check)}")
+
     prepared_events = []
     for event in events:
         # go towards a really microservice architecture: sync rules are handled separately
