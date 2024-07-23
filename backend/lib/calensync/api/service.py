@@ -209,8 +209,8 @@ def handle_update_sync_rule_event(sync_rule: SyncRule, payload: PatchSyncRuleBod
                     f"{len(events)} vs {len(double_check)}")
 
     prepared_events = []
-    for event in events:
-        # go towards a really microservice architecture: sync rules are handled separately
+    for event in double_check:
+        # go towards a microservice architecture: sync rules are handled separately
         prepared_events.append(
             prepare_event_to_push(event, sync_rule.id, False)
         )
