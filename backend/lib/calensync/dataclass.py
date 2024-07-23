@@ -119,10 +119,11 @@ class ExtendedProperties(BaseModel):
     private: Optional[Dict[str, str]] = {}
 
     @classmethod
-    def from_sources(cls, source_event_id, source_calendar_id):
+    def from_sources(cls, source_event_id, source_calendar_id, sync_rule_id):
         result = cls()
         result.private[EventExtendedProperty.get_source_id_key()] = source_event_id
         result.private[EventExtendedProperty.get_calendar_id_key()] = source_calendar_id
+        result.private[EventExtendedProperty.get_rule_id_key()] = sync_rule_id
         return result
 
 
