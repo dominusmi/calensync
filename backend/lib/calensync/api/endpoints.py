@@ -27,7 +27,7 @@ from calensync.secure import encrypt_credentials, decrypt_credentials
 from calensync.utils import get_client_secret, get_profile_and_calendar_scopes, get_profile_scopes, is_local, utcnow, \
     get_paddle_token, prefetch_get_or_none, replace_timezone
 
-if os.environ.get("MOCK_GOOGLE"):
+if os.environ.get("MOCK_GOOGLE") and is_local():
     from unittest.mock import MagicMock
     from calensync.dataclass import GoogleCalendar
 
