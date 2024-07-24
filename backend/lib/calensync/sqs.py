@@ -24,9 +24,10 @@ def send_event(session, content: str):
 def send_batched_events(session, contents: List[str]):
     queue_url = os.environ["SQS_QUEUE_URL"]
     client = session.client("sqs")
+    delay = 0 if is_local() else 3
     client.send_message_batch(
         QueueUrl=queue_url,
-        Entries=[{"Id": str(i), "MessageBody": content, 'DelaySeconds': 3} for i, content in enumerate(contents)],
+        Entries=[{"Id": str(i), "MessageBody": content, 'DelaySeconds': delay} for i, content in enumerate(contents)],
     )
 
 

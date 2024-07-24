@@ -188,7 +188,7 @@ class TestPushEventToRules:
                     id="321", status=EventStatus.confirmed,
                     start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
                     created=utcnow(), updated=utcnow(), extendedProperties=ExtendedProperties.from_sources(
-                        event.id, calendar1_1.id
+                        event.id, calendar1_1.id, str(rule.uuid)
                     )
                 )
             ]
@@ -410,7 +410,7 @@ class TestPushEventToRules:
             id="321", status=EventStatus.cancelled,
             start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
             created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
-            extendedProperties=ExtendedProperties.from_sources("123", calendar1_1.id)
+            extendedProperties=ExtendedProperties.from_sources("123", calendar1_1.id, str(rule.uuid))
         )
 
         with (
