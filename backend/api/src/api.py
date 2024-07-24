@@ -18,7 +18,6 @@ from calensync.dataclass import GoogleWebhookEvent, SQSEvent, QueueEvent, PostSy
 from calensync.log import get_logger
 from calensync.utils import get_env, utcnow
 
-
 app = FastAPI(title="Calensync")  # Here is the magic
 logger = get_logger("api")
 
@@ -157,14 +156,14 @@ def delete__sync_rule(sync_id: str, authorization: Annotated[Union[str, None], C
 
 @app.patch('/sync/{sync_id}')
 @format_response
-def patch__sync_rule(sync_id: str, payload: PatchSyncRuleBody, authorization: Annotated[Union[str, None], Cookie()] = None):
+def patch__sync_rule(sync_id: str, payload: PatchSyncRuleBody,
+                     authorization: Annotated[Union[str, None], Cookie()] = None):
     """
     Update a calendar. Used to set a calendar as active.
     """
     with DatabaseSession(os.environ["ENV"]) as db:
         user = edp.verify_session(authorization)
         edp.patch_sync_rule(user, sync_id, payload, boto3.Session(), db)
-
 
 
 @app.delete('/calendars/{account_id}')
@@ -306,4 +305,3 @@ async def log_requests(request: Request, call_next):
 
 
 handler = Mangum(app, lifespan='off')
-
