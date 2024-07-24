@@ -199,6 +199,13 @@ def handle_update_sync_rule_event(sync_rule: SyncRule, payload: PatchSyncRuleBod
     events = wrapper.get_events(start_date=start_date, end_date=end_date,
                                 private_extended_properties=private_extended_props)
 
+    if len(events) == 0:
+        # we assume that it's a case where the rule was created before the rule_id private extended
+        # property was added. So instead of using that as filter, we simply run an initial sync
+        logger.info(f"No events found with extended property of rule {sync_rule.uuid}. Running initial sync instead")
+        run_initial_sync(sync_rule.id, boto_session, db)
+        return
+
     double_check = []
     for event in events:
         if event.extendedProperties.private.get(EventExtendedProperty.get_rule_id_key()) == str(sync_rule.uuid):
