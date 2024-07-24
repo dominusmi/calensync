@@ -516,12 +516,24 @@ class GoogleCalendarWrapper:
 
             source_calendar_uuid = str(rule.source.uuid)
             c = GoogleCalendarWrapper(rule.destination)
-            c.get_events(
+            existing_events = c.get_events(
                 private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
             )
 
-            if len(c.events) > 0:
+            if len(existing_events) > 0:
+                if (
+                    existing_events[0].summary != format_calendar_text(event.summary, rule.summary)
+                    or existing_events[0].description != format_calendar_text(event.description, rule.description)
+                ):
+                    # this is a sync rule update on a never changed event
+                    c.events_handler.update([(event, to_update) for to_update in existing_events], rule)
+                    c.update_events()
+                    logger.info(f"Updating events: {[e.id for e in existing_events]}")
+                    return 1
+
+                # no sync rule update, and event already exists -> do nothing
                 return 0
+
             c.events_handler.add([source_event_tuple(event, source_calendar_uuid, rule)], rule)
             if c.insert_events():
                 counter_event_changed += 1
