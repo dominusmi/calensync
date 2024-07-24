@@ -205,8 +205,8 @@ def handle_update_sync_rule_event(sync_rule: SyncRule, payload: PatchSyncRuleBod
             double_check.append(event)
 
     if len(double_check) != len(events):
-        logger.warn(f"wrapper.get_events with private extended properties filter failed: "
-                    f"{len(events)} vs {len(double_check)}")
+        logger.warning(f"wrapper.get_events with private extended properties filter failed: "
+                       f"{len(events)} vs {len(double_check)}")
 
     prepared_events = []
     for event in double_check:

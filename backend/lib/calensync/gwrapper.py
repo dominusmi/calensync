@@ -701,7 +701,7 @@ def delete_events_for_sync_rule(sync_rule: SyncRule, boto_session, db, use_queue
 
 def handle_refresh_error(calendar_db: Calendar, exc: google.auth.exceptions.RefreshError):
     reason = exc.args[1]['error']
-    logger.warn(f"Refresh error occurred. Putting calendar on pause: {reason}")
+    logger.warning(f"Refresh error occurred. Putting calendar on pause: {reason}")
     calendar_db.paused = utcnow()
     calendar_db.paused_reason = reason
     calendar_db.save()
