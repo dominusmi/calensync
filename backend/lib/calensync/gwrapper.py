@@ -581,9 +581,13 @@ class GoogleCalendarWrapper:
                     if not recurrence_source_exists:
                         # This signals that the root recurrence is missing, and so the instance of the
                         # recurrence update can't be correctly handled
+                        logger.info(f"Recurrence source does not exist for event with id {event.id}")
                         missing_recurrence = copy(event)
-                        missing_recurrence.id = missing_recurrence.id.split("_")[0]
-                        raise PushToQueueException(event)
+                        if missing_recurrence.id.startswith('_'):
+                            missing_recurrence.id = f'_{missing_recurrence.id[1:].split("_")[0]}'
+                        else:
+                            missing_recurrence.id = missing_recurrence.id.split("_")[0]
+                        raise PushToQueueException(missing_recurrence)
 
                     recurrence_source: GoogleEvent = recurrence_source_exists[0]
                     existing_event = copy(event)
