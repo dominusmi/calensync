@@ -24,6 +24,7 @@ from calensync.database.model import Calendar, CalendarAccount, User, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus, \
     ExtendedProperties, GoogleDate
 from calensync.google_utils import get_recurrent_event_id
+
 from calensync.libcalendar import EventsModificationHandler, PushToQueueException, set_declined_event_if_necessary
 from calensync.log import get_logger
 from calensync.queries.common import get_sync_rules_from_source
