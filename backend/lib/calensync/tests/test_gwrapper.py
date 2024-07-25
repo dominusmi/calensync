@@ -1,3 +1,4 @@
+import copy
 from unittest.mock import patch, MagicMock
 
 import google.auth.exceptions
@@ -188,7 +189,7 @@ class TestPushEventToRules:
                     id="321", status=EventStatus.confirmed,
                     start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
                     created=utcnow(), updated=utcnow(), extendedProperties=ExtendedProperties.from_sources(
-                        event.id, calendar1_1.id
+                        event.id, calendar1_1.id, str(rule.uuid)
                     )
                 )
             ]
@@ -332,7 +333,7 @@ class TestPushEventToRules:
             id="321", status=EventStatus.confirmed,
             start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
             created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
-            extendedProperties=ExtendedProperties.from_sources("123", calendar1_1.id)
+            extendedProperties=ExtendedProperties.from_sources("123", calendar1_1.id, rule.uuid.__str__())
         )
 
         with (
@@ -410,7 +411,7 @@ class TestPushEventToRules:
             id="321", status=EventStatus.cancelled,
             start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
             created=utcnow() - datetime.timedelta(minutes=5), updated=utcnow(),
-            extendedProperties=ExtendedProperties.from_sources("123", calendar1_1.id)
+            extendedProperties=ExtendedProperties.from_sources("123", calendar1_1.id, str(rule.uuid))
         )
 
         with (
@@ -435,6 +436,30 @@ class TestPushEventToRules:
             assert delete_event.call_count == 1
             (service, google_id, deleted_event_id) = delete_event.call_args_list[0].args
             assert deleted_event_id == "321_20241201Z"
+
+    @staticmethod
+    def test_update_event_only_sync_rule_changed(calendar1_1, calendar1_2):
+        rule = SyncRule(source_id=calendar1_1.id, destination_id=calendar1_2.id, summary="Busy").save_new()
+        start = utcnow() + datetime.timedelta(days=1)
+        end = utcnow() + datetime.timedelta(days=1, hours=1)
+        event = GoogleEvent(
+            id="123", status=EventStatus.confirmed,
+            start=GoogleDatetime(dateTime=start), end=GoogleDatetime(dateTime=end),
+            created=utcnow(), updated=utcnow(),
+            summary='initial'
+        )
+        with (
+            patch("calensync.gwrapper.GoogleCalendarWrapper.get_events") as get_events,
+            patch("calensync.gwrapper.GoogleCalendarWrapper.service"),
+            patch("calensync.gwrapper.insert_event") as insert_event,
+            patch("calensync.gwrapper.update_event") as update_event
+        ):
+            current_copy = copy.deepcopy(event)
+            get_events.return_value = [current_copy]
+            GoogleCalendarWrapper.push_event_to_rule(event, rule)
+            assert get_events.call_count == 1
+            assert insert_event.call_count == 0
+            assert update_event.call_count == 1
 
 
 class TestDeleteWatch:

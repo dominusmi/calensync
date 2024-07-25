@@ -8,10 +8,11 @@ import pytest
 from moto import mock_aws
 
 from calensync.api.common import ApiError
-from calensync.api.service import verify_valid_sync_rule, received_webhook, handle_sqs_event, handle_updated_event
+from calensync.api.service import verify_valid_sync_rule, received_webhook, handle_sqs_event, handle_updated_event, \
+    handle_update_sync_rule_event
 from calensync.database.model import SyncRule
 from calensync.dataclass import SQSEvent, QueueEvent, UpdateGoogleEvent, EventStatus, PostSyncRuleEvent, \
-    DeleteSyncRuleEvent, ExtendedProperties, EventExtendedProperty
+    DeleteSyncRuleEvent, ExtendedProperties, EventExtendedProperty, PatchSyncRuleBody
 from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow, BackoffException
@@ -320,11 +321,14 @@ class TestReceiveCreateRuleEvent:
 
             GoogleCalendarWrapper.return_value.get_events.return_value = [
                 GoogleEvent(id="1", status=EventStatus.confirmed, summary="Summary1",
-                            extendedProperties=ExtendedProperties.from_sources("Test1", str(calendar1_1.uuid))),
+                            extendedProperties=ExtendedProperties.from_sources("Test1", str(calendar1_1.uuid),
+                                                                               str(rule1.uuid))),
                 GoogleEvent(id="2", status=EventStatus.confirmed, summary="Summary2",
-                            extendedProperties=ExtendedProperties.from_sources("Test2", str(calendar1_1.uuid))),
+                            extendedProperties=ExtendedProperties.from_sources("Test2", str(calendar1_1.uuid),
+                                                                               str(rule1.uuid))),
                 GoogleEvent(id="3", status=EventStatus.cancelled, summary="Summary3",
-                            extendedProperties=ExtendedProperties.from_sources("Test3", str(calendar1_1.uuid))),
+                            extendedProperties=ExtendedProperties.from_sources("Test3", str(calendar1_1.uuid),
+                                                                               str(rule1.uuid))),
             ]
             handle_sqs_event(sqs_event, db, boto_session)
 
@@ -415,3 +419,38 @@ class TestSessionCorrectlySet:
                 os.environ.pop('SQS_QUEUE_URL')
                 if os.getenv('AWS_EXECUTION_ENV'):
                     os.environ.pop('AWS_EXECUTION_ENV')
+
+
+class TestHandleUpdateSyncRuleEvent:
+    @staticmethod
+    @mock_aws
+    def test_normal(db, calendar1_1, calendar1_2, calendar1_1_2, boto_session):
+        rule1 = SyncRule(source=calendar1_1, destination=calendar1_2, summary="Foo", description="Bar").save_new()
+        rule2 = SyncRule(source=calendar1_1_2, destination=calendar1_2, summary="Foo", description="Bar").save_new()
+
+        events = [
+            GoogleEvent(
+                id="1", status=EventStatus.confirmed, summary="Summary1",
+                extendedProperties=ExtendedProperties.from_sources("Test1", str(calendar1_1.uuid), str(rule1.uuid))),
+            GoogleEvent(
+                id="2", status=EventStatus.confirmed, summary="Summary2",
+                extendedProperties=ExtendedProperties.from_sources("Test2", str(calendar1_1.uuid), "123")),
+            GoogleEvent(
+                id="3", status=EventStatus.confirmed, summary="Summary3",
+                extendedProperties=ExtendedProperties.from_sources("Test3", str(calendar1_1.uuid),
+                                                                   str(rule2.uuid))),
+        ]
+
+        payload = PatchSyncRuleBody(summary="%original%", description=None)
+        with (
+            patch("calensync.gwrapper.google.oauth2.credentials.Credentials.from_authorized_user_info"),
+            patch("calensync.api.service.prepare_event_to_push") as mock_prepare,
+            patch("calensync.api.service.push_update_event_to_queue") as _,
+            patch("calensync.gwrapper.get_events") as get_events,
+        ):
+            get_events.return_value = events
+            handle_update_sync_rule_event(rule1, payload, boto3.Session(), db)
+
+            assert len(mock_prepare.call_args_list) == 1
+            pushed_event = mock_prepare.call_args_list[0].args[0]
+            assert pushed_event.id == "1"

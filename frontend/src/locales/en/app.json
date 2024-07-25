@@ -37,11 +37,14 @@
                 "to": "to",
                 "mark-busy": "Mark events as 'Busy'",
                 "are-you-sure": "Are you sure?",
-                "delete-info": "This will delete the rule, and also remove all the events that were synchronized by this rule in your Google calendars."
+                "delete-info": "This will delete the rule, and also remove all the events that were synchronized by this rule in your Google calendars.",
+                "update-info": "This will update all the events synchronized with this rule. Please use the key-word <b className='fw-bold'>%original%</b> to reference the original event value"
             },
             "customize-event-template": "Customize the title and description of synced events",
             "example-title": "An event with title <b className='fw-bold'>\"Birthday party\"</b> will be synced as ",
-            "example-description": "An event with description <b>\"Let's all meet together for Tom's birthday\"</b> will be synced as "
+            "example-description": "An event with description <b>\"Let's all meet together for Tom's birthday\"</b> will be synced as ",
+            "label-custom-title": "Title template",
+            "label-custom-description": "Description template"
         },
         "connect_from_other_device": "Is your calendar on another device?",
         "connect_from_other_device_post": "Send this link to your device to easily connect!",

@@ -23,6 +23,9 @@ def load_calendars(accounts: List[CalendarAccount], start_date: datetime.datetim
     calendars = []
     for account in accounts:
         for calendar in account.calendars:
+            if calendar.paused is not None:
+                continue
+
             # setting this avoid having to re-fetch it from the database to get the credentials
             service = service_from_account(account, boto_session)
             calendars.append(GoogleCalendarWrapper(calendar, service=service, session=boto_session))
@@ -100,7 +103,7 @@ def sync_user_calendars_by_date(db, boto_session):
             logger.info(f"Syncing {user.uuid}")
             calendar_wrappers = load_calendars(user.accounts, start_date, end_date, boto_session)
             for wrapper in calendar_wrappers:
-                wrapper.solve_update_in_calendar(wrapper.events)
+                wrapper.solve_update_in_calendar(wrapper.events, only_preloaded=True)
         except Exception as e:
             logger.error(f"Error occurred while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
             time.sleep(1)
