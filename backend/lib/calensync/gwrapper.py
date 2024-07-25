@@ -23,6 +23,7 @@ from calensync.api.common import ApiError, number_of_days_to_sync_in_advance
 from calensync.database.model import Calendar, CalendarAccount, User, SyncRule
 from calensync.dataclass import GoogleDatetime, EventExtendedProperty, GoogleCalendar, GoogleEvent, EventStatus, \
     ExtendedProperties, GoogleDate
+from calensync.google_utils import get_recurrent_event_id
 from calensync.libcalendar import EventsModificationHandler, PushToQueueException, set_declined_event_if_necessary
 from calensync.log import get_logger
 from calensync.queries.common import get_sync_rules_from_source
@@ -476,17 +477,13 @@ class GoogleCalendarWrapper:
                     private_extended_properties=EventExtendedProperty.for_source_id(
                         event.recurringEventId).to_google_dict()
                 )
-                if len(fetched_events) == 0:
+                if fetched_events is None or len(fetched_events) == 0:
                     logger.info(f"Did not find recurrent source with source id {event.recurringEventId}")
                     raise PushToQueueException(event)
 
                 for fetched_event in fetched_events:
-                    if "_" in fetched_event.id:
-                        # for events with _R, you don't want to try and delete id_R{date}_{date},
-                        # so we re-write the event correctly
-                        event_id_to_delete = f'{fetched_event.id.split("_")[0]}_{event.id.split("_")[1]}'
-                    else:
-                        event_id_to_delete = f'{fetched_event.id}_{event.id.split("_")[1]}'
+                    event_id_to_delete = get_recurrent_event_id(event.id, fetched_event.id)
+                    logger.info(f"Event id to delete: {event_id_to_delete}")
                     fetched_event.id = event_id_to_delete
                     c.events_handler.delete([fetched_event])
                     c.delete_events()
