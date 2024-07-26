@@ -1,17 +1,18 @@
 from typing import List
 from unittest.mock import patch
 
+import pytest
 import starlette.responses
 
 from calensync.api import endpoints
 from calensync.api.common import ApiError, RedirectResponse
 from calensync.api.endpoints import delete_sync_rule, get_oauth_token, get_frontend_env, reset_user, \
-    handle_add_calendar, resync_calendar
+    handle_add_calendar, resync_calendar, patch_sync_rule
 from calensync.api.tests.util import simulate_sqs_receiver
 from calensync.database.model import Session
 from calensync.database.model import SyncRule, OAuthState, OAuthKind
 from calensync.dataclass import (GoogleDatetime, EventStatus, ExtendedProperties, EventExtendedProperty,
-                                 GoogleCalendar, PostSyncRuleEvent)
+                                 GoogleCalendar, PostSyncRuleEvent, PatchSyncRuleBody)
 from calensync.libcalendar import EventsModificationHandler
 from calensync.tests.fixtures import *
 from calensync.utils import utcnow
@@ -488,3 +489,61 @@ class TestResyncCalendar:
             resync_calendar(user, calendar1_1.uuid, boto_session, db)
 
         assert exc.value.code == 429
+
+
+@mock_aws
+class TestPatchSyncRule:
+    @staticmethod
+    def test_normal_case(db, user, calendar1_1, calendar1_2, boto_session):
+        with (
+            patch("calensync.api.endpoints.handle_update_sync_rule_event") as mock_handle_update,
+        ):
+            rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+            rule2 = SyncRule(source=calendar1_2, destination=calendar1_1, private=True).save_new()
+
+            payload = PatchSyncRuleBody(summary="test")
+            patch_sync_rule(user, rule.uuid.__str__(), payload, boto_session, db)
+            mock_handle_update.assert_called_once()
+            m_sync_rule, m_payload, m_boto_session, m_db = mock_handle_update.call_args_list[0].args
+            assert m_sync_rule.id == rule.id
+            assert m_payload == payload
+            assert m_boto_session == boto_session
+            assert m_db == db
+
+    @staticmethod
+    def test_summary_none(db, user, calendar1_1, calendar1_2, boto_session):
+        with (
+            patch("calensync.api.endpoints.handle_update_sync_rule_event") as mock_handle_update,
+        ):
+            rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+
+            payload = PatchSyncRuleBody(description="test")
+            with pytest.raises(ApiError) as e:
+                patch_sync_rule(user, rule.uuid.__str__(), payload, boto_session, db)
+            assert e.value.code == 400
+
+    @staticmethod
+    def test_user_not_owner(db, user, user2, calendar1_1, calendar1_2, boto_session):
+        with (
+            patch("calensync.api.endpoints.handle_update_sync_rule_event") as mock_handle_update,
+        ):
+            rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True).save_new()
+
+            payload = PatchSyncRuleBody(summary="test")
+            with pytest.raises(ApiError) as e:
+                patch_sync_rule(user2, rule.uuid.__str__(), payload, boto_session, db)
+            assert e.value.code == 404
+
+    @staticmethod
+    def test_same_summary_and_description(db, user, calendar1_1, calendar1_2, boto_session):
+        with (
+            patch("calensync.api.endpoints.handle_update_sync_rule_event") as mock_handle_update,
+        ):
+            rule = SyncRule(source=calendar1_1, destination=calendar1_2, private=True, summary='summary',
+                            description='description').save_new()
+
+            payload = PatchSyncRuleBody(summary="summary", description='description')
+            with pytest.raises(ApiError) as e:
+                patch_sync_rule(user, rule.uuid.__str__(), payload, boto_session, db)
+            assert e.value.code == 400
+            assert 'identical' in e.value.detail

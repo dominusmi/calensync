@@ -101,33 +101,26 @@ const SyncRuleDraftRow: React.FC<{ accounts: Account[], setState: (x: boolean) =
                         </select>
                         <label className='' >{t("dashboard.sync.draft.destination")}</label>
                     </div>
-                    <Accordion className='my-3'>
-                        <Accordion.Item eventKey="0">
-                            <Accordion.Header className='px-0 mx-0'><span className='text-primary'>{t("dashboard.sync.customize-event-template")}</span></Accordion.Header>
-                            <Accordion.Body>
-                                <div>
-                                    <div className="form-group my-3">
-                                        <label>Title template</label>
-                                        <div>
-                                            <input type="text" className="form-control" id="exampleInputEmail1" value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="How to replace the title? use the magic word %original% to use the real event title" />
-                                        </div>
-                                        <small><span dangerouslySetInnerHTML={{"__html": t("dashboard.sync.example-title")}}></span><span className='fw-bold'>{summary.replace("%original%", "Birthday party")}</span></small>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="form-group my-3">
-                                        <label>Description template</label>
-                                        <input type="text" className="form-control" id="exampleInputEmail1" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="How to replace the description? use the magic word %original% to use the real event title" />
-                                        <small><span dangerouslySetInnerHTML={{"__html": t("dashboard.sync.example-description")}}></span> <span className='fw-bold'>{description.replace("%original%", "Let's all meet together for Tom's birthday")}</span></small>
-                                    </div>
-                                </div>
-                            </Accordion.Body>
-                        </Accordion.Item>
-                    </Accordion>
-                    <div className="btn-group pe-lg-2 my-2 col-12 col-lg-1 my-lg-0 my-2" role="group" aria-label="Fourth group">
+                    <div>
+                        <div className="form-group my-3">
+                            <label>Title template</label>
+                            <div>
+                                <input type="text" className="form-control" id="exampleInputEmail1" value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="How to replace the title? use the magic word %original% to use the real event title" />
+                            </div>
+                            <small><span dangerouslySetInnerHTML={{ "__html": t("dashboard.sync.example-title") }}></span><span className='fw-bold'>{summary.replace("%original%", "Birthday party")}</span></small>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="form-group my-3">
+                            <label>Description template</label>
+                            <input type="text" className="form-control" id="exampleInputEmail1" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="How to replace the description? use the magic word %original% to use the real event title" />
+                            <small><span dangerouslySetInnerHTML={{ "__html": t("dashboard.sync.example-description") }}></span> <span className='fw-bold'>{description.replace("%original%", "Let's all meet together for Tom's birthday")}</span></small>
+                        </div>
+                    </div>
+                    <div className="btn-group pe-lg-2 my-2 col-12 col-lg-2 my-lg-0 my-2" role="group" aria-label="Fourth group">
                         <button type="button" className="btn btn-primary" onClick={createSyncRule}>{t("common.save")}</button>
                     </div>
-                    <div className="btn-group pe-lg-2 my-2 col-12 col-lg-1 my-lg-0 my-2" role="group" aria-label="Fourth group">
+                    <div className="btn-group pe-lg-2 my-2 col-12 col-lg-2 my-lg-0 my-2" role="group" aria-label="Fourth group">
                         <button type="button" className="btn btn-outline-primary" onClick={() => setState(false)}>{t("common.cancel")}</button>
                     </div>
                 </div>

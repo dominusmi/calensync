@@ -10,7 +10,7 @@ import peewee
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
 from calensync.database.model import Calendar, User, SyncRule, EmailDB, CalendarAccount, Session
 from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, GoogleCalendar, SQSEvent, QueueEvent, \
-    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent, EventStatus, ExtendedProperties
+    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent, EventStatus, ExtendedProperties, PatchSyncRuleBody
 from calensync.gwrapper import GoogleCalendarWrapper, delete_events_for_sync_rule
 from calensync.libcalendar import PushToQueueException
 from calensync.log import get_logger
@@ -63,7 +63,7 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
     source: Calendar = sync_rule.source
     destination: Calendar = sync_rule.destination
 
-    source_wrapper = GoogleCalendarWrapper(calendar_db=source)
+    source_wrapper = GoogleCalendarWrapper(calendar_db=source, session=session)
     start_date = datetime.datetime.now()
 
     source.last_received = utcnow()
@@ -185,6 +185,44 @@ def handle_delete_sync_rule_event(sync_rule_id: int, boto_session: boto3.Session
 
     sync_rule.deleted = True
     sync_rule.save()
+
+
+def handle_update_sync_rule_event(sync_rule: SyncRule, payload: PatchSyncRuleBody, boto_session: boto3.Session, db):
+    sync_rule.summary = payload.summary
+    sync_rule.description = payload.description
+    sync_rule.save()
+
+    start_date = utcnow() - datetime.timedelta(days=1)
+    end_date = utcnow() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
+    private_extended_props = {EventExtendedProperty.get_rule_id_key(): sync_rule.uuid}
+
+    wrapper = GoogleCalendarWrapper(sync_rule.destination, session=boto_session)
+    events = wrapper.get_events(start_date=start_date, end_date=end_date,
+                                private_extended_properties=private_extended_props)
+
+    if len(events) == 0:
+        # we assume that it's a case where the rule was created before the rule_id private extended
+        # property was added. So instead of using that as filter, we simply run an initial sync
+        logger.info(f"No events found with extended property of rule {sync_rule.uuid}. Running initial sync instead")
+        run_initial_sync(sync_rule.id, boto_session, db)
+        return
+
+    double_check = []
+    for event in events:
+        if event.extendedProperties.private.get(EventExtendedProperty.get_rule_id_key()) == str(sync_rule.uuid):
+            double_check.append(event)
+
+    if len(double_check) != len(events):
+        logger.warning(f"wrapper.get_events with private extended properties filter failed: "
+                       f"{len(events)} vs {len(double_check)}")
+
+    prepared_events = []
+    for event in double_check:
+        # go towards a microservice architecture: sync rules are handled separately
+        prepared_events.append(
+            prepare_event_to_push(event, sync_rule.id, False)
+        )
+    push_update_event_to_queue(prepared_events, boto_session, db)
 
 
 def handle_refresh_existing_calendar(calendar: GoogleCalendar, calendar_db: Calendar, name: str):

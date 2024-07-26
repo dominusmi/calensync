@@ -189,9 +189,6 @@ class SyncRule(UUIDBaseModel):
     description = CharField(null=True, default=None)
     deleted: bool = peewee.BooleanField(default=False)
 
-    class Meta:
-        constraints = [peewee.SQL('UNIQUE (source_id, destination_id)')]
-
 
 class OAuthState(BaseModel):
     user_id: int
