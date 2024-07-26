@@ -45,7 +45,7 @@ def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_ca
         .where(
             SourceAlias.uuid == source_calendar_uuid,
             DestinationAlias.uuid == destination_calendar_uuid,
-            SyncRule.deleted == False
+            SyncRule.deleted == False  # pylint: disable=C0121
         ).count())
 
     if n_rules > 0:
