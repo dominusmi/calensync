@@ -78,16 +78,18 @@ def verify_session(session_id: Optional[str]) -> User:
     """ Returns the claimed email """
 
     if session_id is None:
+        logger.info("Session id is null")
         raise ApiError("Credentials missing", 404)
 
     elif session_id in ('null', ''):
+        logger.info("Session id is empty")
         raise ApiError("Credentials missing", 404)
 
     query = peewee.prefetch(Session.select().where(Session.session_id == session_id).limit(1), User.select())
     result: List[Session] = list(query)
 
     if not result:
-        logger.debug(f"No session found for {session_id}")
+        logger.info(f"No session found for {session_id}")
         raise ApiError("Invalid or expired credentials", 403)
 
     user: User = result[0].user
@@ -581,6 +583,9 @@ def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
 def patch_sync_rule(user: User, sync_uuid: str, payload: PatchSyncRuleBody, boto_session, db):
     if payload.summary is None:
         raise ApiError("Summary must be provided")
+
+    if payload.description is None:
+        payload.description = ''
 
     sync_rules = list(
         SyncRule.select(SyncRule.id, SyncRule.source, Calendar, SyncRule.summary, SyncRule.description)
