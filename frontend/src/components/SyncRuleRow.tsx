@@ -11,7 +11,7 @@ export interface SyncRule {
   destination: string,
   uuid: string,
   summary: string,
-  description: string
+  description: string | null
 }
 
 const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule, onChange }) => {
@@ -89,6 +89,34 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
     }
   }
 
+  async function refreshRule() {
+    try {
+      setLoading(true)
+      const response = await fetch(
+        `${API}/sync/${rule.uuid}/resync`,
+        {
+          method: "POST",
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      )
+      if (response.ok) {
+        createToast("Your rule is being refreshed, this can take several minutes", MessageKind.Info)
+      } else {
+        const data = await response.json();
+        if (data.detail) {
+          createToast(data.detail, MessageKind.Error)
+        } else {
+          createToast("Error while refreshing sync rule", MessageKind.Error)
+        }
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="card my-1">
       {loading && <LoadingOverlay />}
@@ -110,6 +138,16 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
           }
         </div>
         <div className="ms-md-auto my-sm-1">
+          <button type="button" className="btn btn-outline-primary me-1" onClick={refreshRule}>
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 30 30">
+              <path d="M 15 3 C 12.031398 3 9.3028202 4.0834384 7.2070312 5.875 A 1.0001 1.0001 0 1 0 8.5058594 7.3945312 C 10.25407 5.9000929 12.516602 5 15 5 C 20.19656 5 24.450989 8.9379267 24.951172 14 L 22 14 L 26 20 L 30 14 L 26.949219 14 C 26.437925 7.8516588 21.277839 3 15 3 z M 4 10 L 0 16 L 3.0507812 16 C 3.562075 22.148341 8.7221607 27 15 27 C 17.968602 27 20.69718 25.916562 22.792969 24.125 A 1.0001 1.0001 0 1 0 21.494141 22.605469 C 19.74593 24.099907 17.483398 25 15 25 C 9.80344 25 5.5490109 21.062074 5.0488281 16 L 8 16 L 4 10 z"></path>
+            </svg>
+          </button>
+          <button type="button" className="btn btn-outline-primary me-1" onClick={() => setClickedUpdate(true)}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-tools" viewBox="0 0 16 16">
+              <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z" />
+            </svg>
+          </button>
           <button type="button" className="btn btn-outline-primary me-1" onClick={() => setClickedUpdate(true)}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-tools" viewBox="0 0 16 16">
               <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z" />
@@ -173,7 +211,7 @@ const SyncRuleRow: React.FC<{ rule: SyncRule, onChange: () => void }> = ({ rule,
               <div className="form-group my-3">
                 <label>{t("dashboard.sync.label-custom-description")}</label>
                 <input type="text" className="form-control" id="exampleInputEmail1" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="How to replace the description? use the magic word %original% to use the real event title" />
-                <small><span dangerouslySetInnerHTML={{ "__html": t("dashboard.sync.example-description") }}></span> <span className='fw-bold'>{description.replace("%original%", "Let's all meet together for Tom's birthday")}</span></small>
+                <small><span dangerouslySetInnerHTML={{ "__html": t("dashboard.sync.example-description") }}></span> <span className='fw-bold'>{description?.replace("%original%", "Let's all meet together for Tom's birthday")}</span></small>
               </div>
             </div>
           </div>
