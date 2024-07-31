@@ -116,6 +116,14 @@ def post__resync_calendar(calendar_uuid: str, authorization: Annotated[Union[str
         return edp.resync_calendar(user, calendar_uuid, boto3.Session(), db)
 
 
+@app.post('/sync/{rule_uuid}/resync')
+@format_response
+def post__resync_rule(rule_uuid: str, authorization: Annotated[Union[str, None], Cookie()] = None):
+    with DatabaseSession(os.environ["ENV"]) as db:
+        user = edp.verify_session(authorization)
+        return edp.resync_rule(user, rule_uuid, boto3.Session(), db)
+
+
 @app.post('/tos')
 @format_response
 def post__tos(authorization: Annotated[Union[str, None], Cookie()] = None):
