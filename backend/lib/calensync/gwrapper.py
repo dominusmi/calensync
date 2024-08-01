@@ -341,36 +341,34 @@ class GoogleCalendarWrapper:
         self.calendar_db.last_inserted = utcnow()
         self.calendar_db.save()
 
+        logger.info(f"Adding {len(self.events_handler.events_to_add)} events")
         while self.events_handler.events_to_add:
             # order of popping is important for recurrence race condition
             (event, properties, rule) = self.events_handler.events_to_add.pop(0)
-            try:
-                if event.extendedProperties.private.get("source-id") is not None:
-                    # never copy an event created by us
-                    continue
+            if event.extendedProperties.private.get("source-id") is not None:
+                # never copy an event created by us
+                continue
 
-                summary, description = make_summary_and_description(event, rule)
+            summary, description = make_summary_and_description(event, rule)
 
-                kwargs = {}
-                if event.id:
-                    logger.info(f"Keeping id for event {event.id}")
-                    kwargs['id'] = event.id
-                if event.originalStartTime is not None:
-                    kwargs['originalStartTime'] = event.originalStartTime.to_google_dict()
-                if event.recurringEventId is not None:
-                    kwargs['recurringEventId'] = event.recurringEventId
+            kwargs = {}
+            if event.id:
+                logger.info(f"Keeping id for event {event.id}")
+                kwargs['id'] = event.id
+            if event.originalStartTime is not None:
+                kwargs['originalStartTime'] = event.originalStartTime.to_google_dict()
+            if event.recurringEventId is not None:
+                kwargs['recurringEventId'] = event.recurringEventId
 
-                def _inner():
-                    insert_event(
-                        service=self.service, calendar_id=self.google_id,
-                        start=event.start, end=event.end, properties=properties, recurrence=event.recurrence,
-                        summary=summary, description=description, **kwargs
-                    )
+            def _inner():
+                insert_event(
+                    service=self.service, calendar_id=self.google_id,
+                    start=event.start, end=event.end, properties=properties, recurrence=event.recurrence,
+                    summary=summary, description=description, **kwargs
+                )
 
-                return google_error_handling_with_backoff(_inner, self.calendar_db)
+            return google_error_handling_with_backoff(_inner, self.calendar_db)
 
-            except Exception as e:
-                logger.error(f"Failed to insert {event.id} with rule {rule.id}: {e}\n{traceback.format_exc()}")
         return None
 
     def update_events(self):
