@@ -34,7 +34,8 @@ def handler(event, context):
                     tzinfo=datetime.timezone.utc)
                 handle_sqs_event(sqs_event, db, boto3.Session())
             except (BackoffException, PushToQueueException) as e:
-                logger.warn(f"{e}")
+                e: Exception
+                logger.warn(f"{e.__class__.__name__}")
                 batch_item_failures.append({"itemIdentifier": record['messageId']})
             except Exception as e:
                 logger.error(f"Failed to process record {e}\n{traceback.format_exc()}")
