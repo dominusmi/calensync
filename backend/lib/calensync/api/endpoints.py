@@ -33,14 +33,12 @@ if os.environ.get("MOCK_GOOGLE") and is_local():
 
     google_auth_oauthlib = MagicMock()
 
-
-    get_google_email = lambda x: f"{uuid.uuid4()}@test.com" # noqa: disable=F811
+    get_google_email = lambda x: f"{uuid.uuid4()}@test.com"  # noqa: disable=F811
 
     google.oauth2.credentials.Credentials = MagicMock()
     google.oauth2.credentials.Credentials.from_authorized_user_info.return_value = MagicMock()
 
-
-    get_google_calendars = lambda credentials: [ # noqa: disable=F811
+    get_google_calendars = lambda credentials: [  # noqa: disable=F811
         GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}"),
         GoogleCalendar(kind="", id=str(uuid.uuid4()), name=f"name-{str(uuid.uuid4())[:5]}")
     ]
@@ -61,7 +59,6 @@ if os.environ.get("MOCK_GOOGLE") and is_local():
 
 else:
     import google_auth_oauthlib.flow
-
 
 logger = get_logger(__file__)
 
@@ -390,6 +387,39 @@ def get_calendar(user: User, calendar_id: str, db: peewee.Database) -> Calendar:
     return calendars[0]
 
 
+def _launch_resync_rule_event(rule: SyncRule, db, boto_session):
+    event = PostSyncRuleEvent(sync_rule_id=rule.id)
+    sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
+    if is_local():
+        calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
+    else:
+        calensync.sqs.send_event(boto3.Session(), sqs_event.json())
+
+
+def resync_rule(user: User, rule_uuid: str, boto_session: boto3.Session, db: peewee.Database):
+    sync_rules = list(
+        SyncRule
+        .select()
+        .join(Calendar, on=(SyncRule.source_id == Calendar.id))
+        .join(CalendarAccount)
+        .where(
+            SyncRule.uuid == rule_uuid,
+            CalendarAccount.user_id == user.id
+        )
+     )
+    if len(sync_rules) == 0:
+        raise ApiError("Rule doesn't exist or is not own by you", 404)
+
+    rule: SyncRule = sync_rules[0]
+    if (utcnow() - replace_timezone(rule.date_modified)).total_seconds() < 1800:
+        raise ApiError("You must wait at least 30 minutes before refresh a rule", 429)
+
+    rule.date_modified = utcnow()
+    rule.save()
+
+    _launch_resync_rule_event(sync_rules[0], db, boto_session)
+
+
 def resync_calendar(user: User, calendar_uuid: str, boto_session: boto3.Session, db: peewee.Database):
     # pylint: disable=no-member
     calendar = list(
@@ -409,18 +439,17 @@ def resync_calendar(user: User, calendar_uuid: str, boto_session: boto3.Session,
         raise ApiError("Calendar doesn't exist or is not owned by you", 404)
     calendar = calendar[0]
 
-    if calendar.last_resync is not None and (utcnow() - replace_timezone(calendar.last_resync)).total_seconds() / 60 < 30:
+    if (
+            calendar.last_resync is not None
+            and (utcnow() - replace_timezone(calendar.last_resync)).total_seconds() / 60 < 30
+    ):
         raise ApiError("Syncing can take a few minutes time! You can only trigger a manual re-sync once every 30 "
                        "minutes", 429)
 
-    logger.info(f"Found {len(calendar.source_rules)} to resync")
-    for sync_rule in calendar.source_rules:
-        event = PostSyncRuleEvent(sync_rule_id=sync_rule.id)
-        sqs_event = dataclass.SQSEvent(kind=dataclass.QueueEvent.POST_SYNC_RULE, data=event)
-        if is_local():
-            calensync.api.service.handle_sqs_event(sqs_event, db, boto_session)
-        else:
-            calensync.sqs.send_event(boto3.Session(), sqs_event.json())
+    source_rules = [sr for sr in calendar.source_rules if not sr.deleted]
+    logger.info(f"Found {len(source_rules)} to resync")
+    for sync_rule in source_rules:
+        _launch_resync_rule_event(sync_rule, db, boto_session)
 
 
 def refresh_calendars(user: User, account_uuid: str, db: peewee.Database, boto_session: boto3.Session):
@@ -458,7 +487,8 @@ def refresh_calendars(user: User, account_uuid: str, db: peewee.Database, boto_s
         else:
             readonly = (calendar.accessRole == 'reader')
             new_calendars_db.append(
-                Calendar(account=account, platform_id=calendar.id, name=name, readonly=readonly, primary=calendar.primary)
+                Calendar(account=account, platform_id=calendar.id, name=name, readonly=readonly,
+                         primary=calendar.primary)
             )
 
     with db.atomic():
