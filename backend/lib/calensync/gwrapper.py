@@ -58,17 +58,18 @@ def delete_event(service, calendar_id: str, event_id: str):
 def insert_event(service, calendar_id: str, start: GoogleDatetime, end: GoogleDatetime,
                  properties: List[EventExtendedProperty] = None, display_name="Calensync", summary="Busy",
                  description=None, **kwargs) -> Dict:
+    pp = EventExtendedProperty.list_to_dict(properties)
     event = {
         "creator": {"displayName": display_name},
         "summary": summary,
         "description": description,
         "start": start.to_google_dict(),
         "end": end.to_google_dict(),
-        "extendedProperties": {"private": EventExtendedProperty.list_to_dict(properties)},
+        "extendedProperties": {"private": pp},
         "reminders": {"useDefault": False},
         **kwargs
     }
-    logger.debug(f"Sending {event}")
+    logger.info(f"Inserting event with private properties: {pp}")
     return service.events().insert(calendarId=calendar_id, body=event).execute()
 
 
