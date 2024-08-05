@@ -451,7 +451,7 @@ class GoogleCalendarWrapper:
         return events
 
     @staticmethod
-    def push_event_to_rule(event: GoogleEvent, rule: SyncRule) -> int:
+    def push_event_to_rule(event: GoogleEvent, rule: SyncRule, session: boto3.Session = None) -> int:
         """
         Solves a single event update (by updating all other calendars where this event exists)
         """
@@ -463,6 +463,8 @@ class GoogleCalendarWrapper:
 
         set_declined_event_if_necessary(rule, event)
 
+        c = GoogleCalendarWrapper(rule.destination, session=session)
+
         if event.status == EventStatus.tentative:
             # this means an invitation was received, but not yet accepted, so nothing to do
             return 0
@@ -470,7 +472,6 @@ class GoogleCalendarWrapper:
         elif event.status in [EventStatus.cancelled, EventStatus.declined]:
             # need to delete
             logger.info(f"Found event to delete")
-            c = GoogleCalendarWrapper(rule.destination)
             if event.recurringEventId is not None:
                 logger.info("Event part of recurrent sequence")
                 fetched_events = c.get_events(
@@ -512,7 +513,6 @@ class GoogleCalendarWrapper:
             logger.info(f"Potential new event")
 
             source_calendar_uuid = str(rule.source.uuid)
-            c = GoogleCalendarWrapper(rule.destination)
             existing_events = c.get_events(
                 private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
             )
@@ -542,7 +542,6 @@ class GoogleCalendarWrapper:
                 logger.info(f"Found confirmed event, updating")
                 is_recurrence_instance = event.recurringEventId is not None
 
-                c = GoogleCalendarWrapper(rule.destination)
                 events = c.get_events(
                     private_extended_properties=EventExtendedProperty.for_source_id(event.id).to_google_dict()
                 )
