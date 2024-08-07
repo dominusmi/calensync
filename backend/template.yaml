@@ -60,6 +60,7 @@ Resources:
           - Effect: Allow
             Action:
               - ssm:GetParameters
+              - ssm:GetParameter
             Resource:
             - !Ref EncryptionKeyARN
             - !Sub "arn:aws:ssm:eu-north-1:${AWS::AccountId}:parameter/calensync-${Env}/db"
