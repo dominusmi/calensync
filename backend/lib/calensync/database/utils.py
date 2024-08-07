@@ -1,4 +1,6 @@
 import json
+import os
+import uuid
 
 import boto3
 import psycopg2
@@ -7,8 +9,38 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from calensync.database.model import db, MODELS
 
-
 CONFIG_CACHE = {}
+
+
+def get_multiple_parameters(parameter_names: list[str], session: boto3.Session) -> dict[str, str]:
+    """
+    Retrieve a parameter value from AWS Systems Manager Parameter Store.
+
+    :param parameter_names: List of the names of the parameters to retrieve
+    :param session: boto3 session
+    :return: The parameter value if successful, None otherwise
+    """
+    # Create a client for the SSM service
+    ssm_client = session.client('ssm')
+
+    # Get the parameter
+    response = ssm_client.get_parameters(
+        Names=parameter_names,
+        WithDecryption=True  # This is required for SecureString parameters
+    )
+
+    # Extract the parameter value
+    parameters = {param['Name']: param['Value'] for param in response['Parameters']}
+    return parameters
+
+
+def save_certificate(content: str):
+    path = f"/tmp/{uuid.uuid4()}"
+    with open(path, "w+") as f:
+        f.write(content)
+
+    os.chmod(path, 0o600)
+    return path
 
 
 class DatabaseSession:
@@ -35,8 +67,8 @@ class DatabaseSession:
                 except Exception:
                     ...
             configs = {
-                "db": db_name,
-                "username": "yoda",
+                "database": db_name,
+                "user": "yoda",
                 "password": "admin",
                 "host": "0.0.0.0",
                 "port": 5432
@@ -47,25 +79,28 @@ class DatabaseSession:
             if CONFIG_CACHE:
                 configs = CONFIG_CACHE
             else:
-                if session:
-                    secretsmanager = session.client("secretsmanager")
-                else:
-                    secretsmanager = boto3.client("secretsmanager")
+                if not session:
+                    session = boto3.Session()
 
-                secret = secretsmanager.get_secret_value(
-                    SecretId=f'calensync-{env}-db',
-                )
-                configs = json.loads(secret["SecretString"])
+                parameter_names = [
+                    f'/calensync-{env}/db',
+                    f'/calensync-{env}/root.crt',
+                    f'/calensync-{env}/client.crt',
+                    f'/calensync-{env}/client.key'
+                ]
+                parameters = get_multiple_parameters(parameter_names, session)
+
+                configs = json.loads(parameters[parameter_names[0]])
+                configs['sslmode'] = 'verify-ca'
+                configs['sslrootcert'] = save_certificate(parameters[parameter_names[1]])
+                configs['sslcert'] = save_certificate(parameters[parameter_names[2]])
+                configs['sslkey'] = save_certificate(parameters[parameter_names[3]])
                 CONFIG_CACHE = configs
         else:
             raise RuntimeError(f"Invalid environment {env}")
 
         db.init(
-            configs["db"],
-            user=configs["username"],
-            password=configs["password"],
-            host=configs["host"],
-            port=configs["port"],
+            **configs
         )
         db.bind(MODELS)
         self.db = db
