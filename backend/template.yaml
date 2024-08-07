@@ -59,7 +59,7 @@ Resources:
               - !Ref PaddleSecretArn
           - Effect: Allow
             Action:
-              - ssm:GetParameter
+              - ssm:GetParameters
             Resource:
             - !Ref EncryptionKeyARN
             - !Sub "arn:aws:ssm:eu-north-1:${AWS::AccountId}:parameter/calensync-${Env}/db"
