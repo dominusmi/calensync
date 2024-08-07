@@ -66,9 +66,6 @@ Resources:
             - !Sub "arn:aws:ssm:eu-north-1:${AWS::AccountId}:parameter/calensync-${Env}/root.crt"
             - !Sub "arn:aws:ssm:eu-north-1:${AWS::AccountId}:parameter/calensync-${Env}/client.crt"
             - !Sub "arn:aws:ssm:eu-north-1:${AWS::AccountId}:parameter/calensync-${Env}/client.key"
-          - Effect: Allow
-            Action:
-              - secretsmanager:GetSecretValue
 
   CalensyncLayer:
     Type: AWS::Serverless::LayerVersion
