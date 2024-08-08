@@ -607,6 +607,9 @@ def delete_sync_rule(user: User, sync_uuid: str, boto_session, db):
             raise ApiError("Synchronization doesn't exist or is not owned by you", code=404)
         sync_rule: SyncRule = sync_rules[0]
 
+        if sync_rule.deleted:
+            raise ApiError("Synchronization is already deleted")
+
         handle_delete_sync_rule_event(sync_rule.id, boto_session, db)
 
 
