@@ -164,7 +164,8 @@ def get_trial_users_with_create_before_date(start: datetime.datetime):
             User.date_created < start,
             User.subscription_id.is_null(True),
             # If there were no previous email, or the previous email was sent earlier
-            (User.last_email_sent.is_null(True)) | (User.last_email_sent < start)
+            (User.last_email_sent.is_null(True)) | (User.last_email_sent < start),
+            SyncRule.deleted == False
         )
         .group_by(User.id)
         .having(peewee.fn.COUNT(SyncRule.id) > 0)
