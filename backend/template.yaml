@@ -59,8 +59,14 @@ Resources:
               - !Ref PaddleSecretArn
           - Effect: Allow
             Action:
+              - ssm:GetParameters
               - ssm:GetParameter
-            Resource: !Ref EncryptionKeyARN
+            Resource:
+            - !Ref EncryptionKeyARN
+            - !Sub "arn:aws:ssm:eu-north-1:${AWS::AccountId}:parameter/calensync-${Env}/db"
+            - !Sub "arn:aws:ssm:eu-north-1:${AWS::AccountId}:parameter/calensync-${Env}/root.crt"
+            - !Sub "arn:aws:ssm:eu-north-1:${AWS::AccountId}:parameter/calensync-${Env}/client.crt"
+            - !Sub "arn:aws:ssm:eu-north-1:${AWS::AccountId}:parameter/calensync-${Env}/client.key"
 
   CalensyncLayer:
     Type: AWS::Serverless::LayerVersion

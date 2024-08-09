@@ -24,3 +24,10 @@ build
 frontend/src/_blog/
 /appsmith
 /frontend/dist
+/backend/scripts/templates/*
+/backend/client.crt
+/backend/client.key
+/backend/root.crt
+/local/*
+/todo.md
+/backend/jupyter/*
