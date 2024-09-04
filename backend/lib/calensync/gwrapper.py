@@ -309,7 +309,7 @@ class GoogleCalendarWrapper:
             self.calendar_db.active = True
             self.calendar_db.save()
             if self.calendar_db.is_read_only:
-                return None
+                return
 
             try:
                 create_google_watch(self.service, self.calendar_db)
@@ -329,7 +329,7 @@ class GoogleCalendarWrapper:
                 except Exception as e:
                     logger.error(f"Failed to handle exception: {e}. Initial exception: {err}")
 
-        return None
+        return
 
     def delete_watch(self):
         if self.calendar_db.is_read_only:
