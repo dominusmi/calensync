@@ -87,23 +87,28 @@ def hard_sync(db):
             time.sleep(1)
 
 
+def sync_single_user_calendar_by_date(
+        user: User, start_date: datetime.datetime, end_date: datetime.datetime, boto_session
+):
+    logger.info(f"Syncing {user.uuid}")
+    calendar_wrappers = load_calendars(user.accounts, start_date, end_date, boto_session)
+    for wrapper in calendar_wrappers:
+        wrapper.solve_update_in_calendar(wrapper.events, only_preloaded=True)
+
+
 def sync_user_calendars_by_date(db, boto_session):
     users_query = get_users_query_with_active_sync_rules()
-    start: datetime.datetime = datetime.datetime.today() + datetime.timedelta(days=number_of_days_to_sync_in_advance())
+    start: datetime.datetime = datetime.datetime.today()
     start_date = datetime.datetime.fromtimestamp(start.timestamp())
     start_date = start_date.replace(hour=0, minute=0, second=0)
-    end_date = start_date + datetime.timedelta(hours=24)
+    end_date = start_date + datetime.timedelta(days=14)
 
     # because the dates are exclusive in the Google API, this will fetch from 00:00:00 of day, to 23:59:59
     start_date = start_date - datetime.timedelta(seconds=1)
     logger.info(f"Start/end date: {start_date.isoformat()} -> {end_date.isoformat()}")
-
     for user in users_query:
         try:
-            logger.info(f"Syncing {user.uuid}")
-            calendar_wrappers = load_calendars(user.accounts, start_date, end_date, boto_session)
-            for wrapper in calendar_wrappers:
-                wrapper.solve_update_in_calendar(wrapper.events, only_preloaded=True)
+            sync_single_user_calendar_by_date(user, start_date, end_date, boto_session)
         except Exception as e:
             logger.error(f"Error occurred while updating calendar {user.uuid}: {e}\n\n{traceback.format_exc()}")
             time.sleep(1)
