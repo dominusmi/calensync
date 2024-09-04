@@ -2,6 +2,7 @@ import copy
 from unittest.mock import patch, MagicMock
 
 import google.auth.exceptions
+from googleapiclient.errors import HttpError
 
 from calensync.api.tests.util import simulate_sqs_receiver
 from calensync.database.model import SyncRule
@@ -594,3 +595,72 @@ class TestHandleRefreshError:
         exc = google.auth.exceptions.RefreshError(None, {'error': INVALID_GRANT_ERROR})
         handle_refresh_error(calendar1_1, exc)
         assert calendar1_1.paused is not None
+
+
+class TestCreateWatch:
+    @staticmethod
+    @patch('calensync.gwrapper.create_google_watch')
+    def test_google_error_uncaught(mock_create_google_watch, calendar1_1):
+        wrapper = GoogleCalendarWrapper(calendar1_1, service=MagicMock())
+
+        # Simulate an HttpError that's not due to channelIdNotUnique
+        error_content = '{"error": {"errors": [{"reason": "someOtherReason"}]}}'
+        mock_create_google_watch.side_effect = HttpError(
+            resp=MagicMock(status=400, get=lambda x, y: 'application/json'),
+            content=error_content.encode()
+        )
+
+        wrapper.create_watch()
+
+        assert calendar1_1.active == True
+        assert 3590 < (calendar1_1.expiration - datetime.datetime.now()).seconds < 3600
+        mock_create_google_watch.assert_called_once()
+
+    @staticmethod
+    @patch('calensync.gwrapper.create_google_watch')
+    def test_google_error_caught_delete_first_successful(mock_create_google_watch, calendar1_1):
+        wrapper = GoogleCalendarWrapper(calendar1_1, service=MagicMock())
+
+        # Simulate an HttpError due to channelIdNotUnique, then success
+        error_content = '{"error": {"errors": [{"reason": "channelIdNotUnique"}]}}'
+        mock_create_google_watch.side_effect = [
+            HttpError(
+                resp=MagicMock(status=400, get=lambda x, y: 'application/json'),
+                content=error_content.encode()
+            ),
+            None
+        ]
+
+        with patch.object(wrapper, 'delete_watch') as mock_delete_watch:
+            wrapper.create_watch()
+
+            mock_delete_watch.assert_called_once()
+
+        assert calendar1_1.active == True
+        assert 3590 < (calendar1_1.expiration - datetime.datetime.now()).seconds < 3600
+        assert mock_create_google_watch.call_count == 2
+
+    @staticmethod
+    @patch('calensync.gwrapper.create_google_watch')
+    def test_valid(mock_create_google_watch, calendar1_1):
+        wrapper = GoogleCalendarWrapper(calendar1_1, service=MagicMock())
+
+        wrapper.create_watch()
+
+        assert calendar1_1.active == True
+        assert 3590 < (calendar1_1.expiration - datetime.datetime.now()).seconds < 3600
+        mock_create_google_watch.assert_called_once()
+
+    @staticmethod
+    @patch('calensync.gwrapper.create_google_watch')
+    def test_read_only_calendar(mock_create_google_watch, calendar1_1):
+        calendar1_1.readonly = True
+        calendar1_1.save()
+        wrapper = GoogleCalendarWrapper(calendar1_1, service=MagicMock())
+
+        result = wrapper.create_watch()
+
+        assert result is None
+        assert calendar1_1.active == True
+        assert 3590 < (calendar1_1.expiration - datetime.datetime.now()).seconds < 3600
+        mock_create_google_watch.assert_not_called()
