@@ -231,7 +231,7 @@ def handle_update_sync_rule_event(sync_rule: SyncRule, payload: PatchSyncRuleBod
 
 def handle_refresh_existing_calendar(calendar: GoogleCalendar, calendar_db: Calendar, name: str):
     updated = False
-    if calendar.accessRole == 'reader':
+    if calendar.is_readonly():
         # these are calendars imported from another account, they're read only
         if not calendar_db.readonly:
             calendar_db.readonly = True
