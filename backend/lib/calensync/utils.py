@@ -114,7 +114,11 @@ def google_error_handling_with_backoff(function, calendar_db=None):
             # normally there's always a json representation
             reason = e.reason
             if e.resp.get('content-type', '').startswith('application/json'):
-                reason = json.loads(e.content).get('error').get('errors')[0].get('reason')
+                errors = json.loads(e.content).get('error', {}).get('errors', {})
+                if errors:
+                    reason = errors[0].get('reason')
+                else:
+                    logger.error(f"Couldn't parse error: {e.content}")
 
             if e.status_code == 403:
                 if e.reason == "You need to have writer access to this calendar.":
