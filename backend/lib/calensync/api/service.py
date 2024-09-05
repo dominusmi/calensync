@@ -10,13 +10,12 @@ import peewee
 from calensync.api.common import number_of_days_to_sync_in_advance, ApiError
 from calensync.database.model import Calendar, User, SyncRule, EmailDB, CalendarAccount, Session
 from calensync.dataclass import EventExtendedProperty, DeleteSyncRuleEvent, GoogleCalendar, SQSEvent, QueueEvent, \
-    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent, EventStatus, ExtendedProperties, PatchSyncRuleBody
+    GoogleWebhookEvent, PostSyncRuleEvent, UpdateGoogleEvent, EventStatus, PatchSyncRuleBody
 from calensync.gwrapper import GoogleCalendarWrapper, delete_events_for_sync_rule
-from calensync.libcalendar import PushToQueueException
 from calensync.log import get_logger
 from calensync.sqs import SQSEventRun, check_if_should_run_time_or_wait, push_update_event_to_queue, \
     prepare_event_to_push
-from calensync.utils import utcnow, BackoffException
+from calensync.utils import utcnow
 
 logger = get_logger(__file__)
 

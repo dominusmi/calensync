@@ -309,10 +309,27 @@ class GoogleCalendarWrapper:
             self.calendar_db.active = True
             self.calendar_db.save()
             if self.calendar_db.is_read_only:
-                return None
+                return
 
-            create_google_watch(self.service, self.calendar_db)
-        return None
+            try:
+                create_google_watch(self.service, self.calendar_db)
+            except googleapiclient.errors.HttpError as err:
+                # if the error is due to channel not being unique, first try to delete it, then re-create it
+                try:
+                    if err.resp.get('content-type', '').startswith('application/json'):
+                        reason = json.loads(err.content).get('error').get('errors')[0].get('reason')
+
+                        if reason != 'channelIdNotUnique':
+                            logger.error(f"Can't properly handle google error: {err}")
+                            return
+
+                        self.delete_watch()
+                        create_google_watch(self.service, self.calendar_db)
+
+                except Exception as e:
+                    logger.error(f"Failed to handle exception: {e}. Initial exception: {err}")
+
+        return
 
     def delete_watch(self):
         if self.calendar_db.is_read_only:
