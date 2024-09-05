@@ -485,7 +485,7 @@ def refresh_calendars(user: User, account_uuid: str, db: peewee.Database, boto_s
             calendar_db: Calendar = platform_ids[calendar.id]
             handle_refresh_existing_calendar(calendar, calendar_db, name)
         else:
-            readonly = (calendar.accessRole == 'reader')
+            readonly = calendar.is_readonly()
             new_calendars_db.append(
                 Calendar(account=account, platform_id=calendar.id, name=name, readonly=readonly,
                          primary=calendar.primary)

@@ -71,6 +71,12 @@ class GoogleCalendar(BaseModel):
     accessRole: Optional[str]
     primary: bool = False
 
+    def is_readonly(self) -> bool:
+        if self.accessRole is None:
+            return True
+
+        return self.accessRole in ('reader', 'freeBusyReader')
+
 
 class EventExtendedProperty(BaseModel):
     key: str
