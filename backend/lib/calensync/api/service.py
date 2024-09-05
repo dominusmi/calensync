@@ -87,7 +87,6 @@ def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
         source_wrapper.create_watch()
 
 
-
 def handle_received_webhook(calendar: Calendar, db, boto_session: boto3.Session):
     with db.atomic():
         # db atomic so that if solve_update_in_calendar fails for any reason,
