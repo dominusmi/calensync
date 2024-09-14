@@ -53,38 +53,44 @@ def verify_valid_sync_rule(user: User, source_calendar_uuid: str, destination_ca
     return source, destination
 
 
-def run_initial_sync(sync_rule_id: int, session: boto3.Session, db):
-    logger.info(f"Running first sync on {sync_rule_id}")
-    sync_rule = list(peewee.prefetch(
-        SyncRule.select().where(SyncRule.id == sync_rule_id).limit(1),
-        Calendar.select()
-    ))[0]
-    source: Calendar = sync_rule.source
-    destination: Calendar = sync_rule.destination
+def run_initial_sync(sync_rule_id: int, session: boto3.Session, db: peewee.Database):
+    try:
+        with db.atomic():
 
-    source_wrapper = GoogleCalendarWrapper(calendar_db=source, session=session)
-    start_date = datetime.datetime.now()
+            logger.info(f"Running first sync on {sync_rule_id}")
+            sync_rule = list(peewee.prefetch(
+                SyncRule.select().where(SyncRule.id == sync_rule_id).limit(1),
+                Calendar.select()
+            ))[0]
+            source: Calendar = sync_rule.source
+            destination: Calendar = sync_rule.destination
 
-    source.last_received = utcnow()
-    source.save()
+            source_wrapper = GoogleCalendarWrapper(calendar_db=source, session=session)
+            start_date = datetime.datetime.now()
+
+            source.last_received = utcnow()
+            source.last_processed = utcnow()
+            source.save()
+
+            if source.expiration is None:
+                source_wrapper.create_watch()
+    except Exception as e:
+        logger.error(f"Something wrong happened: {e}. {traceback.print_exc()}")
+        return
 
     # number of days to sync in the future
     end_date = start_date + datetime.timedelta(days=number_of_days_to_sync_in_advance())
     events = source_wrapper.get_events(start_date, end_date)
 
+    events = list(filter(lambda x: len(x.extendedProperties.private) == 0, events))
+
     # sorts them so that even that have a recurrence are handled first
     events.sort(key=lambda x: x.recurrence is None)
 
-    events = list(filter(lambda x: len(x.extendedProperties.private) == 0, events))
+
     logger.info(f"Found {len(events)} events, pushing to queue")
     prepared_events = [prepare_event_to_push(e, sync_rule.id, False) for e in events]
     push_update_event_to_queue(prepared_events, session, db)
-
-    source.last_processed = utcnow()
-    source.save()
-
-    if source.expiration is None:
-        source_wrapper.create_watch()
 
 
 def handle_received_webhook(calendar: Calendar, db, boto_session: boto3.Session):
